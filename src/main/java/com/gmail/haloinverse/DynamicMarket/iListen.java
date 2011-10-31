@@ -8,10 +8,8 @@ import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.inventory.ItemStack;
 
-import com.gmail.haloinverse.DynamicMarket.DynamicMarket.EconType;
-import com.iConomy.iConomy;
-import com.iConomy.system.Account;
 import com.nijikokun.bukkit.Permissions.Permissions;
+import com.nijikokun.register.payment.Methods;
 
 public class iListen extends PlayerListener {
     
@@ -384,18 +382,17 @@ public class iListen extends PlayerListener {
         }
         
         if ((name != null) && (!name.isEmpty())) {
-            if (plugin.econType == EconType.ICONOMY4) {
-                return (int) iConomy.getAccount(name).getHoldings().balance();
-            }
+            return (int)Methods.getMethod().getAccount(name).balance();
         }
         
         return 0;
     }
     
+    // Precondition: DynamicMarket.econLoaded == true
     private void show_balance(Player player, Messaging message) {
         // plugin.iC.l.showBalance(player.getName(), player, true);
         int thisBalance = get_balance(player.getName());
-        message.send("{} Balance: {PRM}" + iConomy.format(thisBalance));
+        message.send("{} Balance: {PRM}" + Methods.getMethod().format(thisBalance));
     }
     
     private void delta_balance(String name, int amount) //throws InvalidTransactionException
@@ -404,11 +401,7 @@ public class iListen extends PlayerListener {
             return;
         }
         if ((name != null) && (!name.isEmpty())) {
-            if (plugin.econType == EconType.ICONOMY4) {
-                Account thisAccount = iConomy.getAccount(name);
-                thisAccount.getHoldings().add(amount);
-                //                thisAccount.save();
-            }
+            Methods.getMethod().getAccount(name).add(amount);
         }
     }
     
@@ -502,7 +495,7 @@ public class iListen extends PlayerListener {
         
         plugin.db.removeStock(requested, shopLabel);
         
-        message.send(plugin.shop_tag + "Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + iConomy.format(transValue));
+        message.send(plugin.shop_tag + "Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Methods.getMethod().format(transValue));
         show_balance(player, message);
         
         if (plugin.transLog.isOK) {
@@ -513,13 +506,13 @@ public class iListen extends PlayerListener {
     }
     
     private String getCurrencyNamePlural() {
-        // TODO Auto-generated method stub
-        return com.iConomy.util.Constants.Major.get(1);
+        // TODO config.yml
+        return "FPBs";
     }
     
     private String getCurrencyName() {
-        // TODO Auto-generated method stub
-        return com.iConomy.util.Constants.Major.get(0);
+        // TODO config.yml
+        return "FPB";
     }
     
     private boolean shopSellItem(Player player, String itemString,
@@ -583,7 +576,7 @@ public class iListen extends PlayerListener {
         delta_balance(player.getName(), transValue);
         delta_balance(accountName, -transValue);
         plugin.db.addStock(requested, shopLabel);
-        message.send(plugin.shop_tag + "Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + transValue + " " + iConomy.format(transValue));
+        message.send(plugin.shop_tag + "Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Methods.getMethod().format(transValue));
         show_balance(player, message);
         
         if (plugin.transLog.isOK) {

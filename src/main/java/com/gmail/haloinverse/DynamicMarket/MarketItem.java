@@ -2,7 +2,7 @@ package com.gmail.haloinverse.DynamicMarket;
 
 import java.util.ArrayList;
 
-import com.iConomy.iConomy;
+import com.nijikokun.register.payment.Methods;
 
 //import java.sql.ResultSet;
 
@@ -585,6 +585,10 @@ public class MarketItem extends ItemClump {
     }
     
     public String infoStringBuy(int numBundles) {
+    	if (!DynamicMarket.econLoaded)
+    	{
+    		return "{ERR}Economy not loaded.";
+    	}
         if (!isValid())
             return ("{ERR}Invalid or uninitialized item.");
         if (!canBuy)
@@ -594,11 +598,15 @@ public class MarketItem extends ItemClump {
         if (!getCanBuy(numBundles))
             return ("{PRM}" + getName() + "{ERR} has only {PRM}" + formatBundleCount(leftToBuy()) + " {ERR}left for sale.");
         // Display count as [<bundle>(x<numbundles>)]
-        return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + iConomy.format(getBuyPrice(numBundles)));
+        return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Methods.getMethod().format(getBuyPrice(numBundles)));
         // TODO: Abstract currency name from iConomy reference.
     }
     
     public String infoStringSell(int numBundles) {
+    	if (!DynamicMarket.econLoaded)
+    	{
+    		return "{ERR}Economy not loaded";
+    	}
         if (!isValid())
             return ("{ERR}Invalid or uninitialized item.");
         if (!canSell)
@@ -608,7 +616,7 @@ public class MarketItem extends ItemClump {
         if (!getCanSell(numBundles))
             return ("{PRM}" + getName() + "{ERR} is overstocked, only {PRM}" + formatBundleCount(leftToSell()) + " {ERR}can be sold.");
         // Display count as [<bundle>(x<numbundles>)]
-        return ("{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + iConomy.format(getSellPrice(numBundles)));
+        return ("{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Methods.getMethod().format(getSellPrice(numBundles)));
         // TODO: Abstract currency name from iConomy reference.
     }
     

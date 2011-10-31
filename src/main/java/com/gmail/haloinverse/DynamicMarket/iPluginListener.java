@@ -1,6 +1,9 @@
 package com.gmail.haloinverse.DynamicMarket;
 
-import com.iConomy.iConomy;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.nijikokun.register.payment.Methods;
 
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
@@ -15,30 +18,35 @@ import org.bukkit.plugin.Plugin;
  * @author Nijikokun
  */
 public class iPluginListener extends ServerListener {
-    public iPluginListener() {
+	
+	private DynamicMarket dynamicMarket;
+	
+    public iPluginListener(DynamicMarket dynamicMarket)
+    {
+    	this.dynamicMarket = dynamicMarket;
     }
     
     @Override
     public void onPluginDisable(PluginDisableEvent event) {
-        if (DynamicMarket.economy != null) {
-            if (event.getPlugin().getDescription().getName().equals("iConomy")) {
-                DynamicMarket.setiConomy(null);
-                System.out.println("[DynamicMarket] un-hooked from iConomy.");
+        if (DynamicMarket.econLoaded) {
+            if (event.getPlugin().getDescription().getName().equals("Register"))
+            {
+            	Logger.getLogger("Minecraft").log(Level.SEVERE, "[DynamicMarket] Register disabled! Disabling.");
+            	dynamicMarket.getServer().getPluginManager().disablePlugin(dynamicMarket);
+            }
+            else if (!Methods.hasMethod())
+            {
+            	DynamicMarket.econLoaded = false;
+                System.out.println("[DynamicMarket] un-hooked from Register.");
             }
         }
     }
     
     @Override
-    public void onPluginEnable(PluginEnableEvent event) {
-        Plugin iConomy = event.getPlugin().getServer().getPluginManager().getPlugin("iConomy");
-        
-        if (iConomy != null) {
-            if (iConomy.isEnabled() && iConomy.getClass().getName().equals("com.iConomy.iConomy")) {
-                if (iConomy != null) {
-                    DynamicMarket.setiConomy((iConomy) iConomy);
-                }
-                System.out.println("[DynamicMarket] hooked into iConomy.");
-            }
+    public void onPluginEnable(PluginEnableEvent event) {   
+        if (!DynamicMarket.econLoaded && Methods.hasMethod()) {
+        	DynamicMarket.econLoaded = true;
+            System.out.println("[DynamicMarket] hooked into Register.");
         }
         
         if (event.getPlugin().getDescription().getName().equals("Permissions")) {
