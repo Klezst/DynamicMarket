@@ -1,5 +1,7 @@
 package com.gmail.haloinverse.DynamicMarket;
 
+import com.sk89q.bukkit.migration.PermissionsResolverManager;
+
 import java.util.ArrayList;
 
 import org.bukkit.command.CommandSender;
@@ -8,7 +10,6 @@ import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.inventory.ItemStack;
 
-import com.nijikokun.bukkit.Permissions.Permissions;
 import com.nijikokun.register.payment.Methods;
 
 public class iListen extends PlayerListener {
@@ -19,8 +20,9 @@ public class iListen extends PlayerListener {
         plugin = instance;
     }
     
-    public boolean hasPermission(CommandSender sender, String permString) {
-        //TODO: check this if - looks wrong....
+    public boolean hasPermission(CommandSender sender, String permString)
+    {
+    	/*
         if (DynamicMarket.simplePermissions || DynamicMarket.Permissions == null) {
             DynamicMarket.log.info("[DynamicMarket] - Null Permission Detected when attempting command.");
             if (sender instanceof Player) {
@@ -45,6 +47,8 @@ public class iListen extends PlayerListener {
             return Permissions.Security.permission((Player) sender, DynamicMarket.name.toLowerCase() + "." + permString);
         }
         return true;
+        */
+    	return ((PermissionsResolverManager)DynamicMarket.perms).hasPermission(sender.getName(), plugin.getDescription().getName().toLowerCase()+ "." + permString);
     }
     
     private boolean showHelp(CommandSender sender, String topic) {

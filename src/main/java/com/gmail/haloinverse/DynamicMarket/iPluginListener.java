@@ -8,7 +8,6 @@ import com.nijikokun.register.payment.Methods;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerListener;
-import org.bukkit.plugin.Plugin;
 
 /**
  * iPluginListener Allows us to hook into permissions even if it is loaded later on.
@@ -40,6 +39,12 @@ public class iPluginListener extends ServerListener {
                 System.out.println("[DynamicMarket] un-hooked from Register.");
             }
         }
+        
+        if (event.getPlugin().getDescription().getName().equals("WorldEdit"))
+        {
+        	Logger.getLogger("Minecraft").log(Level.SEVERE, "[DynamicMarket] WorldEdit disabled! Disabling.");
+        	dynamicMarket.getServer().getPluginManager().disablePlugin(dynamicMarket);
+        }
     }
     
     @Override
@@ -49,6 +54,7 @@ public class iPluginListener extends ServerListener {
             System.out.println("[DynamicMarket] hooked into Register.");
         }
         
+        /*
         if (event.getPlugin().getDescription().getName().equals("Permissions")) {
             if (DynamicMarket.Permissions == null) {
                 Plugin Permissions = DynamicMarket.getTheServer().getPluginManager().getPlugin("Permissions");
@@ -58,5 +64,6 @@ public class iPluginListener extends ServerListener {
                 }
             }
         }
+        */
     }
 }

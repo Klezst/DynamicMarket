@@ -1,7 +1,7 @@
 name: DynamicMarket
 main: com.gmail.haloinverse.DynamicMarket.DynamicMarket
-version: v0.4.8.magik.29
-author: HaloInverse
+version: v0.5b Sentinel
+authors: [Klezst, RchGrav, N3X15, Magik, Nijikokun]
 description: >
              A shop plugin building towards an interesting and flexible market system.
 commands:
@@ -19,4 +19,3 @@ commands:
               /<command> help <topic/command>
               /<command> <itemid>
               /<command> <subcommand> <args>
-              

@@ -1,8 +1,8 @@
 package com.gmail.haloinverse.DynamicMarket;
 
-import com.nijikokun.bukkit.Permissions.Permissions;
 import com.nijikokun.register.payment.Methods;
-import com.nijiko.permissions.PermissionHandler;
+import com.sk89q.bukkit.migration.PermissionsResolverManager;
+import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -14,7 +14,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,13 +24,14 @@ public class DynamicMarket extends JavaPlugin {
     
     public static String name; // = "SimpleMarket";
     public static String codename = "Sentinel";
-    public static String version; // = "0.5";
+    public static String version; // = "0.5b";
     
     public iListen playerListener = new iListen(this);
     
     public static Server server = null;
     //public static iConomy economy = null;
-    public static PermissionHandler Permissions = null;
+    //public static PermissionHandler Permissions = null;
+    protected static Object perms; //PermissionsResolverManager
     
     public static iProperty Settings;
     public static File directory = null;
@@ -42,10 +42,10 @@ public class DynamicMarket extends JavaPlugin {
     public static boolean debug = false;
     
     //    protected static boolean wrapperMode = false;
-    protected static boolean wrapperPermissions = false;
+    //protected static boolean wrapperPermissions = false;
     protected static LinkedList<JavaPlugin> wrappers = new LinkedList<JavaPlugin>();
     
-    protected static boolean simplePermissions = false;
+    //protected static boolean simplePermissions = false;
     
     public String shop_tag = "{BKT}[{}Shop{BKT}]{} ";
     protected int max_per_purchase = 64;
@@ -67,7 +67,7 @@ public class DynamicMarket extends JavaPlugin {
     protected String itemsPath = "";
     protected DatabaseMarket db = null;
     
-    protected PermissionInterface permissionWrapper = null;
+    //protected PermissionInterface permissionWrapper = null;
     protected TransactionLogger transLog = null;
     protected String transLogFile = "transactions.log";
     protected boolean transLogAutoFlush = true;
@@ -105,25 +105,36 @@ public class DynamicMarket extends JavaPlugin {
         sqlite = "jdbc:sqlite:" + directory + File.separator + "shop.db";
         
         PluginManager pm = getServer().getPluginManager();
+        
+        // Check for Register (dependency)
         if (pm.getPlugin("Register") == null)
         {
-        	log.log(Level.SEVERE, "[DynamicMarket] Register not detected! Disabling.");
+        	log.log(Level.SEVERE, "[DynamicMarket] Register not detected; disabling.");
         	pm.disablePlugin(this);
         	return;
         }
-        else
-        {
-        	if (Methods.hasMethod())
-        	{
-        		econLoaded = true;
-        		System.out.println("[DynamicMarket] hooked into Register.");
-        	}
-        }
         
-        if (pm.getPlugin("Permissions").isEnabled() && DynamicMarket.Permissions == null) {
-            setupPermissions();
-            System.out.println("[DynamicMarket] Successfully linked with Permissions.");
-        }
+        // Check if register detected economy yet
+    	if (Methods.hasMethod())
+    	{
+    		econLoaded = true;
+    		System.out.println("[DynamicMarket] hooked into Register.");
+    	}
+        
+    	// Check for WorldEdit (dependency)
+    	try
+    	{
+    		perms = new PermissionsResolverManager(this, getDescription().getName(), Logger.getLogger("Minecraft.YourPlugin"));
+    	}
+    	catch (NoClassDefFoundError e)
+    	{
+            log.log(Level.SEVERE, "[DynamicMarket] WorldEdit not detected; disabling.");
+            pm.disablePlugin(this);
+            return;
+    	}
+        
+        // Register events
+        new PermissionsResolverServerListener((PermissionsResolverManager)perms, this);
         
         pluginListener = new iPluginListener(this);
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
@@ -159,6 +170,7 @@ public class DynamicMarket extends JavaPlugin {
     }
     */
     
+    /*
     public static void setupPermissions() {
         Plugin test = getTheServer().getPluginManager().getPlugin("Permissions");
         if (Permissions == null)
@@ -166,6 +178,7 @@ public class DynamicMarket extends JavaPlugin {
                 DynamicMarket.Permissions = ((Permissions) test).getHandler();
         
     }
+    */
     
     private void checkLibs() {
         boolean isok = false;
@@ -263,8 +276,8 @@ public class DynamicMarket extends JavaPlugin {
         csvFileName = Settings.getString("csv-file", "shopDB.csv");
         csvFilePath = Settings.getString("csv-file-path", getDataFolder() + File.separator);
         //        wrapperMode = Settings.getBoolean("wrapper-mode", false);
-        simplePermissions = Settings.getBoolean("simple-permissions", false);
-        wrapperPermissions = Settings.getBoolean("wrapper-permissions", false);
+        //simplePermissions = Settings.getBoolean("simple-permissions", false);
+        //wrapperPermissions = Settings.getBoolean("wrapper-permissions", false);
         
         Messaging.colNormal = "&" + Settings.getString("text-colour-normal", "e");
         Messaging.colCmd = "&" + Settings.getString("text-colour-command", "f");
