@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -33,7 +34,7 @@ public class DynamicMarket extends JavaPlugin {
     //public static PermissionHandler Permissions = null;
     protected static Object perms; //PermissionsResolverManager
     
-    public static iProperty Settings;
+    //public static iProperty Settings;
     public static File directory = null;
     
     //protected static String currency;// = "Coin";
@@ -47,17 +48,17 @@ public class DynamicMarket extends JavaPlugin {
     
     //protected static boolean simplePermissions = false;
     
-    public String shop_tag = "{BKT}[{}Shop{BKT}]{} ";
-    protected int max_per_purchase = 64;
-    protected int max_per_sale = 64;
-    public String defaultShopAccount = "";
-    public boolean defaultShopAccountFree = true;
-    protected static String database_type = "sqlite";
-    protected static String sqlite = "jdbc:sqlite:" + "plugins/DynamicMarket/shop.db";
-    protected static String mysql = "jdbc:mysql://localhost:3306/minecraft";
-    protected static String mysql_user = "root";
-    protected static String mysql_pass = "pass";
-    protected static String mysql_dbEngine = "MyISAM";
+    public String shop_tag; //= "{BKT}[{}Shop{BKT}]{} ";
+    protected int max_per_purchase; // = 64;
+    protected int max_per_sale; // = 64;
+    public String defaultShopAccount; // = "";
+    public boolean defaultShopAccountFree; // = true;
+    protected static String database_type; // = "sqlite";
+    protected static String sqlite; // = "jdbc:sqlite:" + "plugins/DynamicMarket/shop.db";
+    protected static String mysql; // = "jdbc:mysql://localhost:3306/minecraft";
+    protected static String mysql_user; // = "root";
+    protected static String mysql_pass; // = "pass";
+    protected static String mysql_dbEngine; // = "MyISAM";
     protected static Timer timer = null;
     protected static String csvFileName;
     protected static String csvFilePath;
@@ -235,9 +236,65 @@ public class DynamicMarket extends JavaPlugin {
         return wrapperCommand(sender, cmd, args, "");
     }
     
-    public void setup() {
-        Settings = new iProperty(getDataFolder() + File.separator + name + ".settings");
+    public void setup()
+    {
+    	FileConfiguration config = getConfig();
+    	config.options().copyDefaults(true);
+    	saveConfig();
+    	
+        debug = config.getBoolean("debug");
         
+        itemsPath = config.getString("items-db-path");
+        items = new Items(itemsPath + "items.db", this);
+        
+        shop_tag = config.getString("shop-tag");
+        max_per_purchase = config.getInt("items-max-per.purchase");
+        max_per_sale = config.getInt("items-max-per.sale");
+        
+        DynamicMarket.database_type = config.getString("database-type");
+        
+        mysql = config.getString("mysql.url");
+        mysql_user = config.getString("mysql.user");
+        mysql_pass = config.getString("mysql.pass");
+        mysql_dbEngine = config.getString("mysql.engine");
+        
+        if (DynamicMarket.database_type.equalsIgnoreCase("mysql")) {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+            } catch (ClassNotFoundException ex) {
+                log.log(Level.SEVERE, "[DynamicMarket] com.mysql.jdbc.Driver class not found!");
+                ex.printStackTrace();
+            }
+            db = new DatabaseMarket(DatabaseMarket.Type.MYSQL, "Market", items, mysql_dbEngine, this);
+        } else {
+            try {
+                Class.forName("org.sqlite.JDBC");
+            } catch (ClassNotFoundException ex) {
+                log.log(Level.SEVERE, "[DynamicMarket] org.sqlite.JDBC class not found!");
+                ex.printStackTrace();
+            }
+            db = new DatabaseMarket(DatabaseMarket.Type.SQLITE, "Market", items, "", this);
+        }
+        
+        csvFileName = config.getString("import-export.file");
+        csvFilePath = config.getString("import-export.path");
+        
+        Messaging.colNormal = "&" + config.getString("text-color.normal");
+        Messaging.colCmd = "&" + config.getString("text-color.command");
+        Messaging.colBracket = "&" + config.getString("text-color.bracket");
+        Messaging.colParam = "&" + config.getString("text-color.param");
+        Messaging.colError = "&" + config.getString("text-color.error");
+        
+        defaultShopAccount = config.getString("default-shop-account", "");
+        defaultShopAccountFree = config.getBoolean("default-shop-account.is-free");
+        
+        transLogFile = config.getString("transaction-log.file");
+        transLogAutoFlush = config.getBoolean("transaction-log.autoflush");
+        transLog = new TransactionLogger(this, getDataFolder() + File.separator + transLogFile, transLogAutoFlush);
+        //System.out.println("------------------\n" + debug + "\n" + itemsPath + "\n" + items + "n" + shop_tag + "n" + max_per_purchase + "\n" + max_per_sale + "\n" + DynamicMarket.database_type + "\n" + mysql + "\n" + mysql_user + "\n" + mysql_pass + "\n" + mysql_dbEngine + "\n" + Messaging.colNormal + "\n" + Messaging.colBracket + "\n" + Messaging.colCmd + "\n" + Messaging.colParam + "\n" + Messaging.colError + "\n" + defaultShopAccount + "\n" + defaultShopAccountFree + "\n" + transLogFile + "\n" + transLogAutoFlush + "\n" + csvFileName + "\n" + csvFilePath);
+        /*
+        //Settings = new iProperty(getDataFolder() + File.separator + name + ".settings");
+		
         debug = Settings.getBoolean("debug", false);
         
         // ItemsFile = new iProperty("items.db");
