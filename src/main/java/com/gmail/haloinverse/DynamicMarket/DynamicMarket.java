@@ -4,12 +4,20 @@ import com.nijikokun.register.payment.Methods;
 import com.sk89q.bukkit.migration.PermissionsResolverManager;
 import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
 
+import java.awt.List;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Timer;
+import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,7 +43,7 @@ public class DynamicMarket extends JavaPlugin {
     protected static Object perms; //PermissionsResolverManager
     
     //public static iProperty Settings;
-    public static File directory = null;
+    public static File directory;
     
     //protected static String currency;// = "Coin";
     protected static boolean econLoaded = false;
@@ -63,6 +71,32 @@ public class DynamicMarket extends JavaPlugin {
     protected static String csvFileName;
     protected static String csvFilePath;
     
+    // Configuration keys
+    private static final String[] keys =
+    {
+    	"default-shop-account",
+    	"default-shop-account.is-free",
+    	"text-color.bracket",
+    	"text-color.command",
+    	"text-color.error",
+    	"text-color.normal",
+    	"text-color.param",
+    	"database-type",
+    	"items-db-path",
+    	"mysql.url",
+    	"mysql.user",
+    	"mysql.pass",
+    	"mysql.engine",
+    	"import-export.file",
+    	"import-export.path",
+    	"transaction-log.file",
+    	"transaction-log.autoflush",
+    	"shop-tag",
+    	"items-max-per.purchase",
+    	"items-max-per.sale",
+    	"debug"
+    };
+    
     //protected EconType econType = EconType.NONE;
     protected Items items;
     protected String itemsPath = "";
@@ -79,19 +113,18 @@ public class DynamicMarket extends JavaPlugin {
         log.info(Messaging.bracketize(name) + " version " + Messaging.bracketize(version) + " (" + codename + ") disabled");
     }
     
-    public File getDataFolder() {
-        if (directory == null) {
-            String pluginDirString = "plugins" + File.separator + "DynamicMarket";
-            if (!super.getDataFolder().toString().equals(pluginDirString)) {
-                log.warning("Jar is not named DynamicMarket.jar!  Beware of multiple DynamicMarket instances being loaded!");
-                directory = new File(pluginDirString);
-            } else {
-                directory = super.getDataFolder();
-            }
+    
+    @Override
+    public File getDataFolder()
+    {
+        directory = super.getDataFolder();
+        if (!directory.toString().equals("plugins" + File.separator + "DynamicMarket"))
+        {
+        	log.log(Level.WARNING, "[" + getDescription().getName() + "] Jar is not named DynamicMarket.jar: beware of running multiple instances.");
         }
-        
         return directory;
     }
+    
     
     @Override
     public void onEnable() {
@@ -142,7 +175,10 @@ public class DynamicMarket extends JavaPlugin {
         pm.registerEvent(Event.Type.PLUGIN_DISABLE, pluginListener, Priority.Monitor, this);
         
         checkLibs();
-        setup();
+        if (!setup())
+        {
+        	return;
+        }
         
         log.info(Messaging.bracketize(name) + " version " + Messaging.bracketize(version) + " (" + codename + ") enabled");
     }
@@ -236,62 +272,112 @@ public class DynamicMarket extends JavaPlugin {
         return wrapperCommand(sender, cmd, args, "");
     }
     
-    public void setup()
+    public boolean setup()
     {
-    	FileConfiguration config = getConfig();
-    	config.options().copyDefaults(true);
-    	saveConfig();
+		// Set up directory
+    	directory = getDataFolder();
+    	if (!directory.exists())
+    	{
+    		getDataFolder().mkdirs();
+    	}
+    	if (!extract("config.yml", "shopDB.csv"))
+    	{
+    		return false;
+    	}
     	
-        debug = config.getBoolean("debug");
+        // Verify integrity of configuration
+    	FileConfiguration config = getConfig();
+    	
+        ArrayList<String> invalid = new ArrayList<String>();
+        for (String key : keys)
+        {
+        	if (!config.isSet(key))
+        	{
+        		invalid.add(key);
+        	}
+        }
         
-        itemsPath = config.getString("items-db-path");
+        if (invalid.size() > 0)
+        {
+        	String title = getDescription().getName();
+        	log.log(Level.SEVERE, "[" + title + "] Disabling, invalid config.yml; defaults used for:");
+	        for (String key : invalid)
+	        {
+	        	log.log(Level.SEVERE, "[" + title + "]\t" + key);
+	        }
+	        getServer().getPluginManager().disablePlugin(this);
+	        return false;
+        }
+    	
+    	// Load configuration
+        defaultShopAccount = config.getString(keys[0], "");
+        defaultShopAccountFree = config.getBoolean(keys[1]);
+    	
+        Messaging.colBracket = "&" + config.getString(keys[2]);
+        Messaging.colCmd = "&" + config.getString(keys[3]);
+        Messaging.colError = "&" + config.getString(keys[4]);
+        Messaging.colNormal = "&" + config.getString(keys[5]);
+        Messaging.colParam = "&" + config.getString(keys[6]);
+        
+        DynamicMarket.database_type = config.getString(keys[7]);
+        itemsPath = config.getString(keys[8]);
+        
+        mysql = config.getString(keys[9]);
+        mysql_user = config.getString(keys[10]);
+        mysql_pass = config.getString(keys[11]);
+        mysql_dbEngine = config.getString(keys[12]);
+        
+        csvFileName = config.getString(keys[13]);
+        csvFilePath = config.getString(keys[14]);
+        
+        transLogFile = config.getString(keys[15]);
+        transLogAutoFlush = config.getBoolean(keys[16]);
+        
+        shop_tag = config.getString(keys[17]);
+        max_per_purchase = config.getInt(keys[18]);
+        max_per_sale = config.getInt(keys[19]);
+        
+        debug = config.getBoolean(keys[20]);
+        
+        // Setup database
         items = new Items(itemsPath + "items.db", this);
         
-        shop_tag = config.getString("shop-tag");
-        max_per_purchase = config.getInt("items-max-per.purchase");
-        max_per_sale = config.getInt("items-max-per.sale");
-        
-        DynamicMarket.database_type = config.getString("database-type");
-        
-        mysql = config.getString("mysql.url");
-        mysql_user = config.getString("mysql.user");
-        mysql_pass = config.getString("mysql.pass");
-        mysql_dbEngine = config.getString("mysql.engine");
-        
-        if (DynamicMarket.database_type.equalsIgnoreCase("mysql")) {
-            try {
+        if (DynamicMarket.database_type.equalsIgnoreCase("mysql"))
+        {
+            try
+            {
                 Class.forName("com.mysql.jdbc.Driver");
-            } catch (ClassNotFoundException ex) {
-                log.log(Level.SEVERE, "[DynamicMarket] com.mysql.jdbc.Driver class not found!");
+            }
+            catch (ClassNotFoundException ex)
+            {
+                log.log(Level.SEVERE, "[" + getDescription().getName() + "] com.mysql.jdbc.Driver class not found; disabling.");
                 ex.printStackTrace();
+                getServer().getPluginManager().disablePlugin(this);
+                return false;
             }
             db = new DatabaseMarket(DatabaseMarket.Type.MYSQL, "Market", items, mysql_dbEngine, this);
-        } else {
-            try {
+        }
+        else
+        {
+            try
+            {
                 Class.forName("org.sqlite.JDBC");
-            } catch (ClassNotFoundException ex) {
-                log.log(Level.SEVERE, "[DynamicMarket] org.sqlite.JDBC class not found!");
+            }
+            catch (ClassNotFoundException ex)
+            {
+                log.log(Level.SEVERE, "[" + getDescription().getName() + "] org.sqlite.JDBC class not found; disabling.");
                 ex.printStackTrace();
+                getServer().getPluginManager().disablePlugin(this);
+                return false;
             }
             db = new DatabaseMarket(DatabaseMarket.Type.SQLITE, "Market", items, "", this);
         }
         
-        csvFileName = config.getString("import-export.file");
-        csvFilePath = config.getString("import-export.path");
-        
-        Messaging.colNormal = "&" + config.getString("text-color.normal");
-        Messaging.colCmd = "&" + config.getString("text-color.command");
-        Messaging.colBracket = "&" + config.getString("text-color.bracket");
-        Messaging.colParam = "&" + config.getString("text-color.param");
-        Messaging.colError = "&" + config.getString("text-color.error");
-        
-        defaultShopAccount = config.getString("default-shop-account", "");
-        defaultShopAccountFree = config.getBoolean("default-shop-account.is-free");
-        
-        transLogFile = config.getString("transaction-log.file");
-        transLogAutoFlush = config.getBoolean("transaction-log.autoflush");
+        // Setup transaction log
         transLog = new TransactionLogger(this, getDataFolder() + File.separator + transLogFile, transLogAutoFlush);
+        
         //System.out.println("------------------\n" + debug + "\n" + itemsPath + "\n" + items + "n" + shop_tag + "n" + max_per_purchase + "\n" + max_per_sale + "\n" + DynamicMarket.database_type + "\n" + mysql + "\n" + mysql_user + "\n" + mysql_pass + "\n" + mysql_dbEngine + "\n" + Messaging.colNormal + "\n" + Messaging.colBracket + "\n" + Messaging.colCmd + "\n" + Messaging.colParam + "\n" + Messaging.colError + "\n" + defaultShopAccount + "\n" + defaultShopAccountFree + "\n" + transLogFile + "\n" + transLogAutoFlush + "\n" + csvFileName + "\n" + csvFilePath);
+        return true;
         /*
         //Settings = new iProperty(getDataFolder() + File.separator + name + ".settings");
 		
@@ -376,4 +462,99 @@ public class DynamicMarket extends JavaPlugin {
         ICONOMY4;
     }
     */
+    private InputStream getInputStream(String name)
+    {
+    	InputStream input = null;
+    	try
+    	{
+    		JarFile file = new JarFile(getFile());
+    		ZipEntry copy = file.getEntry("resources/" + name);
+    		if (copy == null)
+    		{
+    			log.severe("[" + getDescription().getName() + "] Unable to find INTERNAL file " + name + "; disabling.");
+    			getServer().getPluginManager().disablePlugin(this);
+    			return null;
+    		}
+    		input = file.getInputStream(copy);
+    	}
+    	catch (IOException e)
+    	{
+    		log.severe("[" + getDescription().getName() + "] Unable to read INTERNAL file " + name + "; disabling.");
+    		getServer().getPluginManager().disablePlugin(this);
+    		return null;
+    	}
+    	return input;
+    }
+    
+    
+	 /**
+	 * Original by sk89q
+    * Copy files from the .jar.
+    * 
+    * @param names, names of the files to be copied
+    */
+   protected boolean extract(String... names)
+   {
+	   for (String name : names)
+	   {
+		   // Get input
+	       File actual = new File(getDataFolder(), name);
+	       if (!actual.exists())
+	       {
+	           InputStream input = getInputStream(name);
+	           if (input == null)
+	           {
+	        	   return false;
+	           }
+	           
+	           // Get & write to output
+               FileOutputStream output = null;
+               try
+               {
+                   output = new FileOutputStream(actual);
+                   byte[] buf = new byte[8192];
+                   int length = 0;
+                   while ((length = input.read(buf)) > 0)
+                   {
+                       output.write(buf, 0, length);
+                   }
+                   
+                   log.info("[" + getDescription().getName() + "] Default file " + name + " successfully extracted.");
+               }
+               catch (IOException e)
+               {
+                   log.severe("[" + getDescription().getName() + "] Unable to write file " + name + "; disabling.");
+                   e.printStackTrace();
+                   getServer().getPluginManager().disablePlugin(this);
+               }
+               finally
+               {
+                   try
+                   {
+                       if (input != null)
+                       {
+                           input.close();
+                       }
+                   }
+                   catch (IOException e)
+                   {
+                	   log.warning("[" + getDescription().getName() + "] Unable to close INTERNAL file " + name + ".");
+                   }
+
+                   try
+                   {
+                       if (output != null)
+                       {
+                           output.close();
+                       }
+                   }
+                   catch (IOException e)
+                   {
+                	   log.warning("[" + getDescription().getName() + "] Unable to close file " + name + "; disabling.");
+                   }
+               }
+	       }
+	   }
+	   return true;
+   }
 }
