@@ -1,15 +1,15 @@
 package com.gmail.haloinverse.DynamicMarket;
 
+import com.gmail.klezst.Settings;
+import com.gmail.klezst.Settings.Type;
 import com.nijikokun.register.payment.Methods;
 import com.sk89q.bukkit.migration.PermissionsResolverManager;
 import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
 
-import java.awt.List;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Timer;
@@ -20,7 +20,6 @@ import java.util.zip.ZipEntry;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -56,6 +55,9 @@ public class DynamicMarket extends JavaPlugin {
     
     //protected static boolean simplePermissions = false;
     
+    
+    protected static Settings settings;
+    
     public String shop_tag; //= "{BKT}[{}Shop{BKT}]{} ";
     protected int max_per_purchase; // = 64;
     protected int max_per_sale; // = 64;
@@ -70,32 +72,6 @@ public class DynamicMarket extends JavaPlugin {
     protected static Timer timer = null;
     protected static String csvFileName;
     protected static String csvFilePath;
-    
-    // Configuration keys
-    private static final String[] keys =
-    {
-    	"default-shop-account",
-    	"default-shop-account.is-free",
-    	"text-color.bracket",
-    	"text-color.command",
-    	"text-color.error",
-    	"text-color.normal",
-    	"text-color.param",
-    	"database-type",
-    	"items-db-path",
-    	"mysql.url",
-    	"mysql.user",
-    	"mysql.pass",
-    	"mysql.engine",
-    	"import-export.file",
-    	"import-export.path",
-    	"transaction-log.file",
-    	"transaction-log.autoflush",
-    	"shop-tag",
-    	"items-max-per.purchase",
-    	"items-max-per.sale",
-    	"debug"
-    };
     
     //protected EconType econType = EconType.NONE;
     protected Items items;
@@ -285,63 +261,48 @@ public class DynamicMarket extends JavaPlugin {
     		return false;
     	}
     	
-        // Verify integrity of configuration
-    	FileConfiguration config = getConfig();
-    	
-        ArrayList<String> invalid = new ArrayList<String>();
-        for (String key : keys)
-        {
-        	if (!config.isSet(key))
-        	{
-        		invalid.add(key);
-        	}
-        }
-        
-        if (invalid.size() > 0)
-        {
-        	String title = getDescription().getName();
-        	log.log(Level.SEVERE, "[" + title + "] Disabling, invalid config.yml; defaults used for:");
-	        for (String key : invalid)
-	        {
-	        	log.log(Level.SEVERE, "[" + title + "]\t" + key);
-	        }
-	        getServer().getPluginManager().disablePlugin(this);
-	        return false;
-        }
-    	
     	// Load configuration
-        defaultShopAccount = config.getString(keys[0], "");
-        defaultShopAccountFree = config.getBoolean(keys[1]);
+    	try
+    	{
+    		settings = new Settings(getConfig());
+    	}
+    	catch (IllegalArgumentException e)
+    	{
+    		return false;
+    	}
     	
-        Messaging.colBracket = "&" + config.getString(keys[2]);
-        Messaging.colCmd = "&" + config.getString(keys[3]);
-        Messaging.colError = "&" + config.getString(keys[4]);
-        Messaging.colNormal = "&" + config.getString(keys[5]);
-        Messaging.colParam = "&" + config.getString(keys[6]);
+    	// Temporary compatibility
+    	defaultShopAccount = getSetting(Settings.Type.ACCOUNT_NAME, String.class);
+    	defaultShopAccountFree = getSetting(Settings.Type.ACCOUNT_FREE, Boolean.class);
+    	
+        Messaging.colBracket = getSetting(Settings.Type.BRACKET_COLOR, String.class);
+        Messaging.colCmd = getSetting(Settings.Type.COMMAND_COLOR, String.class);
+        Messaging.colError = getSetting(Settings.Type.ERROR_COLOR, String.class);
+        Messaging.colNormal = getSetting(Settings.Type.NORMAL_COLOR, String.class);
+        Messaging.colParam = getSetting(Settings.Type.PARAM_COLOR, String.class);
         
-        DynamicMarket.database_type = config.getString(keys[7]);
-        itemsPath = config.getString(keys[8]);
+        DynamicMarket.database_type = getSetting(Settings.Type.DATABASE_TYPE, String.class);
+        itemsPath = getSetting(Settings.Type.ITEMS_DB_PATH, String.class);
         
-        mysql = config.getString(keys[9]);
-        mysql_user = config.getString(keys[10]);
-        mysql_pass = config.getString(keys[11]);
-        mysql_dbEngine = config.getString(keys[12]);
+        mysql = getSetting(Settings.Type.MYSQL_URL, String.class);
+        mysql_user = getSetting(Settings.Type.MYSQL_USER, String.class);
+        mysql_pass = getSetting(Settings.Type.MYSQL_PASS, String.class);
+        mysql_dbEngine = getSetting(Settings.Type.MYSQL_ENGINE, String.class);
         
-        csvFileName = config.getString(keys[13]);
-        csvFilePath = config.getString(keys[14]);
+        csvFileName = getSetting(Settings.Type.IMPORT_EXPORT_FILE, String.class);
+        csvFilePath = getSetting(Settings.Type.IMPORT_EXPORT_PATH, String.class);
         
-        transLogFile = config.getString(keys[15]);
-        transLogAutoFlush = config.getBoolean(keys[16]);
+        transLogFile = getSetting(Settings.Type.TRANSACTION_LOG_FILE, String.class);
+        transLogAutoFlush = getSetting(Settings.Type.TRANSACTION_LOG_AUTOFLUSH, Boolean.class);
         
-        shop_tag = config.getString(keys[17]);
-        max_per_purchase = config.getInt(keys[18]);
-        max_per_sale = config.getInt(keys[19]);
+        shop_tag = getSetting(Settings.Type.SHOP_TAG, String.class);
+        max_per_purchase = getSetting(Settings.Type.ITEMS_MAX_PER_PURCHASE, Integer.class);
+        max_per_sale = getSetting(Settings.Type.ITEMS_MAX_PER_SALE, Integer.class);
         
-        debug = config.getBoolean(keys[20]);
-        
+        debug = getSetting(Settings.Type.DEBUG, Boolean.class);
+    	
         // Setup database
         items = new Items(itemsPath + "items.db", this);
-        
         if (DynamicMarket.database_type.equalsIgnoreCase("mysql"))
         {
             try
@@ -378,76 +339,6 @@ public class DynamicMarket extends JavaPlugin {
         
         //System.out.println("------------------\n" + debug + "\n" + itemsPath + "\n" + items + "n" + shop_tag + "n" + max_per_purchase + "\n" + max_per_sale + "\n" + DynamicMarket.database_type + "\n" + mysql + "\n" + mysql_user + "\n" + mysql_pass + "\n" + mysql_dbEngine + "\n" + Messaging.colNormal + "\n" + Messaging.colBracket + "\n" + Messaging.colCmd + "\n" + Messaging.colParam + "\n" + Messaging.colError + "\n" + defaultShopAccount + "\n" + defaultShopAccountFree + "\n" + transLogFile + "\n" + transLogAutoFlush + "\n" + csvFileName + "\n" + csvFilePath);
         return true;
-        /*
-        //Settings = new iProperty(getDataFolder() + File.separator + name + ".settings");
-		
-        debug = Settings.getBoolean("debug", false);
-        
-        // ItemsFile = new iProperty("items.db");
-        itemsPath = Settings.getString("items-db-path", getDataFolder() + File.separator);
-        items = new Items(itemsPath + "items.db", this);
-        
-        shop_tag = Settings.getString("shop-tag", shop_tag);
-        max_per_purchase = Settings.getInt("max-items-per-purchase", 64);
-        max_per_sale = Settings.getInt("max-items-per-sale", 64);
-        
-        DynamicMarket.database_type = Settings.getString("database-type", "sqlite");
-        
-        mysql = Settings.getString("mysql-db", mysql);
-        mysql_user = Settings.getString("mysql-user", mysql_user);
-        mysql_pass = Settings.getString("mysql-pass", mysql_pass);
-        mysql_dbEngine = Settings.getString("mysql-dbengine", mysql_dbEngine);
-        
-        if (DynamicMarket.database_type.equalsIgnoreCase("mysql")) {
-            try {
-                Class.forName("com.mysql.jdbc.Driver");
-            } catch (ClassNotFoundException ex) {
-                log.info("com.mysql.jdbc.Driver class not found!");
-                ex.printStackTrace();
-            }
-            db = new DatabaseMarket(DatabaseMarket.Type.MYSQL, "Market", items, mysql_dbEngine, this);
-        } else {
-            try {
-                Class.forName("org.sqlite.JDBC");
-            } catch (ClassNotFoundException ex) {
-                log.info("org.sqlite.JDBC class not found!");
-                ex.printStackTrace();
-            }
-            db = new DatabaseMarket(DatabaseMarket.Type.SQLITE, "Market", items, "", this);
-        }
-        
-        csvFileName = Settings.getString("csv-file", "shopDB.csv");
-        csvFilePath = Settings.getString("csv-file-path", getDataFolder() + File.separator);
-        //        wrapperMode = Settings.getBoolean("wrapper-mode", false);
-        //simplePermissions = Settings.getBoolean("simple-permissions", false);
-        //wrapperPermissions = Settings.getBoolean("wrapper-permissions", false);
-        
-        Messaging.colNormal = "&" + Settings.getString("text-colour-normal", "e");
-        Messaging.colCmd = "&" + Settings.getString("text-colour-command", "f");
-        Messaging.colBracket = "&" + Settings.getString("text-colour-bracket", "d");
-        Messaging.colParam = "&" + Settings.getString("text-colour-param", "b");
-        Messaging.colError = "&" + Settings.getString("text-colour-error", "c");
-        
-        defaultShopAccount = Settings.getString("default-shop-account", "");
-        defaultShopAccountFree = Settings.getBoolean("default-shop-account-free", defaultShopAccountFree);
-        
-        transLogFile = Settings.getString("transaction-log-file", transLogFile);
-        transLogAutoFlush = Settings.getBoolean("transaction-log-autoflush", transLogAutoFlush);
-        if ((transLogFile != null) && (!transLogFile.isEmpty())) {
-            transLog = new TransactionLogger(this, getDataFolder() + File.separator + transLogFile, transLogAutoFlush);
-        } else {
-            transLog = new TransactionLogger(this, null, false);
-        }
-        
-        /*
-        String econTypeString = Settings.getString("economy-plugin", "iconomy4");
-        if (econTypeString.equalsIgnoreCase("iconomy4")) {
-            econType = EconType.ICONOMY4;
-        } else {
-            log.severe(Messaging.bracketize(name) + " Invalid economy setting for 'economy-plugin='.");
-            econType = EconType.NONE;
-        }
-        */
     }
     
     public void InitializeEconomy() {
@@ -461,7 +352,8 @@ public class DynamicMarket extends JavaPlugin {
         NONE,
         ICONOMY4;
     }
-    */
+    */ 
+    
     private InputStream getInputStream(String name)
     {
     	InputStream input = null;
@@ -487,12 +379,12 @@ public class DynamicMarket extends JavaPlugin {
     }
     
     
-	 /**
-	 * Original by sk89q
-    * Copy files from the .jar.
-    * 
-    * @param names, names of the files to be copied
-    */
+	/**
+   * Original by sk89q
+   * Copy files from the .jar.
+   * 
+   * @param names, names of the files to be copied
+   */
    protected boolean extract(String... names)
    {
 	   for (String name : names)
@@ -557,4 +449,9 @@ public class DynamicMarket extends JavaPlugin {
 	   }
 	   return true;
    }
+   
+	public static <T> T getSetting(Type type, Class<T> dataType)
+	{
+		return settings.getSetting(type, dataType);
+	}
 }

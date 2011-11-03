@@ -1,11 +1,12 @@
 default-shop-account:
+  name: ""
   is-free: true
 text-color:
-  bracket: d
-  command: f
-  error: c
-  normal: c
-  param: b
+  bracket: "&d"
+  command: "&f"
+  error: "&c"
+  normal: "&c"
+  param: "&b"
 database-type: sqlite
 items-db-path: plugins\DynamicMarket\
 mysql:
