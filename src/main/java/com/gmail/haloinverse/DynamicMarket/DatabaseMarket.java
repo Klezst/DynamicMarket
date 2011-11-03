@@ -529,6 +529,7 @@ public class DatabaseMarket extends DatabaseCore {
             }
             // Parse a line.
             // plugin.log.info(line);
+            
             line = line.replace("'", "").replace("\"", "");
             importItem = new MarketItem(line, null, shopLabel, true);
             if (hasRecord(importItem, shopLabel)) {

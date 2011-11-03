@@ -352,32 +352,7 @@ public class DynamicMarket extends JavaPlugin {
         NONE,
         ICONOMY4;
     }
-    */ 
-    
-    private InputStream getInputStream(String name)
-    {
-    	InputStream input = null;
-    	try
-    	{
-    		JarFile file = new JarFile(getFile());
-    		ZipEntry copy = file.getEntry("resources/" + name);
-    		if (copy == null)
-    		{
-    			log.severe("[" + getDescription().getName() + "] Unable to find INTERNAL file " + name + "; disabling.");
-    			getServer().getPluginManager().disablePlugin(this);
-    			return null;
-    		}
-    		input = file.getInputStream(copy);
-    	}
-    	catch (IOException e)
-    	{
-    		log.severe("[" + getDescription().getName() + "] Unable to read INTERNAL file " + name + "; disabling.");
-    		getServer().getPluginManager().disablePlugin(this);
-    		return null;
-    	}
-    	return input;
-    }
-    
+    */   
     
 	/**
    * Original by sk89q
@@ -393,7 +368,25 @@ public class DynamicMarket extends JavaPlugin {
 	       File actual = new File(getDataFolder(), name);
 	       if (!actual.exists())
 	       {
-	           InputStream input = getInputStream(name);
+	    	   InputStream input;
+		       	try
+		    	{
+		    		JarFile file = new JarFile(getFile());
+		    		ZipEntry copy = file.getEntry("resources/" + name);
+		    		if (copy == null)
+		    		{
+		    			log.severe("[" + getDescription().getName() + "] Unable to find INTERNAL file " + name + "; disabling.");
+		    			getServer().getPluginManager().disablePlugin(this);
+		    			return false;
+		    		}
+		    		input = file.getInputStream(copy);
+		    	}
+		    	catch (IOException e)
+		    	{
+		    		log.severe("[" + getDescription().getName() + "] Unable to read INTERNAL file " + name + "; disabling.");
+		    		getServer().getPluginManager().disablePlugin(this);
+		    		return false;
+		    	}
 	           if (input == null)
 	           {
 	        	   return false;
