@@ -371,8 +371,7 @@ public class iListen extends PlayerListener {
             }
         }
         if (topic.equalsIgnoreCase("about")) {
-            message.send("{} " + DynamicMarket.name + " " + DynamicMarket.version + " written by HaloInverse.");
-            message.send("{} Original structure and portions of code are from SimpleShop 1.1 by Nijikokun.");
+            message.send("{} " + DynamicMarket.name + " " + DynamicMarket.version + " written by " + plugin.getDescription().getAuthors() + ".");
             return true;
         }
         message.send("{}Unknown help topic:{CMD} " + topic);

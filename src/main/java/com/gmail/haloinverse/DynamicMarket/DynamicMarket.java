@@ -1,7 +1,8 @@
 package com.gmail.haloinverse.DynamicMarket;
-
-import com.gmail.klezst.Settings;
-import com.gmail.klezst.Settings.Type;
+import com.gmail.haloinverse.DynamicMarket.Setting;
+import com.gmail.klezst.util.settings.InvalidSettingsException;
+import com.gmail.klezst.util.settings.Settings;
+import com.gmail.klezst.util.settings.Validatable;
 import com.nijikokun.register.payment.Methods;
 import com.sk89q.bukkit.migration.PermissionsResolverManager;
 import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
@@ -264,42 +265,46 @@ public class DynamicMarket extends JavaPlugin {
     	// Load configuration
     	try
     	{
-    		settings = new Settings(getConfig());
+    		settings = new Settings(getConfig(), Setting.values());
     	}
-    	catch (IllegalArgumentException e)
+    	catch (InvalidSettingsException e)
     	{
+    		String prefix = "[" + getDescription().getName() + "]";
+    		log.log(Level.SEVERE, prefix + "Invalid config.yml:");
+    		e.printExceptions(log, prefix);
+    		getServer().getPluginManager().disablePlugin(this);
     		return false;
     	}
     	
     	// Temporary compatibility
-    	defaultShopAccount = getSetting(Settings.Type.ACCOUNT_NAME, String.class);
-    	defaultShopAccountFree = getSetting(Settings.Type.ACCOUNT_FREE, Boolean.class);
+    	defaultShopAccount = getSetting(Setting.ACCOUNT_NAME, String.class);
+    	defaultShopAccountFree = getSetting(Setting.ACCOUNT_FREE, Boolean.class);
     	
-        Messaging.colBracket = getSetting(Settings.Type.BRACKET_COLOR, String.class);
-        Messaging.colCmd = getSetting(Settings.Type.COMMAND_COLOR, String.class);
-        Messaging.colError = getSetting(Settings.Type.ERROR_COLOR, String.class);
-        Messaging.colNormal = getSetting(Settings.Type.NORMAL_COLOR, String.class);
-        Messaging.colParam = getSetting(Settings.Type.PARAM_COLOR, String.class);
+        Messaging.colBracket = getSetting(Setting.BRACKET_COLOR, String.class);
+        Messaging.colCmd = getSetting(Setting.COMMAND_COLOR, String.class);
+        Messaging.colError = getSetting(Setting.ERROR_COLOR, String.class);
+        Messaging.colNormal = getSetting(Setting.NORMAL_COLOR, String.class);
+        Messaging.colParam = getSetting(Setting.PARAM_COLOR, String.class);
         
-        DynamicMarket.database_type = getSetting(Settings.Type.DATABASE_TYPE, String.class);
-        itemsPath = getSetting(Settings.Type.ITEMS_DB_PATH, String.class);
+        DynamicMarket.database_type = getSetting(Setting.DATABASE_TYPE, String.class);
+        itemsPath = getSetting(Setting.ITEMS_DB_PATH, String.class);
         
-        mysql = getSetting(Settings.Type.MYSQL_URL, String.class);
-        mysql_user = getSetting(Settings.Type.MYSQL_USER, String.class);
-        mysql_pass = getSetting(Settings.Type.MYSQL_PASS, String.class);
-        mysql_dbEngine = getSetting(Settings.Type.MYSQL_ENGINE, String.class);
+        mysql = getSetting(Setting.MYSQL_URL, String.class);
+        mysql_user = getSetting(Setting.MYSQL_USER, String.class);
+        mysql_pass = getSetting(Setting.MYSQL_PASS, String.class);
+        mysql_dbEngine = getSetting(Setting.MYSQL_ENGINE, String.class);
         
-        csvFileName = getSetting(Settings.Type.IMPORT_EXPORT_FILE, String.class);
-        csvFilePath = getSetting(Settings.Type.IMPORT_EXPORT_PATH, String.class);
+        csvFileName = getSetting(Setting.IMPORT_EXPORT_FILE, String.class);
+        csvFilePath = getSetting(Setting.IMPORT_EXPORT_PATH, String.class);
         
-        transLogFile = getSetting(Settings.Type.TRANSACTION_LOG_FILE, String.class);
-        transLogAutoFlush = getSetting(Settings.Type.TRANSACTION_LOG_AUTOFLUSH, Boolean.class);
+        transLogFile = getSetting(Setting.TRANSACTION_LOG_FILE, String.class);
+        transLogAutoFlush = getSetting(Setting.TRANSACTION_LOG_AUTOFLUSH, Boolean.class);
         
-        shop_tag = getSetting(Settings.Type.SHOP_TAG, String.class);
-        max_per_purchase = getSetting(Settings.Type.ITEMS_MAX_PER_PURCHASE, Integer.class);
-        max_per_sale = getSetting(Settings.Type.ITEMS_MAX_PER_SALE, Integer.class);
+        shop_tag = getSetting(Setting.SHOP_TAG, String.class);
+        max_per_purchase = getSetting(Setting.ITEMS_MAX_PER_PURCHASE, Integer.class);
+        max_per_sale = getSetting(Setting.ITEMS_MAX_PER_SALE, Integer.class);
         
-        debug = getSetting(Settings.Type.DEBUG, Boolean.class);
+        debug = getSetting(Setting.DEBUG, Boolean.class);
     	
         // Setup database
         items = new Items(itemsPath + "items.db", this);
@@ -443,8 +448,8 @@ public class DynamicMarket extends JavaPlugin {
 	   return true;
    }
    
-	public static <T> T getSetting(Type type, Class<T> dataType)
+	public static <T> T getSetting(Validatable setting, Class<T> type)
 	{
-		return settings.getSetting(type, dataType);
+		return settings.getSetting(setting, type);
 	}
 }

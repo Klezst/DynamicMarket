@@ -88,7 +88,6 @@ public class DatabaseMarket extends DatabaseCore {
     public boolean add(MarketItem newItem) {
         if (hasRecord(newItem, newItem.shopLabel))
             return false; // Don't add if a record already exists.
-            
         SQLHandler myQuery = new SQLHandler(this);
         
         myQuery.inputList.add(newItem.itemId);

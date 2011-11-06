@@ -1,6 +1,8 @@
 package com.gmail.haloinverse.DynamicMarket;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.nijikokun.register.payment.Methods;
 
@@ -739,8 +741,9 @@ public class MarketItem extends ItemClump {
         }
         
         String[] inputParams = csvString.split(",");
-        
+
         if (inputParams.length < 21) {
+        	Logger.getLogger("Minecraft").log(Level.WARNING, "[DynamicMarket] Import will fail due to missing column in shopDB.csv for the line that starts with " + inputParams[0]);
             return;
         }
         
