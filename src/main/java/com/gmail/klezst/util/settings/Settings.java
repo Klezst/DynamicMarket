@@ -3,8 +3,6 @@ package com.gmail.klezst.util.settings;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.bukkit.configuration.file.FileConfiguration;
 
