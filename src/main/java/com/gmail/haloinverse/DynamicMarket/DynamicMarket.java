@@ -257,7 +257,7 @@ public class DynamicMarket extends JavaPlugin {
     	{
     		getDataFolder().mkdirs();
     	}
-    	if (!extract("config.yml", "shopDB.csv"))
+    	if (!extract("config.yml", "shopDB.csv", "GNU GPL v3.txt"))
     	{
     		return false;
     	}
