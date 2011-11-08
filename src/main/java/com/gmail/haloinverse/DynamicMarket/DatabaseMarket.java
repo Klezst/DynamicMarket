@@ -9,12 +9,14 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class DatabaseMarket extends DatabaseCore {
+public class DatabaseMarket extends DatabaseCore
+{
     // public Type database = null;
     public Items itemsReference = null;
     
     public DatabaseMarket(Type database, String tableAccessed, Items itemsRef,
-            String thisEngine, DynamicMarket pluginRef) {
+            String thisEngine, DynamicMarket pluginRef)
+    {
         super(database, tableAccessed, thisEngine, pluginRef); // default table name: "Market"
         checkNewFields();
         this.itemsReference = itemsRef;

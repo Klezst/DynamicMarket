@@ -1,7 +1,5 @@
 package com.gmail.haloinverse.DynamicMarket;
 
-import com.sk89q.bukkit.migration.PermissionsResolverManager;
-
 import java.util.ArrayList;
 
 import org.bukkit.command.CommandSender;
@@ -12,65 +10,52 @@ import org.bukkit.inventory.ItemStack;
 
 import com.nijikokun.register.payment.Methods;
 
-public class iListen extends PlayerListener {
+public class iListen extends PlayerListener
+{
     
-    public static DynamicMarket plugin;
+    protected static DynamicMarket plugin;
     
-    public iListen(DynamicMarket instance) {
-        plugin = instance;
-    }
+    // Settings
+    private String shopTag;
+    private int maxPerPurchase;
+    private int maxPerSale;
+    private String csvFilePath;
+    private String csvFileName;
     
-    public boolean hasPermission(CommandSender sender, String permString)
+    /**
+     * Creates a PlayerListener for use with DynamicMarket. NOTE: Must not be created until after the settings are loaded.
+     * @param plugin, This instance of DynamicMarket.
+     */
+    public iListen(DynamicMarket instance)
     {
-    	/*
-        if (DynamicMarket.simplePermissions || DynamicMarket.Permissions == null) {
-            DynamicMarket.log.info("[DynamicMarket] - Null Permission Detected when attempting command.");
-            if (sender instanceof Player) {
-                if (Misc.isAny(permString, new String[] { "access", "buy", "sell" })) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return true;
-            }
-        }
-        if (DynamicMarket.wrapperPermissions) {
-            if (plugin.permissionWrapper != null) {
-                return plugin.permissionWrapper.permission(sender, permString);
-            }
-            DynamicMarket.log.severe(Messaging.bracketize(DynamicMarket.name) + "WARNING: wrapper-permissions set, but no permission handler registered!");
-            return false;
-        }
-        // Permissions not overridden.
-        if (sender instanceof Player) {
-            return Permissions.Security.permission((Player) sender, DynamicMarket.name.toLowerCase() + "." + permString);
-        }
-        return true;
-        */
-    	return ((PermissionsResolverManager)DynamicMarket.perms).hasPermission(sender.getName(), plugin.getDescription().getName().toLowerCase()+ "." + permString);
+        plugin = instance;
+        this.shopTag = plugin.getSetting(Setting.SHOP_TAG, String.class);    
+        this.maxPerPurchase = plugin.getSetting(Setting.ITEMS_MAX_PER_PURCHASE, Integer.class);
+        this.maxPerSale = plugin.getSetting(Setting.ITEMS_MAX_PER_SALE, Integer.class);
+        this.csvFilePath = plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class);
+        this.csvFileName = plugin.getSetting(Setting.IMPORT_EXPORT_FILE, String.class);
     }
     
     private boolean showHelp(CommandSender sender, String topic) {
         // TODO: Migrate help system to an MCDocs-like plugin eventually.
-        Messaging message = new Messaging(sender);
+        Messaging message = new Messaging(sender, plugin);
         
         if (topic.isEmpty()) {
             String commands = "";
             String topics = "";
             String shortcuts = "";
-            message.send("{}" + Misc.headerify("{CMD} " + DynamicMarket.name + " {BKT}({CMD}" + DynamicMarket.codename + "{BKT}){} "));
+            message.send("{}" + Misc.headerify("{CMD} " + plugin.getDescription().getName() + " {BKT}{} "));
             message.send("{} {BKT}(){} Optional, {PRM}<>{} Parameter");
             message.send("{CMD} /shop help {BKT}({PRM}<topic/command>{BKT}){} - Show help.");
             message.send("{CMD} /shop {PRM}<id>{BKT}({CMD}:{PRM}<count>{BKT}){} - Show buy/sell info on an item.");
             message.send("{CMD} /shop {PRM}<command> <params>{} - Use a shop command.");
             commands += " list";
             shortcuts += " -? -l";
-            if (hasPermission(sender, "buy")) {
+            if (plugin.hasPermission(sender, "buy")) {
                 commands += " buy";
                 shortcuts += " -b";
             }
-            if (hasPermission(sender, "sell")) {
+            if (plugin.hasPermission(sender, "sell")) {
                 commands += " sell";
                 shortcuts += " -s";
             }
@@ -78,26 +63,26 @@ public class iListen extends PlayerListener {
             commands += " info";
             shortcuts += " -i";
             
-            if (hasPermission(sender, "items.add")) {
+            if (plugin.hasPermission(sender, "items.add")) {
                 commands += " add";
                 shortcuts += " -a";
             }
-            if (hasPermission(sender, "items.update")) {
+            if (plugin.hasPermission(sender, "items.update")) {
                 commands += " update";
                 shortcuts += " -u";
             }
-            if (hasPermission(sender, "items.remove")) {
+            if (plugin.hasPermission(sender, "items.remove")) {
                 commands += " remove";
                 shortcuts += " -r";
             }
-            if (hasPermission(sender, "admin")) {
+            if (plugin.hasPermission(sender, "admin")) {
                 commands += " reload";
                 commands += " reset";
                 commands += " exportdb importdb";
             }
             
             topics += "ids details about";
-            if (hasPermission(sender, "items.add") || hasPermission(sender, "items.update")) {
+            if (plugin.hasPermission(sender, "items.add") || plugin.hasPermission(sender, "items.update")) {
                 topics += " tags";
             }
             
@@ -106,9 +91,9 @@ public class iListen extends PlayerListener {
             message.send("{} Other help topics: {PRM}" + topics);
             return true;
         }
-        message.send("{}" + Misc.headerify("{} " + DynamicMarket.name + " {BKT}({}" + DynamicMarket.codename + "{BKT}){} : " + topic + "{} "));
+        message.send("{}" + Misc.headerify("{} " + plugin.getDescription().getName() + " {BKT}{} : " + topic + "{} "));
         if (topic.equalsIgnoreCase("buy")) {
-            if (hasPermission(sender, "buy")) {
+            if (plugin.hasPermission(sender, "buy")) {
                 message.send("{CMD} /shop buy {PRM}<id>{BKT}({CMD}:{PRM}<count>{CMD})");
                 message.send("{} Buy {PRM}<count>{} bundles of an item.");
                 message.send("{} If {PRM}<count>{} is missing, buys 1 bundle.");
@@ -116,7 +101,7 @@ public class iListen extends PlayerListener {
             }
         }
         if (topic.equalsIgnoreCase("sell")) {
-            if (hasPermission(sender, "sell")) {
+            if (plugin.hasPermission(sender, "sell")) {
                 message.send("{CMD} /shop sell {PRM}<id>{BKT}({CMD}:{PRM}<count>{CMD})");
                 message.send("{} Sell {PRM}<count>{} bundles of an item.");
                 message.send("{} If {PRM}<count>{} is missing, sells 1 bundle.");
@@ -124,7 +109,7 @@ public class iListen extends PlayerListener {
             }
         }
         if (topic.equalsIgnoreCase("info")) {
-            // if (hasPermission(player,"sell"))
+            // if (plugin.hasPermission(player,"sell"))
             // {
             message.send("{CMD} /shop info {PRM}<id>");
             message.send("{} Show detailed information about a shop item.");
@@ -133,7 +118,7 @@ public class iListen extends PlayerListener {
             // }
         }
         if (topic.equalsIgnoreCase("add")) {
-            if (hasPermission(sender, "items.add")) {
+            if (plugin.hasPermission(sender, "items.add")) {
                 message.send("{CMD} /shop add {PRM}<id>{BKT}({CMD}:{PRM}<bundle>{BKT}) ({PRM}<buyPrice>{BKT} ({PRM}<sellPrice>{BKT})) {PRM}<tags>");
                 message.send("{} Adds item {PRM}<id>{} to the shop.");
                 message.send("{} Transactions will be in {PRM}<bundle>{} units (default 1).");
@@ -144,7 +129,7 @@ public class iListen extends PlayerListener {
             }
         }
         if (topic.equalsIgnoreCase("update")) {
-            if (hasPermission(sender, "items.update")) {
+            if (plugin.hasPermission(sender, "items.update")) {
                 message.send("{CMD} /shop update {PRM}<id>{BKT}({CMD}:{PRM}<bundle>{BKT}) ({PRM}<buyPrice>{BKT} ({PRM}<sellPrice>{BKT})) {PRM}<tags>");
                 message.send("{} Changes item {PRM}<id>{}'s shop details.");
                 message.send("{PRM} <bundle>{}, {PRM}<buyPrice>{}, {PRM}<sellPrice>{}, and {PRM}<tags>{} will be changed.");
@@ -155,13 +140,13 @@ public class iListen extends PlayerListener {
             }
         }
         if (topic.equalsIgnoreCase("remove")) {
-            if (hasPermission(sender, "items.remove")) {
+            if (plugin.hasPermission(sender, "items.remove")) {
                 message.send("{CMD} /shop remove {PRM}<id>");
                 message.send("{} Removes item {PRM}<id>{} from the shop.");
                 return true;
             }
         }
-        if (hasPermission(sender, "admin")) {
+        if (plugin.hasPermission(sender, "admin")) {
             if (topic.equalsIgnoreCase("reload")) {
                 message.send("{CMD} /shop reload");
                 message.send("{} Restarts the shop plugin.");
@@ -215,7 +200,7 @@ public class iListen extends PlayerListener {
             message.send("{} See {CMD}/shop help ids{} for information on IDs.");
             return true;
         }
-        if ((Misc.isEither(topic.split(" ")[0], "tags", "tag")) && ((hasPermission(sender, "items.add") || hasPermission(sender, "items.update")))) {
+        if ((Misc.isEither(topic.split(" ")[0], "tags", "tag")) && ((plugin.hasPermission(sender, "items.add") || plugin.hasPermission(sender, "items.update")))) {
             if (topic.indexOf(" ") > -1) {
                 // Possible tag listed!
                 String thisTag = topic.split(" ")[1].replace(":", "");
@@ -371,7 +356,7 @@ public class iListen extends PlayerListener {
             }
         }
         if (topic.equalsIgnoreCase("about")) {
-            message.send("{} " + DynamicMarket.name + " " + DynamicMarket.version + " written by " + plugin.getDescription().getAuthors() + ".");
+            message.send("{} " + plugin.getDescription().getName() + " " + plugin.getDescription().getVersion() + " written by " + plugin.getDescription().getAuthors() + ".");
             return true;
         }
         message.send("{}Unknown help topic:{CMD} " + topic);
@@ -380,7 +365,7 @@ public class iListen extends PlayerListener {
     }
     
     private int get_balance(String name) {
-        if (!DynamicMarket.econLoaded) {
+        if (!DynamicMarket.isEconLoaded()) {
             return 0;
         }
         
@@ -400,7 +385,7 @@ public class iListen extends PlayerListener {
     
     private void delta_balance(String name, int amount) //throws InvalidTransactionException
     {
-        if (!DynamicMarket.econLoaded) {
+        if (!DynamicMarket.isEconLoaded()) {
             return;
         }
         if ((name != null) && (!name.isEmpty())) {
@@ -410,22 +395,22 @@ public class iListen extends PlayerListener {
     
     private boolean shopShowItemInfo(String itemString, Messaging message,
             boolean fullInfo, String shopLabel) {
-        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel);
+        ItemClump requested = new ItemClump(itemString, plugin.getDatabaseMarket(), shopLabel);
         
         if (!requested.isValid()) {
-            message.send(plugin.shop_tag + "{ERR}Unrecognized or invalid item or command.");
-            message.send(plugin.shop_tag + "{ERR}Try using /shop help");
+            message.send(shopTag + "{ERR}Unrecognized or invalid item or command.");
+            message.send(shopTag + "{ERR}Try using /shop help");
             return true;
         }
         
-        MarketItem data = plugin.db.data(requested, shopLabel);
+        MarketItem data = plugin.getDatabaseMarket().data(requested, shopLabel);
         
         if (data == null) {
-            message.send(plugin.shop_tag + "{ERR}Item currently not traded in shop.");
+            message.send(shopTag + "{ERR}Item currently not traded in shop.");
             return true;
         }
         
-        message.send(plugin.shop_tag + "{}Item {PRM}" + data.getName() + "{BKT}[{PRM}" + data.idString() + "{BKT}]{} info:");
+        message.send(shopTag + "{}Item {PRM}" + data.getName() + "{BKT}[{PRM}" + data.idString() + "{BKT}]{} info:");
         if (fullInfo) {
             ArrayList<String> thisList = data.infoStringFull();
             for (String thisLine : thisList) {
@@ -443,50 +428,50 @@ public class iListen extends PlayerListener {
         // TODO: check aren's source - oddly different here
         
         // TODO: Check for sufficient inventory space for received items.
-        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel, player);
-        Messaging message = new Messaging(player);
+        ItemClump requested = new ItemClump(itemString, plugin.getDatabaseMarket(), shopLabel, player);
+        Messaging message = new Messaging(player, plugin);
         
         int balance = get_balance(player.getName());
         
         int transValue;
         
         if (!requested.isValid()) {
-            message.send(plugin.shop_tag + "{ERR}Invalid item.");
+            message.send(shopTag + "{ERR}Invalid item.");
             message.send("Use: {CMD}/shop buy {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})");
             return true;
         }
         
-        MarketItem data = plugin.db.data(requested, shopLabel);
+        MarketItem data = plugin.getDatabaseMarket().data(requested, shopLabel);
         
         if ((data == null) || !data.isValid()) {
-            message.send(plugin.shop_tag + "{ERR}Unrecognized item name, or not in shop.");
+            message.send(shopTag + "{ERR}Unrecognized item name, or not in shop.");
             return true;
         }
         
         if (data.isDefault()) {
-            message.send(plugin.shop_tag + "{ERR}The default item template is not buyable.");
+            message.send(shopTag + "{ERR}The default item template is not buyable.");
             return true;
         }
         
         if (!data.canBuy) {
-            message.send(plugin.shop_tag + "{ERR}" + data.getName() + " currently not purchaseable from shop.");
+            message.send(shopTag + "{ERR}" + data.getName() + " currently not purchaseable from shop.");
             return true;
         }
         
         if (!data.getCanBuy(requested.count)) {
-            message.send(plugin.shop_tag + "{ERR}" + data.getName() + " understocked: only " + data.formatBundleCount(data.leftToBuy()) + " left.");
+            message.send(shopTag + "{ERR}" + data.getName() + " understocked: only " + data.formatBundleCount(data.leftToBuy()) + " left.");
             return true;
         }
         
-        if ((requested.count < 1) || (requested.count * data.count > plugin.max_per_purchase)) {
-            message.send(plugin.shop_tag + "{ERR}Amount over max items per purchase.");
+        if ((requested.count < 1) || (requested.count * data.count > maxPerPurchase)) {
+            message.send(shopTag + "{ERR}Amount over max items per purchase.");
             return true;
         }
         
         transValue = data.getBuyPrice(requested.count);
         
         if (balance < transValue) {
-            message.send(plugin.shop_tag + "{ERR}You do not have enough " + getCurrencyNamePlural() + " to do this.");
+            message.send(shopTag + "{ERR}You do not have enough " + getCurrencyNamePlural() + " to do this.");
             message.send(data.infoStringBuy(requested.count));
             return true;
         }
@@ -496,13 +481,13 @@ public class iListen extends PlayerListener {
         
         player.getInventory().addItem(new ItemStack[] { new ItemStack(data.itemId, requested.count * data.count, (short) 0, (byte) requested.subType) });
         
-        plugin.db.removeStock(requested, shopLabel);
+        plugin.getDatabaseMarket().removeStock(requested, shopLabel);
         
-        message.send(plugin.shop_tag + "Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Methods.getMethod().format(transValue));
+        message.send(shopTag + "Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Methods.getMethod().format(transValue));
         show_balance(player, message);
         
-        if (plugin.transLog.isOK) {
-            plugin.transLog.logTransaction(player.getName() + ", Buy, " + (-requested.count) + ", " + data.count + ", " + data.getName() + ", " + data.itemId + ", " + data.subType + ", " + transValue + ", " + (shopLabel == null ? "" : shopLabel) + ", " + (accountName == null ? "" : accountName));
+        if (plugin.getTransactionLogger().isOK) {
+            plugin.getTransactionLogger().logTransaction(player.getName() + ", Buy, " + (-requested.count) + ", " + data.count + ", " + data.getName() + ", " + data.itemId + ", " + data.subType + ", " + transValue + ", " + (shopLabel == null ? "" : shopLabel) + ", " + (accountName == null ? "" : accountName));
         }
         
         return true;
@@ -522,46 +507,46 @@ public class iListen extends PlayerListener {
             String shopLabel, String accountName, boolean freeAccount) {
         // TODO: check aren's source different here
         
-        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel, player);
-        Messaging message = new Messaging(player);
+        ItemClump requested = new ItemClump(itemString, plugin.getDatabaseMarket(), shopLabel, player);
+        Messaging message = new Messaging(player, plugin);
         
         int transValue;
         
         if (!requested.isValid()) {
-            message.send(plugin.shop_tag + "{ERR}Invalid item.");
+            message.send(shopTag + "{ERR}Invalid item.");
             message.send("Use: {CMD}/shop sell {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})");
             return true;
         }
         
-        MarketItem data = plugin.db.data(requested, shopLabel);
+        MarketItem data = plugin.getDatabaseMarket().data(requested, shopLabel);
         
         if ((data == null) || !data.isValid()) {
-            message.send(plugin.shop_tag + "{ERR}Unrecognized item name, or not in shop.");
+            message.send(shopTag + "{ERR}Unrecognized item name, or not in shop.");
             return true;
         }
         
         if (data.isDefault()) {
-            message.send(plugin.shop_tag + "{ERR}The default template is not sellable.");
+            message.send(shopTag + "{ERR}The default template is not sellable.");
             return true;
         }
         
         if (data.canSell == false) {
-            message.send(plugin.shop_tag + "{ERR}" + data.getName() + " currently not sellable to shop.");
+            message.send(shopTag + "{ERR}" + data.getName() + " currently not sellable to shop.");
             return true;
         }
         
         if ((requested.count < 1) /* || (requested.count * data.count > plugin.max_per_sale) */) {
-            message.send(plugin.shop_tag + "{ERR}Amount over max items per sale.");
+            message.send(shopTag + "{ERR}Amount over max items per sale.");
             return true;
         }
         
         if (!data.getCanSell(requested.count)) {
-            message.send(plugin.shop_tag + "{ERR}" + data.getName() + " overstocked: only " + data.formatBundleCount(data.leftToSell()) + " can be sold.");
+            message.send(shopTag + "{ERR}" + data.getName() + " overstocked: only " + data.formatBundleCount(data.leftToSell()) + " can be sold.");
             return true;
         }
         
         if (!(Items.has(player, data, requested.count))) {
-            message.send(plugin.shop_tag + "{ERR}You do not have enough " + data.getName() + " to do this.");
+            message.send(shopTag + "{ERR}You do not have enough " + data.getName() + " to do this.");
             return true;
         }
         
@@ -569,21 +554,21 @@ public class iListen extends PlayerListener {
         
         if (!freeAccount) {
             if (get_balance(accountName) < transValue) {
-                message.send(plugin.shop_tag + "{ERR}Shop account does not have enough " + getCurrencyNamePlural() + " to pay for " + data.formatBundleCount(requested.count) + " " + data.getName() + ".");
+                message.send(shopTag + "{ERR}Shop account does not have enough " + getCurrencyNamePlural() + " to pay for " + data.formatBundleCount(requested.count) + " " + data.getName() + ".");
                 return true;
             }
         }
         
-        plugin.items.remove(player, data, requested.count);
+        plugin.removeItem(player, data, requested.count);
         
         delta_balance(player.getName(), transValue);
         delta_balance(accountName, -transValue);
-        plugin.db.addStock(requested, shopLabel);
-        message.send(plugin.shop_tag + "Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Methods.getMethod().format(transValue));
+        plugin.getDatabaseMarket().addStock(requested, shopLabel);
+        message.send(shopTag + "Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Methods.getMethod().format(transValue));
         show_balance(player, message);
         
-        if (plugin.transLog.isOK) {
-            plugin.transLog.logTransaction(player.getName() + ", Sell, " + requested.count + ", " + data.count + ", " + data.getName() + ", " + data.itemId + ", " + data.subType + ", " + (-transValue) + ", " + (shopLabel == null ? "" : shopLabel) + ", " + (accountName == null ? "" : accountName));
+        if (plugin.getTransactionLogger().isOK) {
+            plugin.getTransactionLogger().logTransaction(player.getName() + ", Sell, " + requested.count + ", " + data.count + ", " + data.getName() + ", " + data.itemId + ", " + data.subType + ", " + (-transValue) + ", " + (shopLabel == null ? "" : shopLabel) + ", " + (accountName == null ? "" : accountName));
         }
         
         return true;
@@ -591,26 +576,26 @@ public class iListen extends PlayerListener {
     
     private boolean shopAddItem(String itemString, Messaging message,
             String shopLabel) {
-        MarketItem newItem = new MarketItem(itemString, plugin.db.getDefault(shopLabel), plugin.db, shopLabel);
+        MarketItem newItem = new MarketItem(itemString, plugin.getDatabaseMarket().getDefault(shopLabel), plugin.getDatabaseMarket(), shopLabel);
         
         if (!newItem.isValid()) {
-            message.send(plugin.shop_tag + "{ERR}Unrecognized item name or ID.");
+            message.send(shopTag + "{ERR}Unrecognized item name or ID.");
             return true;
         }
         
-        if (plugin.db.hasRecord(newItem)) {
-            message.send(plugin.shop_tag + "{ERR}" + newItem.getName() + " is already in the market list.");
-            message.send(plugin.shop_tag + "{ERR}Use {CMD}/shop update{ERR} instead.");
+        if (plugin.getDatabaseMarket().hasRecord(newItem)) {
+            message.send(shopTag + "{ERR}" + newItem.getName() + " is already in the market list.");
+            message.send(shopTag + "{ERR}Use {CMD}/shop update{ERR} instead.");
             return true;
         }
         
-        if ((newItem.count < 1) || (newItem.count > plugin.max_per_sale)) {
-            message.send(plugin.shop_tag + "{ERR}Invalid amount. (Range: 1.." + plugin.max_per_sale + ")");
+        if ((newItem.count < 1) || (newItem.count > maxPerSale)) {
+            message.send(shopTag + "{ERR}Invalid amount. (Range: 1.." + maxPerSale + ")");
             return true;
         }
         
-        if (plugin.db.add(newItem)) {
-            message.send(plugin.shop_tag + "Item {PRM}" + newItem.getName() + "{} added:");
+        if (plugin.getDatabaseMarket().add(newItem)) {
+            message.send(shopTag + "Item {PRM}" + newItem.getName() + "{} added:");
             // message.send(newItem.infoStringBuy());
             // message.send(newItem.infoStringSell());
             ArrayList<String> thisList = newItem.infoStringFull();
@@ -619,7 +604,7 @@ public class iListen extends PlayerListener {
             }
             return true;
         } else {
-            message.send(plugin.shop_tag + "{ERR}Item {PRM}" + newItem.getName() + "{ERR} could not be added.");
+            message.send(shopTag + "{ERR}Item {PRM}" + newItem.getName() + "{ERR} could not be added.");
             return true;
         }
     }
@@ -637,21 +622,21 @@ public class iListen extends PlayerListener {
             // Check bundle size first.
             try {
                 if (firstItem.contains(":")) {
-                    if (Integer.valueOf(firstItem.split(":", 2)[1]) > plugin.max_per_sale) {
-                        message.send(plugin.shop_tag + "{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + plugin.max_per_sale + ")");
+                    if (Integer.valueOf(firstItem.split(":", 2)[1]) > maxPerSale) {
+                        message.send(shopTag + "{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerSale + ")");
                         return true;
                     }
                 }
             } catch (NumberFormatException ex) {
-                message.send(plugin.shop_tag + "{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + plugin.max_per_sale + ")");
+                message.send(shopTag + "{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerSale + ")");
                 return true;
             }
             
-            if (plugin.db.updateAllFromTags(itemStringIn, shopLabel)) {
-                message.send(plugin.shop_tag + " All shop items updated.");
+            if (plugin.getDatabaseMarket().updateAllFromTags(itemStringIn, shopLabel)) {
+                message.send(shopTag + " All shop items updated.");
                 return true;
             } else {
-                message.send(plugin.shop_tag + " {ERR}All shop items update failed.");
+                message.send(shopTag + " {ERR}All shop items update failed.");
                 return true;
             }
         }
@@ -659,13 +644,13 @@ public class iListen extends PlayerListener {
         
         // Fetch the previous record and use it as the default for parsing these string tags.
         
-        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel);
+        ItemClump requested = new ItemClump(itemString, plugin.getDatabaseMarket(), shopLabel);
         
-        MarketItem prevData = plugin.db.data(requested, shopLabel);
+        MarketItem prevData = plugin.getDatabaseMarket().data(requested, shopLabel);
         
         if (prevData == null) {
-            message.send(plugin.shop_tag + "{ERR}" + itemString.split(" ", 2)[0] + " not found in market.");
-            message.send(plugin.shop_tag + "{ERR}Use {CMD}/shop add{ERR} instead.");
+            message.send(shopTag + "{ERR}" + itemString.split(" ", 2)[0] + " not found in market.");
+            message.send(shopTag + "{ERR}Use {CMD}/shop add{ERR} instead.");
             return true;
         }
         
@@ -680,15 +665,15 @@ public class iListen extends PlayerListener {
             }
         }
         
-        MarketItem updated = new MarketItem(itemString, prevData, plugin.db, shopLabel);
+        MarketItem updated = new MarketItem(itemString, prevData, plugin.getDatabaseMarket(), shopLabel);
         
-        if ((updated.count < 1) || (updated.count > plugin.max_per_sale)) {
-            message.send(plugin.shop_tag + "{ERR}Invalid bundle size. (Range: 1.." + plugin.max_per_sale + ")");
+        if ((updated.count < 1) || (updated.count > maxPerSale)) {
+            message.send(shopTag + "{ERR}Invalid bundle size. (Range: 1.." + maxPerSale + ")");
             return true;
         }
         
-        if (plugin.db.update(updated)) {
-            message.send(plugin.shop_tag + "Item {PRM}" + updated.getName() + "{} updated:");
+        if (plugin.getDatabaseMarket().update(updated)) {
+            message.send(shopTag + "Item {PRM}" + updated.getName() + "{} updated:");
             // message.send(updated.infoStringBuy());
             // message.send(updated.infoStringSell());
             ArrayList<String> thisList = updated.infoStringFull();
@@ -697,25 +682,25 @@ public class iListen extends PlayerListener {
             }
             return true;
         } else {
-            message.send(plugin.shop_tag + "Item {PRM}" + updated.getName() + "{} update {ERR}failed.");
+            message.send(shopTag + "Item {PRM}" + updated.getName() + "{} update {ERR}failed.");
             return true;
         }
     }
     
     private boolean shopRemoveItem(String itemString, Messaging message,
             String shopLabel) {
-        ItemClump removed = new ItemClump(itemString, plugin.db, shopLabel);
+        ItemClump removed = new ItemClump(itemString, plugin.getDatabaseMarket(), shopLabel);
         String removedItemName = null;
         
         if (removed.itemId == -1) {
-            message.send(plugin.shop_tag + "{ERR}Unrecognized item name or ID.");
+            message.send(shopTag + "{ERR}Unrecognized item name or ID.");
             return true;
         }
         
-        MarketItem itemToRemove = plugin.db.data(removed, shopLabel);
+        MarketItem itemToRemove = plugin.getDatabaseMarket().data(removed, shopLabel);
         
         if (itemToRemove == null) {
-            message.send(plugin.shop_tag + "{ERR}Item {PRM}" + removed.getName(plugin.db, shopLabel) + "{ERR} not found in market.");
+            message.send(shopTag + "{ERR}Item {PRM}" + removed.getName(plugin.getDatabaseMarket(), shopLabel) + "{ERR} not found in market.");
             return true;
         }
         
@@ -724,25 +709,25 @@ public class iListen extends PlayerListener {
             removedItemName = "<Unknown>";
         }
         
-        if (plugin.db.remove(removed, shopLabel)) {
-            message.send(plugin.shop_tag + "Item " + removedItemName + " was removed.");
+        if (plugin.getDatabaseMarket().remove(removed, shopLabel)) {
+            message.send(shopTag + "Item " + removedItemName + " was removed.");
             return true;
         } else {
-            message.send(plugin.shop_tag + "Item " + removedItemName + " {ERR}could not be removed.");
+            message.send(shopTag + "Item " + removedItemName + " {ERR}could not be removed.");
             return true;
         }
     }
     
     public boolean shopReset(CommandSender sender, String confirmString,
             String shopLabel) {
-        Messaging message = new Messaging(sender);
+        Messaging message = new Messaging(sender, plugin);
         if (confirmString.isEmpty()) {
-            message.send("{ERR} Warning!{} This will DELETE AND REBUILD the shop DB.");
+            message.send("{ERR} Warning!{} This will DELETE AND REBUILD the shop db.");
             message.send("{} If you're sure, type: {CMD}/shop reset confirm");
             return true;
         }
         if (confirmString.equalsIgnoreCase("confirm")) {
-            if (plugin.db.resetDatabase(shopLabel)) {
+            if (plugin.getDatabaseMarket().resetDatabase(shopLabel)) {
                 message.send("{} Database successfully reset.");
                 return true;
             } else {
@@ -786,7 +771,8 @@ public class iListen extends PlayerListener {
     
     public boolean parseCommand(CommandSender sender, String cmd,
             String[] args, String shopLabel, String accountName,
-            boolean freeAccount) {
+            boolean freeAccount)
+    {
         // String commandName = cmd.getName().toLowerCase();
         
         // TODO: Show helpful errors for inappropriate numbers of arguments.
@@ -794,13 +780,15 @@ public class iListen extends PlayerListener {
         // freeAccount: If true, account is not checked for debt.
         
         // Player player = (Player) sender;
-        Messaging message = new Messaging(sender);
+        Messaging message = new Messaging(sender, plugin);
         
         // if (commandName.equals("shop")) {
         // if (cmd.getName().toLowerCase().equals("shop")) {
-        if (cmd.toLowerCase().equals("shop") || cmd.toLowerCase().equals("dshop")) {
+        if (cmd.toLowerCase().equals("shop") || cmd.toLowerCase().equals("dshop"))
+        {
             
-            if (!hasPermission(sender, "access")) {
+            if (sender instanceof Player && !plugin.hasPermission(sender, "access"))
+            {
                 message.send("{ERR}You do not have permission to access the shop.");
                 return true;
             }
@@ -843,7 +831,7 @@ public class iListen extends PlayerListener {
                     message.send("{ERR}Cannot purchase items without being logged in.");
                     return true;
                 }
-                if (!(hasPermission(sender, "buy"))) {
+                if (!(plugin.hasPermission(sender, "buy"))) {
                     message.send("{ERR}You do not have permission to buy from the shop.");
                     return true;
                 }
@@ -855,7 +843,7 @@ public class iListen extends PlayerListener {
                     message.send("{ERR}Cannot sell items without being logged in.");
                     return true;
                 }
-                if (!(hasPermission(sender, "sell"))) {
+                if (!(plugin.hasPermission(sender, "sell"))) {
                     message.send("{ERR}You do not have permission to sell to the shop.");
                     return true;
                 }
@@ -863,7 +851,7 @@ public class iListen extends PlayerListener {
             }
             
             if (subCommand.equalsIgnoreCase("reload")) {
-                if (!(hasPermission(sender, "admin"))) {
+                if (!(plugin.hasPermission(sender, "admin"))) {
                     message.send("{ERR}You do not have permission to reload the shop plugin.");
                     return true;
                 }
@@ -875,7 +863,7 @@ public class iListen extends PlayerListener {
             }
             
             if (subCommand.equalsIgnoreCase("reset")) {
-                if (!(hasPermission(sender, "admin"))) {
+                if (!(plugin.hasPermission(sender, "admin"))) {
                     message.send("{ERR}You do not have permission to reset the shop DB.");
                     return true;
                 }
@@ -887,30 +875,30 @@ public class iListen extends PlayerListener {
             }
             
             if (subCommand.equalsIgnoreCase("exportDB")) {
-                if (!(hasPermission(sender, "admin"))) {
+                if (sender instanceof Player && !plugin.hasPermission(sender, "admin")) {
                     message.send("{ERR}You do not have permission to export the shop DB.");
                     return true;
                 }
-                if (plugin.db.dumpToCSV(DynamicMarket.csvFilePath + shopLabel + DynamicMarket.csvFileName, shopLabel)) {
-                    message.send("{} Database export to {PRM}" + shopLabel + DynamicMarket.csvFileName + "{} successful.");
+                if (plugin.getDatabaseMarket().dumpToCSV(csvFilePath + shopLabel + csvFileName, shopLabel)) {
+                    message.send("{} Database export to {PRM}" + shopLabel + csvFileName + "{} successful.");
                     return true;
                 } else {
-                    message.send("{ERR} Database export to {PRM}" + shopLabel + DynamicMarket.csvFileName + "{ERR} NOT successful.");
+                    message.send("{ERR} Database export to {PRM}" + shopLabel + csvFileName + "{ERR} NOT successful.");
                     message.send("{ERR} See Bukkit console for details.");
                     return true;
                 }
             }
             
             if (subCommand.equalsIgnoreCase("importDB")) {
-                if (!(hasPermission(sender, "admin"))) {
+                if (sender instanceof Player && !plugin.hasPermission(sender, "admin")) {
                     message.send("{ERR}You do not have permission to import the shop DB.");
                     return true;
                 }
-                if (plugin.db.inhaleFromCSV(DynamicMarket.csvFilePath + shopLabel + DynamicMarket.csvFileName, shopLabel)) {
-                    message.send("{} Database import from {PRM}" + shopLabel + DynamicMarket.csvFileName + "{} successful.");
+                if (plugin.getDatabaseMarket().inhaleFromCSV(csvFilePath + shopLabel + csvFileName, shopLabel)) {
+                    message.send("{} Database import from {PRM}" + shopLabel + csvFileName + "{} successful.");
                     return true;
                 } else {
-                    message.send("{ERR} Database import from {PRM}" + shopLabel + DynamicMarket.csvFileName + "{ERR} NOT successful.");
+                    message.send("{ERR} Database import from {PRM}" + shopLabel + csvFileName + "{ERR} NOT successful.");
                     message.send("{ERR} See Bukkit console for details.");
                     return true;
                 }
@@ -918,7 +906,7 @@ public class iListen extends PlayerListener {
             
             if ((Misc.isEither(subCommand, "add", "-a")) && (args.length >= 2)) {
                 // /shop add [id](:count) [buy] [sell] <tagList>
-                if (!(hasPermission(sender, "items.add"))) {
+                if (!(plugin.hasPermission(sender, "items.add"))) {
                     message.send("{ERR}You do not have permission to add items to the shop.");
                     return true;
                 }
@@ -926,7 +914,7 @@ public class iListen extends PlayerListener {
             }
             
             if ((Misc.isEither(subCommand, "update", "-u")) && (args.length >= 2)) {
-                if (!(hasPermission(sender, "items.update"))) {
+                if (!(plugin.hasPermission(sender, "items.update"))) {
                     message.send("{ERR}You do not have permission to update shop items.");
                     return true;
                 }
@@ -934,7 +922,7 @@ public class iListen extends PlayerListener {
             }
             
             if ((Misc.isEither(subCommand, "remove", "-r")) && (args.length == 2)) {
-                if (!(hasPermission(sender, "items.remove"))) {
+                if (!(plugin.hasPermission(sender, "items.remove"))) {
                     message.send("{ERR}You do not have permission to remove shop items.");
                     return true;
                 }
@@ -965,19 +953,19 @@ public class iListen extends PlayerListener {
                         pageSelect = 1;
                     }
                 }
-                ArrayList<MarketItem> list = plugin.db.list(pageSelect, nameFilter, shopLabel);
-                ArrayList<MarketItem> listToCount = plugin.db.list(0, nameFilter, shopLabel);
+                ArrayList<MarketItem> list = plugin.getDatabaseMarket().list(pageSelect, nameFilter, shopLabel);
+                ArrayList<MarketItem> listToCount = plugin.getDatabaseMarket().list(0, nameFilter, shopLabel);
                 int numPages = (listToCount.size() / 8 + (listToCount.size() % 8 > 0 ? 1 : 0));
                 if (listToCount.isEmpty()) {
-                    message.send(plugin.shop_tag + "{ERR}No items are set up in the shop yet...");
+                    message.send(shopTag + "{ERR}No items are set up in the shop yet...");
                     return true;
                 }
                 if (pageSelect > numPages) {
-                    message.send(plugin.shop_tag + "{ERR}The shop only has " + numPages + " pages of items.");
+                    message.send(shopTag + "{ERR}The shop only has " + numPages + " pages of items.");
                     return true;
                 }
                 if (list.isEmpty()) {
-                    message.send(plugin.shop_tag + "{ERR}Horrors! The page calculation made a mistake!");
+                    message.send(shopTag + "{ERR}Horrors! The page calculation made a mistake!");
                     return true;
                 } else {
                     message.send("{}Shop Items: Page {BKT}[{PRM}" + pageSelect + "{BKT}]{} of {BKT}[{PRM}" + numPages + "{BKT}]");

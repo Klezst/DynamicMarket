@@ -3,16 +3,20 @@ package com.gmail.haloinverse.DynamicMarket;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class TransactionLogger {
     
     private BufferedWriter logWriter = null;
     private String logFileName;
+    private DynamicMarket plugin;
+    
     public boolean autoFlush;
     public boolean isOK;
     
-    public TransactionLogger(DynamicMarket thisPlugin, String fileName,
-            boolean setAutoFlush) {
+    public TransactionLogger(DynamicMarket thisPlugin, String fileName, boolean setAutoFlush)
+    {
+    	this.plugin = thisPlugin;
         this.isOK = true;
         this.logFileName = fileName;
         this.autoFlush = setAutoFlush;
@@ -61,7 +65,8 @@ public class TransactionLogger {
         }
     }
     
-    private void logSevereException(String exDesc, Exception exDetail) {
-        DynamicMarket.log.severe("[" + DynamicMarket.name + "]: " + exDesc + ": " + exDetail);
+    private void logSevereException(String exDesc, Exception exDetail)
+    {
+        plugin.log(Level.SEVERE, exDesc + ": " + exDetail);
     }
 }

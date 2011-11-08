@@ -3,6 +3,7 @@ package com.gmail.haloinverse.DynamicMarket;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -14,12 +15,13 @@ public class Items {
     private HashMap<String, String> itemsData;
     private iProperty ItemsFile;
     
-    public Items(DynamicMarket plugin) {
+    public Items(DynamicMarket plugin)
+    {
         
     }
     
-    public Items(String itemFileName, DynamicMarket thisPlugin) {
-        
+    public Items(String itemFileName, DynamicMarket thisPlugin)
+    {
         // TODO: Handle cases where the plugin loads, but items.db doesn't.
         // TODO: Add user command for reloading items.db.
         // TODO: Make item file format more generic.
@@ -33,7 +35,7 @@ public class Items {
         try {
             mappedItems = ItemsFile.returnMap();
         } catch (Exception ex) {
-            DynamicMarket.log.info(Messaging.bracketize(new StringBuilder().append(DynamicMarket.name).append(" Flatfile").toString()) + " could not grab item list!");
+            thisPlugin.log(Level.INFO, Messaging.bracketize(new StringBuilder().append("Flatfile").toString()) + " could not grab item list!");
         }
         
         Iterator<String> it;

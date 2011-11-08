@@ -587,7 +587,7 @@ public class MarketItem extends ItemClump {
     }
     
     public String infoStringBuy(int numBundles) {
-    	if (!DynamicMarket.econLoaded)
+    	if (!DynamicMarket.isEconLoaded())
     	{
     		return "{ERR}Economy not loaded.";
     	}
@@ -605,7 +605,7 @@ public class MarketItem extends ItemClump {
     }
     
     public String infoStringSell(int numBundles) {
-    	if (!DynamicMarket.econLoaded)
+    	if (!DynamicMarket.isEconLoaded())
     	{
     		return "{ERR}Economy not loaded";
     	}

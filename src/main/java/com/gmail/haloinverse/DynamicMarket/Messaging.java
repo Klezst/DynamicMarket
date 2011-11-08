@@ -3,27 +3,32 @@ package com.gmail.haloinverse.DynamicMarket;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class Messaging {
+public class Messaging
+{
     
-    public Player player = null;
+    private Player player = null;
     private CommandSender sender = null;
-    public static String colNormal = "&e"; // Normal text colour {}
-    public static String colCmd = "&f"; // Command highlight colour {CMD}
-    public static String colBracket = "&d"; // Highlighting of brackets around params/data {PBK}
-    public static String colParam = "&b"; // Highlighting of parameters.
-    public static String colError = "&c"; // Highlighting for errors. {ERR}
-    
-    /*     */
+    private DynamicMarket plugin;
+    private static String colNormal; // Normal text colour {}
+    private static String colCmd; // Command highlight colour {CMD}
+    private static String colBracket; // Highlighting of brackets around params/data {PBK}
+    private static String colParam; // Highlighting of parameters.
+    private static String colError; // Highlighting for errors. {ERR}
 
-    public Messaging(CommandSender thisSender) {
+    public Messaging(CommandSender thisSender, DynamicMarket plugin)
+    {
         sender = thisSender;
-        if (thisSender instanceof Player) {
+        if (thisSender instanceof Player)
+        {
             player = (Player) thisSender;
         }
+        this.plugin = plugin;
     }
     
-    public boolean isPlayer() {
-        if (player == null) {
+    public boolean isPlayer()
+    {
+        if (player == null)
+        {
             return false;
         }
         return true;
@@ -71,9 +76,18 @@ public class Messaging {
         }
     }
     
-    public static void broadcast(String message) {
-        for (Player p : iListen.plugin.getServer().getOnlinePlayers()) {
+    public void broadcast(String message) {
+        for (Player p : plugin.getServer().getOnlinePlayers()) {
             p.sendMessage(parse(message));
         }
+    }
+    
+    protected static void initialize(String colNormalIn, String colCmdIn, String colBracketIn, String colParamIn, String colErrorIn)
+    {
+    	colNormal = colNormalIn;
+    	colCmd = colCmdIn;
+    	colBracket = colBracketIn;
+    	colParam = colParamIn;
+    	colError = colErrorIn;
     }
 }

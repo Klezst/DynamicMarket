@@ -7,28 +7,33 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.sql.Statement;
 
-public class SQLHandler {
+public class SQLHandler
+{
     
     // A wrapper class to handle the repeated grunt-work of SQL queries and the errors they throw.
     public Connection conn;
     public PreparedStatement ps;
     private ArrayList<PreparedStatement> psList;
+    private DynamicMarket plugin;
     public ResultSet rs;
     public DatabaseCore connDB;
     public ArrayList<Object> inputList;
     public boolean isOK; // Default true, set to false when errors occur.
     
-    public SQLHandler(DatabaseCore thisDB) {
+    public SQLHandler(DatabaseCore thisDB)
+    {
+    	this.plugin = thisDB.getPlugin();
         isOK = true;
         inputList = new ArrayList<Object>();
         psList = new ArrayList<PreparedStatement>();
         connDB = thisDB;
         
         try {
-            if (DynamicMarket.debug)
-                DynamicMarket.log.info("SQLHandler constructor - trying connection to DB");
+            if (plugin.getSetting(Setting.DEBUG, Boolean.class))
+                plugin.log(Level.INFO, "SQLHandler constructor - trying connection to DB");
             conn = connDB.connection();
         } catch (ClassNotFoundException ex) {
             connDB.logSevereException("Database connector not found for " + connDB.dbTypeString(), ex);
@@ -44,9 +49,10 @@ public class SQLHandler {
         rs = null;
     };
     
-    public void prepareStatement(String sqlString) {
-        if (DynamicMarket.debug)
-            DynamicMarket.log.info("SQLHandler:prepareStatement(\"" + sqlString + "\")");
+    public void prepareStatement(String sqlString)
+    {
+        if (plugin.getSetting(Setting.DEBUG, Boolean.class))
+            plugin.log(Level.INFO, "SQLHandler:prepareStatement(\"" + sqlString + "\")");
         try {
             // Store previous prepareStatement, if one was already prepared.
             
@@ -131,16 +137,16 @@ public class SQLHandler {
             rs = null;
             if (ps != null) {
                 rs = ps.executeQuery();
-                if (DynamicMarket.debug) {
-                    DynamicMarket.log.info("ps.executeQuery() called");
+                if (plugin.getSetting(Setting.DEBUG, Boolean.class)) {
+                    plugin.log(Level.INFO, "ps.executeQuery() called");
                     SQLWarning sw = rs.getWarnings();
                     while (sw != null) {
-                        DynamicMarket.log.info(sw.getMessage());
+                        plugin.log(Level.INFO, sw.getMessage());
                         sw = sw.getNextWarning();
                     }
                     sw = ps.getWarnings();
                     while (sw != null) {
-                        DynamicMarket.log.info(sw.getMessage());
+                        plugin.log(Level.INFO, sw.getMessage());
                         sw = sw.getNextWarning();
                     }
                 }

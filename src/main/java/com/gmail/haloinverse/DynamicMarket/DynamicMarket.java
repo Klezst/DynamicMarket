@@ -1,4 +1,5 @@
 package com.gmail.haloinverse.DynamicMarket;
+
 import com.gmail.haloinverse.DynamicMarket.Setting;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Settings;
@@ -13,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.Timer;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,294 +21,105 @@ import java.util.zip.ZipEntry;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.Server;
 
-public class DynamicMarket extends JavaPlugin {
-    public static final Logger log = Logger.getLogger("Minecraft");
+public class DynamicMarket extends JavaPlugin
+{
+    private static final Logger log = Logger.getLogger("Minecraft");
+    private static boolean econLoaded = false;
     
-    public static String name; // = "SimpleMarket";
-    public static String codename = "Sentinel";
-    public static String version; // = "0.5b";
+    private iListen playerListener;
+    private iPluginListener pluginListener;
+    private Object permissionsManager; // PermissionsResolverManager (Must be Object to prevent NoClassFoundException, iff WorldEdit isn't present)
+    private File directory;
+    private LinkedList<JavaPlugin> wrappers = new LinkedList<JavaPlugin>();
+    private Settings settings;
     
-    public iListen playerListener = new iListen(this);
+    private String defaultShopAccount;
+    private boolean defaultShopAccountFree;
     
-    public static Server server = null;
-    //public static iConomy economy = null;
-    //public static PermissionHandler Permissions = null;
-    protected static Object perms; //PermissionsResolverManager
-    
-    //public static iProperty Settings;
-    public static File directory;
-    
-    //protected static String currency;// = "Coin";
-    protected static boolean econLoaded = false;
-    
-    public static boolean debug = false;
-    
-    //    protected static boolean wrapperMode = false;
-    //protected static boolean wrapperPermissions = false;
-    protected static LinkedList<JavaPlugin> wrappers = new LinkedList<JavaPlugin>();
-    
-    //protected static boolean simplePermissions = false;
-    
-    
-    protected static Settings settings;
-    
-    public String shop_tag; //= "{BKT}[{}Shop{BKT}]{} ";
-    protected int max_per_purchase; // = 64;
-    protected int max_per_sale; // = 64;
-    public String defaultShopAccount; // = "";
-    public boolean defaultShopAccountFree; // = true;
-    protected static String database_type; // = "sqlite";
-    protected static String sqlite; // = "jdbc:sqlite:" + "plugins/DynamicMarket/shop.db";
-    protected static String mysql; // = "jdbc:mysql://localhost:3306/minecraft";
-    protected static String mysql_user; // = "root";
-    protected static String mysql_pass; // = "pass";
-    protected static String mysql_dbEngine; // = "MyISAM";
-    protected static Timer timer = null;
-    protected static String csvFileName;
-    protected static String csvFilePath;
-    
-    //protected EconType econType = EconType.NONE;
-    protected Items items;
-    protected String itemsPath = "";
-    protected DatabaseMarket db = null;
-    
-    //protected PermissionInterface permissionWrapper = null;
-    protected TransactionLogger transLog = null;
-    protected String transLogFile = "transactions.log";
-    protected boolean transLogAutoFlush = true;
-    private static iPluginListener pluginListener = null;
-    
-    public void onDisable() {
-        //        db.uninitialize();
-        log.info(Messaging.bracketize(name) + " version " + Messaging.bracketize(version) + " (" + codename + ") disabled");
-    }
-    
+    private Items items;
+    private DatabaseMarket db;
+    private TransactionLogger transLog;
     
     @Override
-    public File getDataFolder()
+    public void onDisable()
     {
-        directory = super.getDataFolder();
-        if (!directory.toString().equals("plugins" + File.separator + "DynamicMarket"))
-        {
-        	log.log(Level.WARNING, "[" + getDescription().getName() + "] Jar is not named DynamicMarket.jar: beware of running multiple instances.");
-        }
-        return directory;
+        log(Level.INFO, "Disabled.");
     }
     
-    
     @Override
-    public void onEnable() {
-        PluginDescriptionFile desc = getDescription();
-        getDataFolder().mkdir();
-        
-        server = getServer();
-        
-        name = desc.getName();
-        version = desc.getVersion();
-        
-        sqlite = "jdbc:sqlite:" + directory + File.separator + "shop.db";
-        
+    public void onEnable()
+    {
         PluginManager pm = getServer().getPluginManager();
-        
+    	
         // Check for Register (dependency)
         if (pm.getPlugin("Register") == null)
         {
-        	log.log(Level.SEVERE, "[DynamicMarket] Register not detected; disabling.");
+        	log(Level.SEVERE, "Register not detected.");
         	pm.disablePlugin(this);
         	return;
         }
         
-        // Check if register detected economy yet
-    	if (Methods.hasMethod())
-    	{
-    		econLoaded = true;
-    		System.out.println("[DynamicMarket] hooked into Register.");
-    	}
-        
     	// Check for WorldEdit (dependency)
     	try
     	{
-    		perms = new PermissionsResolverManager(this, getDescription().getName(), Logger.getLogger("Minecraft.YourPlugin"));
+    		permissionsManager = new PermissionsResolverManager(this, getDescription().getName(), Logger.getLogger("Minecraft." + getDescription().getName())); // Creates our instance of WorldEdit Permissions Interoperability Framework (WEPIF)
     	}
     	catch (NoClassDefFoundError e)
     	{
-            log.log(Level.SEVERE, "[DynamicMarket] WorldEdit not detected; disabling.");
+            log(Level.SEVERE, "WorldEdit not detected");
             pm.disablePlugin(this);
             return;
     	}
-        
-        // Register events
-        new PermissionsResolverServerListener((PermissionsResolverManager)perms, this);
-        
-        pluginListener = new iPluginListener(this);
-        pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
-        pm.registerEvent(Event.Type.PLUGIN_DISABLE, pluginListener, Priority.Monitor, this);
-        
+    	
+		// Set up directory
+    	directory = getDataFolder();
+    	directory.mkdirs();
+    	
+    	// Set up libraries
         checkLibs();
-        if (!setup())
+        
+        // Extract files
+        if (!extract("config.yml", "shopDB.csv", "LICENSE.txt"))
         {
+        	pm.disablePlugin(this);
         	return;
         }
         
-        log.info(Messaging.bracketize(name) + " version " + Messaging.bracketize(version) + " (" + codename + ") enabled");
-    }
-    
-    public static Server getTheServer() {
-        return server;
-    }
-    
-    /*
-    public static iConomy getiConomy() {
-        return economy;
-    }
-    */
-    
-    /*
-    public static boolean setiConomy(iConomy plugin) {
-        if (economy == null) {
-            economy = plugin;
-            //currency = iConomy.getCurrency();
-            econLoaded = true;
-            log.info(Messaging.bracketize(name) + " iConomy connected.");
-        } else {
-            return false;
-        }
-        return true;
-    }
-    */
-    
-    /*
-    public static void setupPermissions() {
-        Plugin test = getTheServer().getPluginManager().getPlugin("Permissions");
-        if (Permissions == null)
-            if (test != null)
-                DynamicMarket.Permissions = ((Permissions) test).getHandler();
-        
-    }
-    */
-    
-    private void checkLibs() {
-        boolean isok = false;
-        File a = new File(getDataFolder() + "/sqlitejdbc-v056.jar");
-        if (!a.exists()) {
-            isok = FileDownloader.fileDownload("http://www.brisner.no/libs/sqlitejdbc-v056.jar", getDataFolder().toString());
-            if (isok)
-                System.out.println("[DynamicMarket] Downloaded SQLite Successfully.");
-        }
-        File b = new File(getDataFolder() + "/mysql-connector-java-5.1.15-bin.jar");
-        if (!b.exists()) {
-            isok = FileDownloader.fileDownload("http://www.brisner.no/libs/mysql-connector-java-5.1.15-bin.jar", getDataFolder().toString());
-            if (isok)
-                System.out.println("[DynamicMarket] Downloaded MySQL Successfully.");
-        }
-        File c = new File(getDataFolder() + "/items.db");
-        if (!c.exists()) {
-            isok = FileDownloader.fileDownload("http://www.brisner.no/DynamicMarket/items.db", getDataFolder().toString());
-            if (isok)
-                System.out.println("[DynamicMarket] items.db downloaded successfully");
-        }
-    }
-    
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd,
-            String commandLabel, String[] args) {
-        ListIterator<JavaPlugin> itr = DynamicMarket.wrappers.listIterator();
-        while (itr.hasNext()) {
-            JavaPlugin wrap = itr.next();
-            if (wrap.onCommand(sender, cmd, commandLabel, args))
-                return true;
-        }
-        return this.playerListener.parseCommand(sender, cmd.getName(), args, "", defaultShopAccount, defaultShopAccountFree);
-    }
-    
-    public void hookWrapper(JavaPlugin wrap) {
-        DynamicMarket.wrappers.add(wrap);
-        log.info(Messaging.bracketize(name) + " wrapper mode enabled by " + wrap.getDescription().getName());
-    }
-    
-    public boolean wrapperCommand(CommandSender sender, String cmd,
-            String[] args, String shopLabel, String accountName,
-            boolean freeAccount) {
-        return this.playerListener.parseCommand(sender, cmd, args, (shopLabel == null ? "" : shopLabel), accountName, freeAccount);
-    }
-    
-    public boolean wrapperCommand(CommandSender sender, String cmd,
-            String[] args, String shopLabel) {
-        return wrapperCommand(sender, cmd, args, (shopLabel == null ? "" : shopLabel), defaultShopAccount, defaultShopAccountFree);
-    }
-    
-    public boolean wrapperCommand(CommandSender sender, String cmd,
-            String[] args) {
-        return wrapperCommand(sender, cmd, args, "");
-    }
-    
-    public boolean setup()
-    {
-		// Set up directory
-    	directory = getDataFolder();
-    	if (!directory.exists())
-    	{
-    		getDataFolder().mkdirs();
-    	}
-    	if (!extract("config.yml", "shopDB.csv", "GNU GPL v3.txt"))
-    	{
-    		return false;
-    	}
-    	
-    	// Load configuration
+        // Load settings
     	try
     	{
     		settings = new Settings(getConfig(), Setting.values());
     	}
     	catch (InvalidSettingsException e)
     	{
-    		String prefix = "[" + getDescription().getName() + "]";
-    		log.log(Level.SEVERE, prefix + "Invalid config.yml:");
-    		e.printExceptions(log, prefix);
-    		getServer().getPluginManager().disablePlugin(this);
-    		return false;
+    		log(Level.SEVERE, "Invalid config.yml:");
+    		e.printExceptions(log, "[" + getDescription().getName() + "]");
+    		pm.disablePlugin(this);
+    		return;
     	}
     	
-    	// Temporary compatibility
     	defaultShopAccount = getSetting(Setting.ACCOUNT_NAME, String.class);
     	defaultShopAccountFree = getSetting(Setting.ACCOUNT_FREE, Boolean.class);
     	
-        Messaging.colBracket = getSetting(Setting.BRACKET_COLOR, String.class);
-        Messaging.colCmd = getSetting(Setting.COMMAND_COLOR, String.class);
-        Messaging.colError = getSetting(Setting.ERROR_COLOR, String.class);
-        Messaging.colNormal = getSetting(Setting.NORMAL_COLOR, String.class);
-        Messaging.colParam = getSetting(Setting.PARAM_COLOR, String.class);
-        
-        DynamicMarket.database_type = getSetting(Setting.DATABASE_TYPE, String.class);
-        itemsPath = getSetting(Setting.ITEMS_DB_PATH, String.class);
-        
-        mysql = getSetting(Setting.MYSQL_URL, String.class);
-        mysql_user = getSetting(Setting.MYSQL_USER, String.class);
-        mysql_pass = getSetting(Setting.MYSQL_PASS, String.class);
-        mysql_dbEngine = getSetting(Setting.MYSQL_ENGINE, String.class);
-        
-        csvFileName = getSetting(Setting.IMPORT_EXPORT_FILE, String.class);
-        csvFilePath = getSetting(Setting.IMPORT_EXPORT_PATH, String.class);
-        
-        transLogFile = getSetting(Setting.TRANSACTION_LOG_FILE, String.class);
-        transLogAutoFlush = getSetting(Setting.TRANSACTION_LOG_AUTOFLUSH, Boolean.class);
-        
-        shop_tag = getSetting(Setting.SHOP_TAG, String.class);
-        max_per_purchase = getSetting(Setting.ITEMS_MAX_PER_PURCHASE, Integer.class);
-        max_per_sale = getSetting(Setting.ITEMS_MAX_PER_SALE, Integer.class);
-        
-        debug = getSetting(Setting.DEBUG, Boolean.class);
+    	// TODO: Ensure that settings are a ChatColor
+    	Messaging.initialize
+    	(
+    		getSetting(Setting.NORMAL_COLOR, String.class),
+    		getSetting(Setting.COMMAND_COLOR, String.class),
+        	getSetting(Setting.BRACKET_COLOR, String.class),
+        	getSetting(Setting.PARAM_COLOR, String.class),
+        	getSetting(Setting.ERROR_COLOR, String.class)
+        );
     	
         // Setup database
-        items = new Items(itemsPath + "items.db", this);
-        if (DynamicMarket.database_type.equalsIgnoreCase("mysql"))
+        items = new Items(getSetting(Setting.ITEMS_DB_PATH, String.class) + "items.db", this);
+        if (getSetting(Setting.DATABASE_TYPE, String.class).equalsIgnoreCase("mysql"))
         {
             try
             {
@@ -316,12 +127,12 @@ public class DynamicMarket extends JavaPlugin {
             }
             catch (ClassNotFoundException ex)
             {
-                log.log(Level.SEVERE, "[" + getDescription().getName() + "] com.mysql.jdbc.Driver class not found; disabling.");
+                log(Level.SEVERE, "com.mysql.jdbc.Driver class not found.");
                 ex.printStackTrace();
-                getServer().getPluginManager().disablePlugin(this);
-                return false;
+                pm.disablePlugin(this);
+                return;
             }
-            db = new DatabaseMarket(DatabaseMarket.Type.MYSQL, "Market", items, mysql_dbEngine, this);
+            db = new DatabaseMarket(DatabaseMarket.Type.MYSQL, "Market", items, getSetting(Setting.MYSQL_ENGINE, String.class), this);
         }
         else
         {
@@ -331,46 +142,120 @@ public class DynamicMarket extends JavaPlugin {
             }
             catch (ClassNotFoundException ex)
             {
-                log.log(Level.SEVERE, "[" + getDescription().getName() + "] org.sqlite.JDBC class not found; disabling.");
+                log(Level.SEVERE, "org.sqlite.JDBC class not found; disabling.");
                 ex.printStackTrace();
-                getServer().getPluginManager().disablePlugin(this);
-                return false;
+                pm.disablePlugin(this);
+                return;
             }
             db = new DatabaseMarket(DatabaseMarket.Type.SQLITE, "Market", items, "", this);
         }
         
         // Setup transaction log
-        transLog = new TransactionLogger(this, getDataFolder() + File.separator + transLogFile, transLogAutoFlush);
+        transLog = new TransactionLogger(this, directory + File.separator + getSetting(Setting.TRANSACTION_LOG_FILE, String.class), getSetting(Setting.TRANSACTION_LOG_AUTOFLUSH, Boolean.class));
         
-        //System.out.println("------------------\n" + debug + "\n" + itemsPath + "\n" + items + "n" + shop_tag + "n" + max_per_purchase + "\n" + max_per_sale + "\n" + DynamicMarket.database_type + "\n" + mysql + "\n" + mysql_user + "\n" + mysql_pass + "\n" + mysql_dbEngine + "\n" + Messaging.colNormal + "\n" + Messaging.colBracket + "\n" + Messaging.colCmd + "\n" + Messaging.colParam + "\n" + Messaging.colError + "\n" + defaultShopAccount + "\n" + defaultShopAccountFree + "\n" + transLogFile + "\n" + transLogAutoFlush + "\n" + csvFileName + "\n" + csvFilePath);
-        return true;
-    }
-    
-    public void InitializeEconomy() {
-        econLoaded = true;
-        log.info(Messaging.bracketize(name) + " successfully hooked into iConomy.");
-    }
-    
-    /*
-    public static enum EconType {
+        // Check, if register detected economy yet
+    	if (Methods.hasMethod())
+    	{
+    		econLoaded = true;
+    		System.out.println("[DynamicMarket] hooked into Register.");
+    	}
         
-        NONE,
-        ICONOMY4;
+        // Register events
+        new PermissionsResolverServerListener((PermissionsResolverManager)permissionsManager, this); // Tells WEPIF to check for changes in what permissions plugin is used
+        
+      	playerListener = new iListen(this); // This runs this.onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
+      	
+        pluginListener = new iPluginListener(this);
+        pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
+        pm.registerEvent(Event.Type.PLUGIN_DISABLE, pluginListener, Priority.Monitor, this);
+        
+        log(Level.INFO, "Enabled.");
     }
-    */   
     
-	/**
-   * Original by sk89q
-   * Copy files from the .jar.
-   * 
-   * @param names, names of the files to be copied
-   */
-   protected boolean extract(String... names)
-   {
+    private void checkLibs()
+    {
+        boolean isok = false;
+        
+        File a = new File(directory + "/sqlitejdbc-v056.jar");
+        if (!a.exists())
+        {
+            isok = FileDownloader.fileDownload("http://www.brisner.no/libs/sqlitejdbc-v056.jar", directory.toString());
+            if (isok)
+            {
+                log(Level.INFO, "Downloaded SQLite Successfully.");
+            }
+        }
+        
+        File b = new File(directory + "/mysql-connector-java-5.1.15-bin.jar");
+        if (!b.exists())
+        {
+            isok = FileDownloader.fileDownload("http://www.brisner.no/libs/mysql-connector-java-5.1.15-bin.jar", directory.toString());
+            if (isok)
+            {
+                log(Level.INFO, "Downloaded MySQL Successfully.");
+            }
+        }
+        
+        File c = new File(directory + "/items.db");
+        if (!c.exists())
+        {
+            isok = FileDownloader.fileDownload("http://www.brisner.no/DynamicMarket/items.db", directory.toString());
+            if (isok)
+            {
+                log(Level.INFO, "Downloaded items.db successfully");
+            }
+        }
+    }
+    
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
+    {
+        ListIterator<JavaPlugin> itr = wrappers.listIterator();
+        while (itr.hasNext())
+        {
+            JavaPlugin wrap = itr.next();
+            if (wrap.onCommand(sender, cmd, commandLabel, args))
+            {
+                return true;
+            }
+        }
+        
+        return this.playerListener.parseCommand(sender, cmd.getName(), args, "", defaultShopAccount, defaultShopAccountFree);
+    }
+    
+    public void hookWrapper(JavaPlugin wrap)
+    {
+        wrappers.add(wrap);
+        log(Level.INFO, "Wrapper mode enabled by " + wrap.getDescription().getName());
+    }
+    
+    public boolean wrapperCommand(CommandSender sender, String cmd, String[] args, String shopLabel, String accountName, boolean freeAccount)
+    {
+        return this.playerListener.parseCommand(sender, cmd, args, (shopLabel == null ? "" : shopLabel), accountName, freeAccount);
+    }
+    
+    public boolean wrapperCommand(CommandSender sender, String cmd, String[] args, String shopLabel)
+    {
+        return wrapperCommand(sender, cmd, args, (shopLabel == null ? "" : shopLabel), defaultShopAccount, defaultShopAccountFree);
+    }
+    
+    public boolean wrapperCommand(CommandSender sender, String cmd, String[] args)
+    {
+        return wrapperCommand(sender, cmd, args, "");
+    }
+    
+    /**
+    * Original by sk89q
+    * Copy files from the .jar.
+    * 
+    * @param names, names of the files to be copied
+    */
+    private boolean extract(String... names)
+    {
 	   for (String name : names)
 	   {
 		   // Get input
-	       File actual = new File(getDataFolder(), name);
+	       File actual = new File(directory, name);
 	       if (!actual.exists())
 	       {
 	    	   InputStream input;
@@ -380,20 +265,20 @@ public class DynamicMarket extends JavaPlugin {
 		    		ZipEntry copy = file.getEntry("resources/" + name);
 		    		if (copy == null)
 		    		{
-		    			log.severe("[" + getDescription().getName() + "] Unable to find INTERNAL file " + name + "; disabling.");
-		    			getServer().getPluginManager().disablePlugin(this);
+		    			log(Level.SEVERE, "Unable to find INTERNAL file " + name + ".");
 		    			return false;
 		    		}
 		    		input = file.getInputStream(copy);
 		    	}
 		    	catch (IOException e)
 		    	{
-		    		log.severe("[" + getDescription().getName() + "] Unable to read INTERNAL file " + name + "; disabling.");
-		    		getServer().getPluginManager().disablePlugin(this);
+		    		log(Level.SEVERE, "Unable to read INTERNAL file " + name + ".");
 		    		return false;
 		    	}
+		       	
 	           if (input == null)
 	           {
+	        	   log(Level.SEVERE, "Unable to get InputStream for " + name + ".");
 	        	   return false;
 	           }
 	           
@@ -409,13 +294,13 @@ public class DynamicMarket extends JavaPlugin {
                        output.write(buf, 0, length);
                    }
                    
-                   log.info("[" + getDescription().getName() + "] Default file " + name + " successfully extracted.");
+                   log(Level.INFO, "Resource " + name + " successfully extracted.");
                }
                catch (IOException e)
                {
-                   log.severe("[" + getDescription().getName() + "] Unable to write file " + name + "; disabling.");
+                   log(Level.SEVERE, "Unable to write file " + name + ".");
                    e.printStackTrace();
-                   getServer().getPluginManager().disablePlugin(this);
+                   return false; // Finally will still try to close the files
                }
                finally
                {
@@ -428,7 +313,7 @@ public class DynamicMarket extends JavaPlugin {
                    }
                    catch (IOException e)
                    {
-                	   log.warning("[" + getDescription().getName() + "] Unable to close INTERNAL file " + name + ".");
+                	   log(Level.WARNING, "Unable to close INTERNAL file " + name + ".");
                    }
 
                    try
@@ -440,16 +325,52 @@ public class DynamicMarket extends JavaPlugin {
                    }
                    catch (IOException e)
                    {
-                	   log.warning("[" + getDescription().getName() + "] Unable to close file " + name + "; disabling.");
+                	   log(Level.WARNING, "Unable to close file " + name + ".");
                    }
                }
 	       }
 	   }
 	   return true;
-   }
-   
-	public static <T> T getSetting(Validatable setting, Class<T> type)
+    }
+    
+	protected void log(Level level, String message)
+	{
+		log.log(level, "[" + getDescription().getName() + "] " + message);
+	}
+    
+	public static boolean isEconLoaded()
+	{
+		return econLoaded;
+	}
+	
+	protected static void setEconLoaded(boolean state)
+	{
+		econLoaded = state;
+	}
+	
+	protected void removeItem(Player player, MarketItem item, int amount)
+	{
+		items.remove(player, item, amount);
+	}
+	
+	// Access Methods
+	protected DatabaseMarket getDatabaseMarket()
+	{
+		return db;
+	}
+	
+	public <T> T getSetting(Validatable setting, Class<T> type)
 	{
 		return settings.getSetting(setting, type);
+	}
+	
+	protected TransactionLogger getTransactionLogger()
+	{
+		return transLog;
+	}
+	
+	public boolean hasPermission(CommandSender sender, String permission)
+	{
+			return ((PermissionsResolverManager)permissionsManager).hasPermission(sender.getName(), getDescription().getName().toLowerCase() + "." + permission);
 	}
 }

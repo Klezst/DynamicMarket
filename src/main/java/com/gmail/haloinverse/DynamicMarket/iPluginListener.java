@@ -1,7 +1,6 @@
 package com.gmail.haloinverse.DynamicMarket;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.nijikokun.register.payment.Methods;
 
@@ -18,52 +17,44 @@ import org.bukkit.event.server.ServerListener;
  */
 public class iPluginListener extends ServerListener {
 	
-	private DynamicMarket dynamicMarket;
+	private DynamicMarket plugin;
 	
-    public iPluginListener(DynamicMarket dynamicMarket)
+    public iPluginListener(DynamicMarket plugin)
     {
-    	this.dynamicMarket = dynamicMarket;
+    	this.plugin = plugin;
     }
     
     @Override
-    public void onPluginDisable(PluginDisableEvent event) {
-        if (DynamicMarket.econLoaded) {
+    public void onPluginDisable(PluginDisableEvent event)
+    {
+        if (DynamicMarket.isEconLoaded())
+        {
             if (event.getPlugin().getDescription().getName().equals("Register"))
             {
-            	Logger.getLogger("Minecraft").log(Level.SEVERE, "[DynamicMarket] Register disabled! Disabling.");
-            	dynamicMarket.getServer().getPluginManager().disablePlugin(dynamicMarket);
+            	plugin.log(Level.SEVERE, "Register disabled!");
+            	plugin.getServer().getPluginManager().disablePlugin(plugin);
             }
             else if (!Methods.hasMethod())
             {
-            	DynamicMarket.econLoaded = false;
-                System.out.println("[DynamicMarket] un-hooked from Register.");
+            	DynamicMarket.setEconLoaded(false);
+                plugin.log(Level.WARNING, "Un-hooked from Register.");
             }
         }
         
         if (event.getPlugin().getDescription().getName().equals("WorldEdit"))
         {
-        	Logger.getLogger("Minecraft").log(Level.SEVERE, "[DynamicMarket] WorldEdit disabled! Disabling.");
-        	dynamicMarket.getServer().getPluginManager().disablePlugin(dynamicMarket);
+        	plugin.log(Level.SEVERE, "WorldEdit disabled!");
+        	plugin.getServer().getPluginManager().disablePlugin(plugin);
         }
     }
     
     @Override
-    public void onPluginEnable(PluginEnableEvent event) {   
-        if (!DynamicMarket.econLoaded && Methods.hasMethod()) {
-        	DynamicMarket.econLoaded = true;
-            System.out.println("[DynamicMarket] hooked into Register.");
+    public void onPluginEnable(PluginEnableEvent event)
+    {   
+        if (!DynamicMarket.isEconLoaded() && Methods.hasMethod())
+        {
+        	DynamicMarket.setEconLoaded(true);
+            plugin.log(Level.INFO, "Hooked into Register.");
         }
-        
-        /*
-        if (event.getPlugin().getDescription().getName().equals("Permissions")) {
-            if (DynamicMarket.Permissions == null) {
-                Plugin Permissions = DynamicMarket.getTheServer().getPluginManager().getPlugin("Permissions");
-                if (Permissions != null) {
-                    DynamicMarket.setupPermissions();
-                    System.out.println("[DynamicMarket] Successfully linked with Permissions.");
-                }
-            }
-        }
-        */
     }
 }

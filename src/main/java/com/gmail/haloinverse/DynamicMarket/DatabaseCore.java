@@ -1,26 +1,32 @@
 package com.gmail.haloinverse.DynamicMarket;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
-public abstract class DatabaseCore {
+public abstract class DatabaseCore
+{
     
     public Type databaseType = null;
     public String tableName; // default: SimpleMarket
-    public DynamicMarket plugin = null;
+    private DynamicMarket plugin = null;
     public String engine = "MyISAM";
     private static Connection conn = null;
     
     public DatabaseCore(Type databaseType, String tableAccessed,
-            String thisEngine, DynamicMarket thisPlugin) {
+            String thisEngine, DynamicMarket thisPlugin)
+    {
         this.databaseType = databaseType;
         this.tableName = tableAccessed;
         if (thisEngine != null)
+        {
             engine = thisEngine;
-        plugin = thisPlugin;
+        }
+        this.plugin = thisPlugin;
         initialize();
     }
     
@@ -29,13 +35,17 @@ public abstract class DatabaseCore {
     }
     
     protected boolean initialize(String tableSuffix) {
-        if (!(checkTable(tableSuffix))) {
-            DynamicMarket.log.info("[" + DynamicMarket.name + "] Creating database.");
-            if (createTable(tableSuffix)) {
-                DynamicMarket.log.info("[" + DynamicMarket.name + "] Database Created.");
+        if (!(checkTable(tableSuffix)))
+        {
+            plugin.log(Level.INFO, "Creating database.");
+            if (createTable(tableSuffix))
+            {
+                plugin.log(Level.INFO, "Database Created.");
                 return true;
-            } else {
-                DynamicMarket.log.severe("[" + DynamicMarket.name + "] Database creation *failed*.");
+            }
+            else
+            {
+                plugin.log(Level.SEVERE, "Database creation failed.");
                 return false;
             }
         }
@@ -52,9 +62,9 @@ public abstract class DatabaseCore {
         myQuery.close();
         
         if (myQuery.isOK) {
-            DynamicMarket.log.info("[" + DynamicMarket.name + "] Database table successfully deleted.");
+            plugin.log(Level.INFO, "Database table successfully deleted.");
         } else {
-            DynamicMarket.log.severe("[" + DynamicMarket.name + "] Database table could not be deleted.");
+            plugin.log(Level.SEVERE, "Database table could not be deleted.");
         }
         
         return myQuery.isOK;
@@ -69,52 +79,55 @@ public abstract class DatabaseCore {
         return initialize(tableSuffix);
     }
     
-    protected Connection connection() throws ClassNotFoundException,
-            SQLException {
+    protected Connection connection() throws ClassNotFoundException, SQLException
+    {
         //    	DynamicMarket.log.info("connection: " +
         //    			               "null? " + ((DatabaseCore.conn == null)?"true":"false") + 
         //    			               " isClosed? " + (((DatabaseCore.conn != null) && DatabaseCore.conn.isClosed())?"true":"false"));
         //    	new Throwable().printStackTrace();
         
-        if (DynamicMarket.debug)
-            DynamicMarket.log.info("DatabaseCore:connection() called");
+    	boolean debug = plugin.getSetting(Setting.DEBUG, Boolean.class);
+    	
+        if (debug)
+            plugin.log(Level.INFO, "DatabaseCore:connection() called");
         
         if ((DatabaseCore.conn != null) && (!DatabaseCore.conn.isClosed())) {
             boolean bad = false;
             SQLWarning sw = conn.getWarnings();
             while (sw != null) {
                 bad = true;
-                DynamicMarket.log.info("leftover warning: " + sw.getMessage());
+                plugin.log(Level.INFO, "leftover warning: " + sw.getMessage());
                 sw = sw.getNextWarning();
             }
             if (bad) {
-                if (DynamicMarket.debug)
-                    DynamicMarket.log.info("DatabaseCore:connection() not re-using connection");
+                if (debug)
+                    plugin.log(Level.INFO, "DatabaseCore:connection() not re-using connection");
                 conn = null;
             } else {
-                if (DynamicMarket.debug)
-                    DynamicMarket.log.info("DatabaseCore:connection() returning last connection");
+                if (debug)
+                    plugin.log(Level.INFO, "DatabaseCore:connection() returning last connection");
                 return DatabaseCore.conn;
             }
         }
         
-        if (DynamicMarket.debug)
-            DynamicMarket.log.info("DatabaseCore:connection() new connection");
+        if (debug)
+            plugin.log(Level.INFO, "DatabaseCore:connection() new connection");
         
         // CHANGED: Sets connections to auto-commit, rather than emergency
-        // commit-on-close behaviour.
+        // commit-on-close behavior.
         Connection newConn;
         
-        if (this.databaseType.equals(Type.SQLITE)) {
+        if (this.databaseType.equals(Type.SQLITE))
+        {
             Class.forName("org.sqlite.JDBC");
-            newConn = DriverManager.getConnection(DynamicMarket.sqlite);
+            newConn = DriverManager.getConnection("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "shop.db");
             newConn.setAutoCommit(true);
             DatabaseCore.conn = newConn;
             return DatabaseCore.conn;
         }
         
         Class.forName("com.mysql.jdbc.Driver");
-        newConn = DriverManager.getConnection(DynamicMarket.mysql, DynamicMarket.mysql_user, DynamicMarket.mysql_pass);
+        newConn = DriverManager.getConnection(plugin.getSetting(Setting.MYSQL_URL, String.class), plugin.getSetting(Setting.MYSQL_USER, String.class),plugin.getSetting(Setting.MYSQL_PASS, String.class));
         newConn.setAutoCommit(false);
         DatabaseCore.conn = newConn;
         return DatabaseCore.conn;
@@ -125,11 +138,11 @@ public abstract class DatabaseCore {
     }
     
     protected void logSevereException(String exDesc, Exception exDetail) {
-        DynamicMarket.log.severe("[" + DynamicMarket.name + "]: " + exDesc + ": " + exDetail);
+        plugin.log(Level.SEVERE, exDesc + ": " + exDetail);
     }
     
     protected void logSevereException(String exDesc) {
-        DynamicMarket.log.severe("[" + DynamicMarket.name + "]: " + exDesc);
+        plugin.log(Level.SEVERE, exDesc);
     }
     
     protected boolean checkTable(String tableSuffix) {
@@ -143,6 +156,11 @@ public abstract class DatabaseCore {
     
     protected boolean checkTable() {
         return checkTable("");
+    }
+    
+    protected DynamicMarket getPlugin()
+    {
+    	return plugin;
     }
     
     protected abstract boolean createTable(String tableSuffix);
@@ -161,7 +179,8 @@ public abstract class DatabaseCore {
     
     public abstract Object data(ItemClump thisItem);
     
-    public static enum Type {
+    public static enum Type
+    {
         
         SQLITE,
         MYSQL,
