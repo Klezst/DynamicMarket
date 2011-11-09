@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -99,7 +100,7 @@ public class DynamicMarket extends JavaPlugin
     	catch (InvalidSettingsException e)
     	{
     		log(Level.SEVERE, "Invalid config.yml:");
-    		e.printExceptions(log, "[" + getDescription().getName() + "]");
+    		e.printExceptions(log, "[" + getDescription().getName() + "]\t");
     		pm.disablePlugin(this);
     		return;
     	}
@@ -107,14 +108,13 @@ public class DynamicMarket extends JavaPlugin
     	defaultShopAccount = getSetting(Setting.ACCOUNT_NAME, String.class);
     	defaultShopAccountFree = getSetting(Setting.ACCOUNT_FREE, Boolean.class);
     	
-    	// TODO: Ensure that settings are a ChatColor
     	Messaging.initialize
     	(
-    		getSetting(Setting.NORMAL_COLOR, String.class),
-    		getSetting(Setting.COMMAND_COLOR, String.class),
-        	getSetting(Setting.BRACKET_COLOR, String.class),
-        	getSetting(Setting.PARAM_COLOR, String.class),
-        	getSetting(Setting.ERROR_COLOR, String.class)
+    		getSetting(Setting.NORMAL_COLOR, ChatColor.class),
+    		getSetting(Setting.COMMAND_COLOR, ChatColor.class),
+        	getSetting(Setting.BRACKET_COLOR, ChatColor.class),
+        	getSetting(Setting.PARAM_COLOR, ChatColor.class),
+        	getSetting(Setting.ERROR_COLOR, ChatColor.class)
         );
     	
         // Setup database
@@ -142,7 +142,7 @@ public class DynamicMarket extends JavaPlugin
             }
             catch (ClassNotFoundException ex)
             {
-                log(Level.SEVERE, "org.sqlite.JDBC class not found; disabling.");
+                log(Level.SEVERE, "org.sqlite.JDBC class not found.");
                 ex.printStackTrace();
                 pm.disablePlugin(this);
                 return;

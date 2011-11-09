@@ -1,17 +1,48 @@
 package com.gmail.haloinverse.DynamicMarket;
 
 import com.gmail.klezst.util.settings.Validatable;
+import com.gmail.klezst.util.settings.Validation;
 
 public enum Setting implements Validatable
 {
-	// Do not use primitive data types
+	// Do not use primitive data types or null
 	ACCOUNT_NAME("default-shop-account.name", String.class),
 	ACCOUNT_FREE("default-shop-account.is-free", Boolean.class),
-	BRACKET_COLOR("text-color.bracket", String.class),
-	COMMAND_COLOR("text-color.command", String.class),
-	ERROR_COLOR("text-color.error", String.class),
-	NORMAL_COLOR("text-color.normal", String.class),
-	PARAM_COLOR("text-color.param", String.class),
+	BRACKET_COLOR("text-color.bracket", String.class)
+	{
+		public Object validate(Object value) // This is a custom validation script that is run after the value has been validated to exist and that it is of the class specified by getType()
+		{
+			return Validation.getChatColor(this.getKey(), (String)value); // A library function provided to check if a String is a ChatColor
+		}
+	},
+	COMMAND_COLOR("text-color.command", String.class)
+	{
+		public Object validate(Object value)
+		{
+			return Validation.getChatColor(this.getKey(), (String)value);
+		}
+	},
+	ERROR_COLOR("text-color.error", String.class)
+	{
+		public Object validate(Object value)
+		{
+			return Validation.getChatColor(this.getKey(), (String)value);
+		}
+	},
+	NORMAL_COLOR("text-color.normal", String.class)
+	{
+		public Object validate(Object value)
+		{
+			return Validation.getChatColor(this.getKey(), (String)value);
+		}
+	},
+	PARAM_COLOR("text-color.param", String.class)
+	{
+		public Object validate(Object value)
+		{
+			return Validation.getChatColor(this.getKey(), (String)value);
+		}
+	},
 	DATABASE_TYPE("database-type", String.class),
 	ITEMS_DB_PATH("items-db-path", String.class),
 	MYSQL_URL("mysql.url", String.class),
@@ -44,5 +75,10 @@ public enum Setting implements Validatable
 	public Class<?> getType()
 	{
 		return type;
+	}
+	
+	public Object validate(Object value)
+	{
+		return value;
 	}
 }
