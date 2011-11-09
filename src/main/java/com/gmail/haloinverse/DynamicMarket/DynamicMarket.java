@@ -30,22 +30,28 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class DynamicMarket extends JavaPlugin
 {
+	// Statics
     private static final Logger log = Logger.getLogger("Minecraft");
     private static boolean econLoaded = false;
     
+    // Listeners
     private iListen playerListener;
-    private iPluginListener pluginListener;
-    private Object permissionsManager; // PermissionsResolverManager (Must be Object to prevent NoClassFoundException, iff WorldEdit isn't present)
-    private File directory;
-    private LinkedList<JavaPlugin> wrappers = new LinkedList<JavaPlugin>();
-    private Settings settings;
+    private PluginListener pluginListener;
     
+    // Settings
+    private Settings settings;
     private String defaultShopAccount;
     private boolean defaultShopAccountFree;
     
+    // Vital Utilities
     private Items items;
     private DatabaseMarket db;
+    private Object permissionsManager; // PermissionsResolverManager (Must be Object to prevent NoClassFoundException, iff WorldEdit isn't present).
+    
+    // Utilities
     private TransactionLogger transLog;
+    private File directory;
+    private LinkedList<JavaPlugin> wrappers = new LinkedList<JavaPlugin>();
     
     @Override
     public void onDisable()
@@ -58,7 +64,7 @@ public class DynamicMarket extends JavaPlugin
     {
         PluginManager pm = getServer().getPluginManager();
     	
-        // Check for Register (dependency)
+        // Check for Register (dependency).
         if (pm.getPlugin("Register") == null)
         {
         	log(Level.SEVERE, "Register not detected.");
@@ -66,7 +72,7 @@ public class DynamicMarket extends JavaPlugin
         	return;
         }
         
-    	// Check for WorldEdit (dependency)
+    	// Check for WorldEdit (dependency).
     	try
     	{
     		permissionsManager = new PermissionsResolverManager(this, getDescription().getName(), Logger.getLogger("Minecraft." + getDescription().getName())); // Creates our instance of WorldEdit Permissions Interoperability Framework (WEPIF)
@@ -78,21 +84,21 @@ public class DynamicMarket extends JavaPlugin
             return;
     	}
     	
-		// Set up directory
+		// Set up directory.
     	directory = getDataFolder();
     	directory.mkdirs();
     	
-    	// Set up libraries
+    	// Set up libraries.
         checkLibs();
         
-        // Extract files
+        // Extract files.
         if (!extract("config.yml", "shopDB.csv", "LICENSE.txt"))
         {
         	pm.disablePlugin(this);
         	return;
         }
         
-        // Load settings
+        // Load & Validate settings.
     	try
     	{
     		settings = new Settings(getConfig(), Setting.values());
@@ -105,6 +111,7 @@ public class DynamicMarket extends JavaPlugin
     		return;
     	}
     	
+    	// Set settings.
     	defaultShopAccount = getSetting(Setting.ACCOUNT_NAME, String.class);
     	defaultShopAccountFree = getSetting(Setting.ACCOUNT_FREE, Boolean.class);
     	
@@ -117,7 +124,7 @@ public class DynamicMarket extends JavaPlugin
         	getSetting(Setting.ERROR_COLOR, ChatColor.class)
         );
     	
-        // Setup database
+        // Setup database.
         items = new Items(getSetting(Setting.ITEMS_DB_PATH, String.class) + "items.db", this);
         if (getSetting(Setting.DATABASE_TYPE, String.class).equalsIgnoreCase("mysql"))
         {
@@ -150,22 +157,22 @@ public class DynamicMarket extends JavaPlugin
             db = new DatabaseMarket(DatabaseMarket.Type.SQLITE, "Market", items, "", this);
         }
         
-        // Setup transaction log
+        // Setup transaction log.
         transLog = new TransactionLogger(this, directory + File.separator + getSetting(Setting.TRANSACTION_LOG_FILE, String.class), getSetting(Setting.TRANSACTION_LOG_AUTOFLUSH, Boolean.class));
         
-        // Check, if register detected economy yet
+        // Check, if Register detected an economy yet.
     	if (Methods.hasMethod())
     	{
     		econLoaded = true;
     		System.out.println("[DynamicMarket] hooked into Register.");
     	}
         
-        // Register events
-        new PermissionsResolverServerListener((PermissionsResolverManager)permissionsManager, this); // Tells WEPIF to check for changes in what permissions plugin is used
+        // Register events.
+        new PermissionsResolverServerListener((PermissionsResolverManager)permissionsManager, this); // Tells WEPIF to check for changes in what permissions plugin is used.
         
-      	playerListener = new iListen(this); // This runs this.onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
+      	playerListener = new iListen(this); // Runs on this.onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args).
       	
-        pluginListener = new iPluginListener(this);
+        pluginListener = new PluginListener(this); // Checks for changes in Register.
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
         pm.registerEvent(Event.Type.PLUGIN_DISABLE, pluginListener, Priority.Monitor, this);
         
@@ -210,6 +217,7 @@ public class DynamicMarket extends JavaPlugin
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
     {
+    	// Runs wrappers' onCommand(CommandSender, Command, String, String[]).
         ListIterator<JavaPlugin> itr = wrappers.listIterator();
         while (itr.hasNext())
         {
@@ -220,13 +228,14 @@ public class DynamicMarket extends JavaPlugin
             }
         }
         
+        // Runs iListen, iff no wrapper returned true.
         return this.playerListener.parseCommand(sender, cmd.getName(), args, "", defaultShopAccount, defaultShopAccountFree);
     }
     
     public void hookWrapper(JavaPlugin wrap)
     {
         wrappers.add(wrap);
-        log(Level.INFO, "Wrapper mode enabled by " + wrap.getDescription().getName());
+        log(Level.WARNING, "Wrapper mode enabled by " + wrap.getDescription().getName());
     }
     
     public boolean wrapperCommand(CommandSender sender, String cmd, String[] args, String shopLabel, String accountName, boolean freeAccount)
@@ -245,19 +254,20 @@ public class DynamicMarket extends JavaPlugin
     }
     
     /**
-    * Original by sk89q
     * Copy files from the .jar.
     * 
-    * @param names, names of the files to be copied
+    * @param names, Names of the files to be copied
+    * @author sk89q, Klezst
     */
     private boolean extract(String... names)
     {
 	   for (String name : names)
 	   {
-		   // Get input
+		   // Check, if file already exists.
 	       File actual = new File(directory, name);
 	       if (!actual.exists())
 	       {
+	    	   // Get input.
 	    	   InputStream input;
 		       	try
 		    	{
@@ -278,7 +288,7 @@ public class DynamicMarket extends JavaPlugin
 		       	
 	           if (input == null)
 	           {
-	        	   log(Level.SEVERE, "Unable to get InputStream for " + name + ".");
+	        	   log(Level.SEVERE, "Unable to get InputStream for INTERNAL file " + name + ".");
 	        	   return false;
 	           }
 	           
@@ -302,6 +312,8 @@ public class DynamicMarket extends JavaPlugin
                    e.printStackTrace();
                    return false; // Finally will still try to close the files
                }
+               
+               // Close files.
                finally
                {
                    try

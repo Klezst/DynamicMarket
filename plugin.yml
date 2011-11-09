@@ -1,6 +1,6 @@
 name: DynamicMarket
 main: com.gmail.haloinverse.DynamicMarket.DynamicMarket
-version: 0.7b Sentinel
+version: 0.7c Sentinel
 authors: [Klezst, RchGrav, N3X15, Magik, Nijikokun]
 description: >
              A shop plugin building towards an interesting and flexible market system.
