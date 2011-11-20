@@ -12,8 +12,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedList;
-import java.util.ListIterator;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,7 +49,6 @@ public class DynamicMarket extends JavaPlugin
     // Utilities
     private TransactionLogger transLog;
     private File directory;
-    private LinkedList<JavaPlugin> wrappers = new LinkedList<JavaPlugin>();
     
     @Override
     public void onDisable()
@@ -217,40 +214,7 @@ public class DynamicMarket extends JavaPlugin
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
     {
-    	// Runs wrappers' onCommand(CommandSender, Command, String, String[]).
-        ListIterator<JavaPlugin> itr = wrappers.listIterator();
-        while (itr.hasNext())
-        {
-            JavaPlugin wrap = itr.next();
-            if (wrap.onCommand(sender, cmd, commandLabel, args))
-            {
-                return true;
-            }
-        }
-        
-        // Runs iListen, iff no wrapper returned true.
         return this.playerListener.parseCommand(sender, cmd.getName(), args, "", defaultShopAccount, defaultShopAccountFree);
-    }
-    
-    public void hookWrapper(JavaPlugin wrap)
-    {
-        wrappers.add(wrap);
-        log(Level.WARNING, "Wrapper mode enabled by " + wrap.getDescription().getName());
-    }
-    
-    public boolean wrapperCommand(CommandSender sender, String cmd, String[] args, String shopLabel, String accountName, boolean freeAccount)
-    {
-        return this.playerListener.parseCommand(sender, cmd, args, (shopLabel == null ? "" : shopLabel), accountName, freeAccount);
-    }
-    
-    public boolean wrapperCommand(CommandSender sender, String cmd, String[] args, String shopLabel)
-    {
-        return wrapperCommand(sender, cmd, args, (shopLabel == null ? "" : shopLabel), defaultShopAccount, defaultShopAccountFree);
-    }
-    
-    public boolean wrapperCommand(CommandSender sender, String cmd, String[] args)
-    {
-        return wrapperCommand(sender, cmd, args, "");
     }
     
     /**
