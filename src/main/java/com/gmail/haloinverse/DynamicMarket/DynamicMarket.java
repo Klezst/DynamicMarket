@@ -1,12 +1,18 @@
 package com.gmail.haloinverse.DynamicMarket;
 
 import com.gmail.haloinverse.DynamicMarket.Setting;
+import com.gmail.haloinverse.DynamicMarket.commands.Commands;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Settings;
 import com.gmail.klezst.util.settings.Validatable;
-import com.nijikokun.register.payment.Methods;
 import com.sk89q.bukkit.migration.PermissionsResolverManager;
 import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
+import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.CommandPermissionsException;
+import com.sk89q.minecraft.util.commands.CommandUsageException;
+import com.sk89q.minecraft.util.commands.CommandsManager;
+import com.sk89q.minecraft.util.commands.MissingNestedCommandException;
+import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,8 +27,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -30,21 +34,14 @@ public class DynamicMarket extends JavaPlugin
 {
 	// Statics
     private static final Logger log = Logger.getLogger("Minecraft");
-    private static boolean econLoaded = false;
-    
-    // Listeners
-    private iListen playerListener;
-    private PluginListener pluginListener;
-    
-    // Settings
-    private Settings settings;
-    private String defaultShopAccount;
-    private boolean defaultShopAccountFree;
     
     // Vital Utilities
     private Items items;
+    private Shop shop;
     private DatabaseMarket db;
+    private Settings settings;
     private Object permissionsManager; // PermissionsResolverManager (Must be Object to prevent NoClassFoundException, iff WorldEdit isn't present).
+    private Object commandsManager; // CommandsManager (Must be Object to prevent NoClassFoundException, iff WorldEdit isn't present).
     
     // Utilities
     private TransactionLogger transLog;
@@ -56,7 +53,8 @@ public class DynamicMarket extends JavaPlugin
         log(Level.INFO, "Disabled.");
     }
     
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void onEnable()
     {
         PluginManager pm = getServer().getPluginManager();
@@ -72,7 +70,21 @@ public class DynamicMarket extends JavaPlugin
     	// Check for WorldEdit (dependency).
     	try
     	{
+    		// Setup permissions.
     		permissionsManager = new PermissionsResolverManager(this, getDescription().getName(), Logger.getLogger("Minecraft." + getDescription().getName())); // Creates our instance of WorldEdit Permissions Interoperability Framework (WEPIF)
+    		new PermissionsResolverServerListener((PermissionsResolverManager)permissionsManager, this); // Tells WEPIF to check for changes in what permissions plugin is used.
+    		
+    		// Setup commands.
+    		final DynamicMarket plugin = this;
+    		commandsManager = new CommandsManager<CommandSender>()
+    		{
+    			@Override
+    			public boolean hasPermission(CommandSender sender, String permission)
+    			{
+    				return plugin.hasPermission(sender, permission);
+    			}
+   			};
+   			((CommandsManager<CommandSender>)commandsManager).register(Commands.class);
     	}
     	catch (NoClassDefFoundError e)
     	{
@@ -108,10 +120,7 @@ public class DynamicMarket extends JavaPlugin
     		return;
     	}
     	
-    	// Set settings.
-    	defaultShopAccount = getSetting(Setting.ACCOUNT_NAME, String.class);
-    	defaultShopAccountFree = getSetting(Setting.ACCOUNT_FREE, Boolean.class);
-    	
+    	// Set messaging settings.
     	Messaging.initialize
     	(
     		getSetting(Setting.NORMAL_COLOR, ChatColor.class),
@@ -157,21 +166,8 @@ public class DynamicMarket extends JavaPlugin
         // Setup transaction log.
         transLog = new TransactionLogger(this, directory + File.separator + getSetting(Setting.TRANSACTION_LOG_FILE, String.class), getSetting(Setting.TRANSACTION_LOG_AUTOFLUSH, Boolean.class));
         
-        // Check, if Register detected an economy yet.
-    	if (Methods.hasMethod())
-    	{
-    		econLoaded = true;
-    		System.out.println("[DynamicMarket] hooked into Register.");
-    	}
-        
-        // Register events.
-        new PermissionsResolverServerListener((PermissionsResolverManager)permissionsManager, this); // Tells WEPIF to check for changes in what permissions plugin is used.
-        
-      	playerListener = new iListen(this); // Runs on this.onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args).
-      	
-        pluginListener = new PluginListener(this); // Checks for changes in Register.
-        pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
-        pm.registerEvent(Event.Type.PLUGIN_DISABLE, pluginListener, Priority.Monitor, this);
+        // Create default shop.
+      	shop = new Shop(getSetting(Setting.INFINITE_FUNDING, Boolean.class), this, getSetting(Setting.ITEMS_MAX_PER_TRANSACTION, Integer.class), "");
         
         log(Level.INFO, "Enabled.");
     }
@@ -211,10 +207,37 @@ public class DynamicMarket extends JavaPlugin
         }
     }
     
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
     {
-        return this.playerListener.parseCommand(sender, cmd.getName(), args, "", defaultShopAccount, defaultShopAccountFree);
+        try
+        {
+            ((CommandsManager<CommandSender>)commandsManager).execute(cmd.getName(), args, sender, this, sender);
+        }
+        catch (CommandPermissionsException e)
+        {
+        	sender.sendMessage(Messaging.parse("{ERR}" + "You don't have permission"));
+        }
+        catch (MissingNestedCommandException e)
+        {
+        	sender.sendMessage(Messaging.parse("{ERR}" + e.getUsage()));
+        }
+        catch (CommandUsageException e)
+        {
+        	sender.sendMessage(Messaging.parse("{ERR}" + e.getMessage()));
+        	sender.sendMessage(Messaging.parse("{ERR}" + e.getUsage()));
+        }
+        catch (WrappedCommandException e)
+        {
+        	e.printStackTrace();
+        }
+        catch (CommandException e)
+        {
+        	sender.sendMessage(Messaging.parse("{ERR}" + e.getMessage()));
+        }
+        
+        return true;
     }
     
     /**
@@ -309,19 +332,9 @@ public class DynamicMarket extends JavaPlugin
 	   return true;
     }
     
-	protected void log(Level level, String message)
+	public void log(Level level, String message)
 	{
 		log.log(level, "[" + getDescription().getName() + "] " + message);
-	}
-    
-	public static boolean isEconLoaded()
-	{
-		return econLoaded;
-	}
-	
-	protected static void setEconLoaded(boolean state)
-	{
-		econLoaded = state;
 	}
 	
 	protected void removeItem(Player player, MarketItem item, int amount)
@@ -330,7 +343,12 @@ public class DynamicMarket extends JavaPlugin
 	}
 	
 	// Access Methods
-	protected DatabaseMarket getDatabaseMarket()
+	public Shop getShop()
+	{
+		return shop;
+	}
+	
+	public DatabaseMarket getDatabaseMarket()
 	{
 		return db;
 	}
@@ -347,6 +365,6 @@ public class DynamicMarket extends JavaPlugin
 	
 	public boolean hasPermission(CommandSender sender, String permission)
 	{
-			return ((PermissionsResolverManager)permissionsManager).hasPermission(sender.getName(), getDescription().getName().toLowerCase() + "." + permission);
+		return ((PermissionsResolverManager)permissionsManager).hasPermission(sender.getName(), getDescription().getName().toLowerCase() + "." + permission);
 	}
 }

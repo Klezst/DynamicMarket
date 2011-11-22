@@ -93,4 +93,9 @@ public class Messaging
     	colParam = colParamIn.toString();
     	colError = colErrorIn.toString();
     }
+    
+    public static void send(CommandSender recipient, String message)
+    {
+    	recipient.sendMessage(parse(message));
+    }
 }
