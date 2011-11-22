@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.gmail.haloinverse.DynamicMarket.database.DatabaseMarket;
+import com.gmail.haloinverse.DynamicMarket.database.SQLHandler;
+import com.gmail.haloinverse.DynamicMarket.util.Economy;
+
 //import java.sql.ResultSet;
 
 public class MarketItem extends ItemClump {
@@ -597,7 +601,7 @@ public class MarketItem extends ItemClump {
         // Display count as [<bundle>(x<numbundles>)]
         try
         {
-        	return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Util.format(getBuyPrice(numBundles)));
+        	return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Economy.format(getBuyPrice(numBundles)));
         }
         catch (NullPointerException e)
         {
@@ -618,7 +622,7 @@ public class MarketItem extends ItemClump {
         // Display count as [<bundle>(x<numbundles>)]
         try
         {
-        	return ("{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Util.format(getSellPrice(numBundles)));
+        	return ("{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Economy.format(getSellPrice(numBundles)));
         }
         catch (NullPointerException e)
         {

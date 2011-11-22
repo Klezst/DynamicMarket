@@ -1,4 +1,4 @@
-package com.gmail.haloinverse.DynamicMarket;
+package com.gmail.haloinverse.DynamicMarket.database;
 
 import java.io.File;
 import java.sql.Connection;
@@ -7,6 +7,10 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.logging.Level;
+
+import com.gmail.haloinverse.DynamicMarket.DynamicMarket;
+import com.gmail.haloinverse.DynamicMarket.ItemClump;
+import com.gmail.haloinverse.DynamicMarket.Setting;
 
 public abstract class DatabaseCore
 {

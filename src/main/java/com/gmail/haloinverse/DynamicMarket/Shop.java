@@ -24,6 +24,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import com.gmail.haloinverse.DynamicMarket.util.Messaging;
+import com.gmail.haloinverse.DynamicMarket.util.Economy;
+
 public class Shop
 {	
 	private boolean infiniteFunding;
@@ -51,35 +54,35 @@ public class Shop
         
         if (!newItem.isValid())
         {
-            sender.sendMessage(Messaging.parse("{ERR}Unrecognized item name or ID."));
+            sender.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name or ID."));
             return;
         }
         
         if (plugin.getDatabaseMarket().hasRecord(newItem))
         {
-            sender.sendMessage(Messaging.parse("{ERR}" + newItem.getName() + " is already in the market list."));
-            sender.sendMessage(Messaging.parse("{ERR}Use {CMD}/shop update{ERR} instead."));
+            sender.sendMessage(Messaging.parseColor("{ERR}" + newItem.getName() + " is already in the market list."));
+            sender.sendMessage(Messaging.parseColor("{ERR}Use {CMD}/shop update{ERR} instead."));
             return;
         }
         
         if ((newItem.count < 1) || (newItem.count > maxPerTransaction))
         {
-            sender.sendMessage(Messaging.parse("{ERR}Invalid amount. (Range: 1.." + maxPerTransaction + ")"));
+            sender.sendMessage(Messaging.parseColor("{ERR}Invalid amount. (Range: 1.." + maxPerTransaction + ")"));
             return;
         }
         
         if (plugin.getDatabaseMarket().add(newItem))
         {
-            sender.sendMessage(Messaging.parse("Item {PRM}" + newItem.getName() + "{} added:"));
+            sender.sendMessage(Messaging.parseColor("Item {PRM}" + newItem.getName() + "{} added:"));
             ArrayList<String> thisList = newItem.infoStringFull();
             for (String thisLine : thisList)
             {
-                sender.sendMessage(Messaging.parse(thisLine));
+                sender.sendMessage(Messaging.parseColor(thisLine));
             }
         }
         else
         {
-            sender.sendMessage(Messaging.parse("{ERR}Item {PRM}" + newItem.getName() + "{ERR} could not be added."));
+            sender.sendMessage(Messaging.parseColor("{ERR}Item {PRM}" + newItem.getName() + "{ERR} could not be added."));
         }
     }
 	
@@ -92,18 +95,18 @@ public class Shop
         
         try
         {
-        	balance = Util.getBalance(player.getName());
+        	balance = Economy.getBalance(player.getName());
         }
     	catch (NullPointerException e)
     	{
-    		player.sendMessage(Messaging.parse("{ERR}Register hasn't detected an economy plugin!"));
+    		player.sendMessage(Messaging.parseColor("{ERR}Register hasn't detected an economy plugin!"));
     		return;
     	}
         
         if (!requested.isValid())
         {
-            player.sendMessage(Messaging.parse("{ERR}Invalid item."));
-            player.sendMessage(Messaging.parse("Use: {CMD}/shop buy {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})"));
+            player.sendMessage(Messaging.parseColor("{ERR}Invalid item."));
+            player.sendMessage(Messaging.parseColor("Use: {CMD}/shop buy {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})"));
             return;
         }
         
@@ -111,31 +114,31 @@ public class Shop
         
         if ((data == null) || !data.isValid())
         {
-        	player.sendMessage(Messaging.parse("{ERR}Unrecognized item name, or not in shop."));
+        	player.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name, or not in shop."));
             return;
         }
         
         if (data.isDefault())
         {
-        	player.sendMessage(Messaging.parse("{ERR}The default item template is not buyable."));
+        	player.sendMessage(Messaging.parseColor("{ERR}The default item template is not buyable."));
             return;
         }
         
         if (!data.canBuy)
         {
-        	player.sendMessage(Messaging.parse("{ERR}" + data.getName() + " currently not purchaseable from shop."));
+        	player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " currently not purchaseable from shop."));
             return;
         }
         
         if (!data.getCanBuy(requested.count))
         {
-        	player.sendMessage(Messaging.parse("{ERR}" + data.getName() + " understocked: only " + data.formatBundleCount(data.leftToBuy()) + " left."));
+        	player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " understocked: only " + data.formatBundleCount(data.leftToBuy()) + " left."));
             return;
         }
         
         if ((requested.count < 1) || (requested.count * data.count > maxPerTransaction))
         {
-        	player.sendMessage(Messaging.parse("{ERR}Amount over max items per purchase."));
+        	player.sendMessage(Messaging.parseColor("{ERR}Amount over max items per purchase."));
             return;
         }
         
@@ -143,20 +146,20 @@ public class Shop
         
         if (balance < transValue)
         {
-        	player.sendMessage(Messaging.parse("{ERR}You do not have enough money to do this."));
-        	player.sendMessage(Messaging.parse(data.infoStringBuy(requested.count)));
+        	player.sendMessage(Messaging.parseColor("{ERR}You do not have enough money to do this."));
+        	player.sendMessage(Messaging.parseColor(data.infoStringBuy(requested.count)));
             return;
         }
         
-        Util.deltaBalance(-transValue, player.getName());
+        Economy.deltaBalance(-transValue, player.getName());
         funds += transValue;
         
         player.getInventory().addItem(new ItemStack[] { new ItemStack(data.itemId, requested.count * data.count, (short) 0, (byte) requested.subType) });
         
         plugin.getDatabaseMarket().removeStock(requested, name);
         
-        player.sendMessage(Messaging.parse("Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Util.format(transValue)));
-        player.sendMessage(Messaging.parse("{}Balance: {PRM}" + Util.getFormattedBalance(player.getName())));
+        player.sendMessage(Messaging.parseColor("Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Economy.format(transValue)));
+        player.sendMessage(Messaging.parseColor("{}Balance: {PRM}" + Economy.getFormattedBalance(player.getName())));
         
         if (plugin.getTransactionLogger().isOK)
         {
@@ -176,7 +179,7 @@ public class Shop
         
         if (removed.itemId == -1)
         {
-            sender.sendMessage(Messaging.parse("{ERR}Unrecognized item name or ID."));
+            sender.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name or ID."));
             return;
         }
         
@@ -184,7 +187,7 @@ public class Shop
         
         if (itemToRemove == null)
         {
-            sender.sendMessage(Messaging.parse("{ERR}Item {PRM}" + removed.getName(plugin.getDatabaseMarket(), name) + "{ERR} not found in market."));
+            sender.sendMessage(Messaging.parseColor("{ERR}Item {PRM}" + removed.getName(plugin.getDatabaseMarket(), name) + "{ERR} not found in market."));
             return;
         }
         
@@ -196,11 +199,11 @@ public class Shop
         
         if (plugin.getDatabaseMarket().remove(removed, name))
         {
-            sender.sendMessage(Messaging.parse("Item " + removedItemName + " was removed."));
+            sender.sendMessage(Messaging.parseColor("Item " + removedItemName + " was removed."));
         }
         else
         {
-            sender.sendMessage(Messaging.parse("Item " + removedItemName + " {ERR}could not be removed."));
+            sender.sendMessage(Messaging.parseColor("Item " + removedItemName + " {ERR}could not be removed."));
         }
     }
     
@@ -212,8 +215,8 @@ public class Shop
         
         if (!requested.isValid())
         {
-        	player.sendMessage(Messaging.parse("{ERR}Invalid item."));
-        	player.sendMessage(Messaging.parse("Use: {CMD}/shop sell {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})"));
+        	player.sendMessage(Messaging.parseColor("{ERR}Invalid item."));
+        	player.sendMessage(Messaging.parseColor("Use: {CMD}/shop sell {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})"));
             return;
         }
         
@@ -221,37 +224,37 @@ public class Shop
         
         if ((data == null) || !data.isValid())
         {
-        	player.sendMessage(Messaging.parse("{ERR}Unrecognized item name, or not in shop."));
+        	player.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name, or not in shop."));
             return;
         }
         
         if (data.isDefault())
         {
-            player.sendMessage(Messaging.parse("{ERR}The default template is not sellable."));
+            player.sendMessage(Messaging.parseColor("{ERR}The default template is not sellable."));
             return;
         }
         
         if (data.canSell == false)
         {
-            player.sendMessage(Messaging.parse("{ERR}" + data.getName() + " currently not sellable to shop."));
+            player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " currently not sellable to shop."));
             return;
         }
         
         if ((requested.count < 1) /* || (requested.count * data.count > plugin.max_per_sale) */)
         {
-            player.sendMessage(Messaging.parse("{ERR}Amount over max items per sale."));
+            player.sendMessage(Messaging.parseColor("{ERR}Amount over max items per sale."));
             return;
         }
         
         if (!data.getCanSell(requested.count))
         {
-            player.sendMessage(Messaging.parse("{ERR}" + data.getName() + " overstocked: only " + data.formatBundleCount(data.leftToSell()) + " can be sold."));
+            player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " overstocked: only " + data.formatBundleCount(data.leftToSell()) + " can be sold."));
             return;
         }
         
         if (!(Items.has(player, data, requested.count)))
         {
-            player.sendMessage(Messaging.parse("{ERR}You do not have enough " + data.getName() + " to do this."));
+            player.sendMessage(Messaging.parseColor("{ERR}You do not have enough " + data.getName() + " to do this."));
             return;
         }
         
@@ -259,7 +262,7 @@ public class Shop
         
         if (!infiniteFunding && funds < transValue)
         {
-            player.sendMessage(Messaging.parse("{ERR}The shop does not have enough money to pay for " + data.formatBundleCount(requested.count) + " " + data.getName() + "."));
+            player.sendMessage(Messaging.parseColor("{ERR}The shop does not have enough money to pay for " + data.formatBundleCount(requested.count) + " " + data.getName() + "."));
             return;
         }
         
@@ -267,18 +270,18 @@ public class Shop
         
         try
         {
-        	Util.deltaBalance(transValue, player.getName());
+        	Economy.deltaBalance(transValue, player.getName());
         }
     	catch (NullPointerException e)
     	{
-    		player.sendMessage(Messaging.parse("{ERR}Register hasn't detected an economy plugin!"));
+    		player.sendMessage(Messaging.parseColor("{ERR}Register hasn't detected an economy plugin!"));
     		return;
     	}
         funds -= transValue;
         
         plugin.getDatabaseMarket().addStock(requested, name);
-        player.sendMessage(Messaging.parse("Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Util.format(transValue)));
-        player.sendMessage(Messaging.parse("{}Balance: {PRM}" + Util.getFormattedBalance(player.getName())));
+        player.sendMessage(Messaging.parseColor("Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Economy.format(transValue)));
+        player.sendMessage(Messaging.parseColor("{}Balance: {PRM}" + Economy.getFormattedBalance(player.getName())));
         
         if (plugin.getTransactionLogger().isOK)
         {
@@ -304,25 +307,25 @@ public class Shop
                 {
                     if (Integer.valueOf(firstItem.split(":", 2)[1]) > maxPerTransaction)
                     {
-                        sender.sendMessage(Messaging.parse("{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerTransaction + ")"));
+                        sender.sendMessage(Messaging.parseColor("{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerTransaction + ")"));
                         return;
                     }
                 }
             }
             catch (NumberFormatException ex)
             {
-                sender.sendMessage(Messaging.parse("{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerTransaction + ")"));
+                sender.sendMessage(Messaging.parseColor("{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerTransaction + ")"));
                 return;
             }
             
             if (plugin.getDatabaseMarket().updateAllFromTags(itemStringIn, name))
             {
-                sender.sendMessage(Messaging.parse("All shop items updated."));
+                sender.sendMessage(Messaging.parseColor("All shop items updated."));
                 return;
             }
             else
             {
-                sender.sendMessage(Messaging.parse("{ERR}All shop items update failed."));
+                sender.sendMessage(Messaging.parseColor("{ERR}All shop items update failed."));
                 return;
             }
         }
@@ -336,8 +339,8 @@ public class Shop
         
         if (prevData == null)
         {
-            sender.sendMessage(Messaging.parse("{ERR}" + itemString.split(" ", 2)[0] + " not found in market."));
-            sender.sendMessage(Messaging.parse("{ERR}Use {CMD}/shop add{ERR} instead."));
+            sender.sendMessage(Messaging.parseColor("{ERR}" + itemString.split(" ", 2)[0] + " not found in market."));
+            sender.sendMessage(Messaging.parseColor("{ERR}Use {CMD}/shop add{ERR} instead."));
             return;
         }
         
@@ -360,22 +363,22 @@ public class Shop
         
         if ((updated.count < 1) || (updated.count > maxPerTransaction))
         {
-            sender.sendMessage(Messaging.parse("{ERR}Invalid bundle size. (Range: 1.." + maxPerTransaction + ")"));
+            sender.sendMessage(Messaging.parseColor("{ERR}Invalid bundle size. (Range: 1.." + maxPerTransaction + ")"));
             return;
         }
         
         if (plugin.getDatabaseMarket().update(updated))
         {
-            sender.sendMessage(Messaging.parse("Item {PRM}" + updated.getName() + "{} updated:"));
+            sender.sendMessage(Messaging.parseColor("Item {PRM}" + updated.getName() + "{} updated:"));
             ArrayList<String> thisList = updated.infoStringFull();
             for (String thisLine : thisList)
             {
-                sender.sendMessage(Messaging.parse(thisLine));
+                sender.sendMessage(Messaging.parseColor(thisLine));
             }
         }
         else
         {
-            sender.sendMessage(Messaging.parse("Item {PRM}" + updated.getName() + "{} update {ERR}failed."));
+            sender.sendMessage(Messaging.parseColor("Item {PRM}" + updated.getName() + "{} update {ERR}failed."));
         }
     }
 }

@@ -3,6 +3,8 @@ package com.gmail.haloinverse.DynamicMarket;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import com.gmail.haloinverse.DynamicMarket.database.DatabaseMarket;
+
 public class ItemClump {
     
     // Implemented because bukkit's ItemStack methods don't handle item subtypes consistently.

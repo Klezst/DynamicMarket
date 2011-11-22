@@ -1,4 +1,4 @@
-package com.gmail.haloinverse.DynamicMarket;
+package com.gmail.haloinverse.DynamicMarket.database;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -9,6 +9,9 @@ import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.sql.Statement;
+
+import com.gmail.haloinverse.DynamicMarket.DynamicMarket;
+import com.gmail.haloinverse.DynamicMarket.Setting;
 
 public class SQLHandler
 {

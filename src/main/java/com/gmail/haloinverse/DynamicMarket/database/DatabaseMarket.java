@@ -1,4 +1,4 @@
-package com.gmail.haloinverse.DynamicMarket;
+package com.gmail.haloinverse.DynamicMarket.database;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -8,6 +8,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+
+import com.gmail.haloinverse.DynamicMarket.DynamicMarket;
+import com.gmail.haloinverse.DynamicMarket.ItemClump;
+import com.gmail.haloinverse.DynamicMarket.Items;
+import com.gmail.haloinverse.DynamicMarket.MarketItem;
 
 public class DatabaseMarket extends DatabaseCore
 {

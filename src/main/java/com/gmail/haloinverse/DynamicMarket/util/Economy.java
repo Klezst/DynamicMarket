@@ -16,17 +16,18 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.gmail.haloinverse.DynamicMarket;
+package com.gmail.haloinverse.DynamicMarket.util;
 
 import com.nijikokun.register.payment.Methods;
 
-public class Util
+public class Economy
 {
 	/**
 	 * Changes an economy account's balance.
 	 * @param amount, Amount to change the balance (can be negative).
 	 * @param name, Name of the account.
 	 * @throws NullPointerException, iff Register hasn't loaded an economy yet. // TODO: Remove listener for Register and economies and just use NullPointerException
+	 * @author Klezst
 	 */
 	public static void deltaBalance(int amount, String name) throws NullPointerException
 	{
@@ -38,6 +39,7 @@ public class Util
 	 * @param name, Name of the account.
 	 * @return Balance of the account called name.
 	 * @throws NullPointerException, iff Register hasn't loaded an economy yet.
+	 * @author Klezst
 	 */
     public static int getBalance(String name) throws NullPointerException
     {
@@ -49,6 +51,7 @@ public class Util
 	 * @param name, Name of the account.
 	 * @return Balance of the account called name in display format.
 	 * @throws NullPointerException, iff Register hasn't loaded an economy yet.
+	 * @author Klezst
 	 */
     public static String getFormattedBalance(String name) throws IllegalArgumentException
     {
@@ -60,6 +63,7 @@ public class Util
 	 * @param amount, Amount to be formatted.
 	 * @return amount in display format.
 	 * @throws NullPointerException, iff Register hasn't loaded an economy yet.
+	 * @author Klezst
 	 */
     public static String format(double amount) throws NullPointerException
     {

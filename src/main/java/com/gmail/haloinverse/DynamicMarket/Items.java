@@ -35,7 +35,7 @@ public class Items {
         try {
             mappedItems = ItemsFile.returnMap();
         } catch (Exception ex) {
-            thisPlugin.log(Level.INFO, Messaging.bracketize(new StringBuilder().append("Flatfile").toString()) + " could not grab item list!");
+            thisPlugin.log(Level.INFO, "[" + new StringBuilder().append("Flatfile").toString() + "] Could not grab item list!");
         }
         
         Iterator<String> it;
