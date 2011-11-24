@@ -574,7 +574,7 @@ public class ShopCommands
         // TODO: Break into another method.
         int pageSelect = 1;
         String nameFilter = null;
-        if (args.argsLength() == 2)
+        if (args.argsLength() == 1)
         {
             try
             {
@@ -585,7 +585,7 @@ public class ShopCommands
                 nameFilter = args.getString(0);
             }
         }
-        if (args.argsLength() == 3)
+        if (args.argsLength() == 2)
         {
             nameFilter = args.getString(0);
             try

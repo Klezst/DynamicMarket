@@ -27,7 +27,7 @@ public class Commands
 	@Command
 	(
 		aliases = {"shop", "dshop"},
-		desc = "Interaction with the DynamicMarket"
+		desc = "Use /shop help, for more information."
 	)
 	@NestedCommand(ShopCommands.class)
 	@CommandPermissions("access")
