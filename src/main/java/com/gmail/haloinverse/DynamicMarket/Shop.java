@@ -19,366 +19,204 @@
 package com.gmail.haloinverse.DynamicMarket;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
-import com.gmail.haloinverse.DynamicMarket.util.Messaging;
-import com.gmail.haloinverse.DynamicMarket.util.Economy;
+import org.bukkit.material.MaterialData;
 
-public class Shop
-{	
-	private boolean infiniteFunding;
+import com.avaje.ebean.validation.NotEmpty;
+import com.avaje.ebean.validation.NotNull;
+import com.gmail.haloinverse.DynamicMarket.util.Format;
+import com.gmail.haloinverse.DynamicMarket.util.Message;
+import com.sk89q.minecraft.util.commands.CommandContext;
+
+@Entity
+@Table(name = "shops")
+public class Shop // TODO: Add location support.
+{
+	// Fields.
+	@Id
+	private int id;
 	
-	private double funds; // TODO: Make this persist
+	@OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
+	private List<Product> products = new ArrayList<Product>();
 	
-	private DynamicMarket plugin;
-	
-	private int maxPerTransaction;
-	
+	@NotEmpty
 	private String name;
 	
-	public Shop(boolean infiniteFunding, DynamicMarket plugin, int maxPerTransaction, String name)
+	@NotNull
+	private boolean infiniteFunding;
+	
+	@NotNull
+	private double funds;
+	
+	@NotNull
+	private int maxTransactionSize;
+	
+	// Constructors.
+	public Shop()
 	{
+		
+	}
+	
+	public Shop(String name, boolean infiniteFunding, double funds, int maxTransactionSize)
+	{
+		this.name = name;
 		this.infiniteFunding = infiniteFunding;
-		this.funds = 0;
-		this.plugin = plugin;
-		this.maxPerTransaction = maxPerTransaction;
+		this.funds = funds;
+		this.maxTransactionSize = maxTransactionSize;
+	}
+	
+	// Gets & sets.
+	public int getId()
+	{
+		return id;
+	}
+	public void setId(int id)
+	{
+		this.id = id;
+	}
+	
+	public List<Product> getProducts()
+	{
+		return products;
+	}
+	public void setProducts(List<Product> products)
+	{
+			this.products = products;
+	}
+	
+	public String getName()
+	{
+		return name;
+	}
+	public void setName(String name)
+	{
 		this.name = name;
 	}
 	
-    public void add(CommandSender sender, String itemString) // TODO: Instead of passing the sender, throw an IllegalArgumentException
-    {
-        MarketItem newItem = new MarketItem(itemString, plugin.getDatabaseMarket().getDefault(name), plugin.getDatabaseMarket(), name);
-        
-        if (!newItem.isValid())
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name or ID."));
-            return;
-        }
-        
-        if (plugin.getDatabaseMarket().hasRecord(newItem))
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}" + newItem.getName() + " is already in the market list."));
-            sender.sendMessage(Messaging.parseColor("{ERR}Use {CMD}/shop update{ERR} instead."));
-            return;
-        }
-        
-        if ((newItem.count < 1) || (newItem.count > maxPerTransaction))
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}Invalid amount. (Range: 1.." + maxPerTransaction + ")"));
-            return;
-        }
-        
-        if (plugin.getDatabaseMarket().add(newItem))
-        {
-            sender.sendMessage(Messaging.parseColor("Item {PRM}" + newItem.getName() + "{} added:"));
-            ArrayList<String> thisList = newItem.infoStringFull();
-            for (String thisLine : thisList)
-            {
-                sender.sendMessage(Messaging.parseColor(thisLine));
-            }
-        }
-        else
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}Item {PRM}" + newItem.getName() + "{ERR} could not be added."));
-        }
-    }
+	public boolean isInfiniteFunding()
+	{
+		return infiniteFunding;
+	}
+	public void setInfiniteFunding(boolean infiniteFunding)
+	{
+		this.infiniteFunding = infiniteFunding;
+	}
 	
-    public void buy(Player player, String itemString)
-    {
-        // TODO: Check for sufficient inventory space for received items.
-        ItemClump requested = new ItemClump(itemString, plugin.getDatabaseMarket(), name, player);
-        int transValue;
-        int balance;
-        
-        try
-        {
-        	balance = Economy.getBalance(player.getName());
-        }
-    	catch (NullPointerException e)
-    	{
-    		player.sendMessage(Messaging.parseColor("{ERR}Register hasn't detected an economy plugin!"));
-    		return;
-    	}
-        
-        if (!requested.isValid())
-        {
-            player.sendMessage(Messaging.parseColor("{ERR}Invalid item."));
-            player.sendMessage(Messaging.parseColor("Use: {CMD}/shop buy {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})"));
-            return;
-        }
-        
-        MarketItem data = plugin.getDatabaseMarket().data(requested, name);
-        
-        if ((data == null) || !data.isValid())
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name, or not in shop."));
-            return;
-        }
-        
-        if (data.isDefault())
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}The default item template is not buyable."));
-            return;
-        }
-        
-        if (!data.canBuy)
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " currently not purchaseable from shop."));
-            return;
-        }
-        
-        if (!data.getCanBuy(requested.count))
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " understocked: only " + data.formatBundleCount(data.leftToBuy()) + " left."));
-            return;
-        }
-        
-        if ((requested.count < 1) || (requested.count * data.count > maxPerTransaction))
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}Amount over max items per purchase."));
-            return;
-        }
-        
-        transValue = data.getBuyPrice(requested.count);
-        
-        if (balance < transValue)
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}You do not have enough money to do this."));
-        	player.sendMessage(Messaging.parseColor(data.infoStringBuy(requested.count)));
-            return;
-        }
-        
-        Economy.deltaBalance(-transValue, player.getName());
-        funds += transValue;
-        
-        player.getInventory().addItem(new ItemStack[] { new ItemStack(data.itemId, requested.count * data.count, (short) 0, (byte) requested.subType) });
-        
-        plugin.getDatabaseMarket().removeStock(requested, name);
-        
-        player.sendMessage(Messaging.parseColor("Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Economy.format(transValue)));
-        player.sendMessage(Messaging.parseColor("{}Balance: {PRM}" + Economy.getFormattedBalance(player.getName())));
-        
-        if (plugin.getTransactionLogger().isOK)
-        {
-            plugin.getTransactionLogger().logTransaction(player.getName() + ", Buy, " + (-requested.count) + ", " + data.count + ", " + data.getName() + ", " + data.itemId + ", " + data.subType + ", " + transValue + ", " + name);
-        }
-    }
-    
-    public String getName()
-    {
-    	return name;
-    }
-    
-    public void remove(CommandSender sender, String itemString) // TODO: Instead of passing the sender, throw an IllegalArgumentException
-    {
-        ItemClump removed = new ItemClump(itemString, plugin.getDatabaseMarket(), name);
-        String removedItemName = null;
-        
-        if (removed.itemId == -1)
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name or ID."));
-            return;
-        }
-        
-        MarketItem itemToRemove = plugin.getDatabaseMarket().data(removed, name);
-        
-        if (itemToRemove == null)
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}Item {PRM}" + removed.getName(plugin.getDatabaseMarket(), name) + "{ERR} not found in market."));
-            return;
-        }
-        
-        removedItemName = itemToRemove.getName();
-        if (removedItemName == null)
-        {
-            removedItemName = "<Unknown>";
-        }
-        
-        if (plugin.getDatabaseMarket().remove(removed, name))
-        {
-            sender.sendMessage(Messaging.parseColor("Item " + removedItemName + " was removed."));
-        }
-        else
-        {
-            sender.sendMessage(Messaging.parseColor("Item " + removedItemName + " {ERR}could not be removed."));
-        }
-    }
-    
-    public void sell(Player player, String itemString)
-    {
-        ItemClump requested = new ItemClump(itemString, plugin.getDatabaseMarket(), name,  player);
-        
-        int transValue;
-        
-        if (!requested.isValid())
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}Invalid item."));
-        	player.sendMessage(Messaging.parseColor("Use: {CMD}/shop sell {PRM}<item id or name>{BKT}({CMD}:{PRM}<bundles>{BKT})"));
-            return;
-        }
-        
-        MarketItem data = plugin.getDatabaseMarket().data(requested, name);
-        
-        if ((data == null) || !data.isValid())
-        {
-        	player.sendMessage(Messaging.parseColor("{ERR}Unrecognized item name, or not in shop."));
-            return;
-        }
-        
-        if (data.isDefault())
-        {
-            player.sendMessage(Messaging.parseColor("{ERR}The default template is not sellable."));
-            return;
-        }
-        
-        if (data.canSell == false)
-        {
-            player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " currently not sellable to shop."));
-            return;
-        }
-        
-        if ((requested.count < 1) /* || (requested.count * data.count > plugin.max_per_sale) */)
-        {
-            player.sendMessage(Messaging.parseColor("{ERR}Amount over max items per sale."));
-            return;
-        }
-        
-        if (!data.getCanSell(requested.count))
-        {
-            player.sendMessage(Messaging.parseColor("{ERR}" + data.getName() + " overstocked: only " + data.formatBundleCount(data.leftToSell()) + " can be sold."));
-            return;
-        }
-        
-        if (!(Items.has(player, data, requested.count)))
-        {
-            player.sendMessage(Messaging.parseColor("{ERR}You do not have enough " + data.getName() + " to do this."));
-            return;
-        }
-        
-        transValue = data.getSellPrice(requested.count);
-        
-        if (!infiniteFunding && funds < transValue)
-        {
-            player.sendMessage(Messaging.parseColor("{ERR}The shop does not have enough money to pay for " + data.formatBundleCount(requested.count) + " " + data.getName() + "."));
-            return;
-        }
-        
-        plugin.removeItem(player, data, requested.count);
-        
-        try
-        {
-        	Economy.deltaBalance(transValue, player.getName());
-        }
-    	catch (NullPointerException e)
-    	{
-    		player.sendMessage(Messaging.parseColor("{ERR}Register hasn't detected an economy plugin!"));
-    		return;
-    	}
-        funds -= transValue;
-        
-        plugin.getDatabaseMarket().addStock(requested, name);
-        player.sendMessage(Messaging.parseColor("Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Economy.format(transValue)));
-        player.sendMessage(Messaging.parseColor("{}Balance: {PRM}" + Economy.getFormattedBalance(player.getName())));
-        
-        if (plugin.getTransactionLogger().isOK)
-        {
-            plugin.getTransactionLogger().logTransaction(player.getName() + ", Sell, " + requested.count + ", " + data.count + ", " + data.getName() + ", " + data.itemId + ", " + data.subType + ", " + (-transValue) + ", " + name);
-        }
-    }
-    
-    public void update(CommandSender sender, String itemStringIn) // TODO: Instead of passing the sender, throw an IllegalArgumentException
-    {
-        // Make a copy of itemStringIn, in case modification is needed.
-        String itemString = new String(itemStringIn);
-        
-        // Check if the item name is "all".
-        String firstItem = itemString.split(" ", 2)[0];
-        String thisName = firstItem.split(":", 2)[0];
-        if (thisName.equalsIgnoreCase("all"))
-        {
-            // Update-all requested.
-            // Check bundle size first.
-            try
-            {
-                if (firstItem.contains(":"))
-                {
-                    if (Integer.valueOf(firstItem.split(":", 2)[1]) > maxPerTransaction)
-                    {
-                        sender.sendMessage(Messaging.parseColor("{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerTransaction + ")"));
-                        return;
-                    }
-                }
-            }
-            catch (NumberFormatException ex)
-            {
-                sender.sendMessage(Messaging.parseColor("{ERR}Invalid bundle size [" + firstItem.split(":", 2)[1] + "]. (Range: 1.." + maxPerTransaction + ")"));
-                return;
-            }
-            
-            if (plugin.getDatabaseMarket().updateAllFromTags(itemStringIn, name))
-            {
-                sender.sendMessage(Messaging.parseColor("All shop items updated."));
-                return;
-            }
-            else
-            {
-                sender.sendMessage(Messaging.parseColor("{ERR}All shop items update failed."));
-                return;
-            }
-        }
-        // End of update-all subsection
-        
-        // Fetch the previous record and use it as the default for parsing these string tags.
-        
-        ItemClump requested = new ItemClump(itemString, plugin.getDatabaseMarket(), name);
-        
-        MarketItem prevData = plugin.getDatabaseMarket().data(requested, name);
-        
-        if (prevData == null)
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}" + itemString.split(" ", 2)[0] + " not found in market."));
-            sender.sendMessage(Messaging.parseColor("{ERR}Use {CMD}/shop add{ERR} instead."));
-            return;
-        }
-        
-        // If no :count is input, insert it into itemString.
-        if (!(itemString.split(" ")[0].contains(":")))
-        {
-            String[] itemSubStrings = itemString.split(" ", 2);
-            itemSubStrings[0] += ":" + prevData.count;
-            if (itemSubStrings.length > 1)
-            {
-                itemString = itemSubStrings[0] + " " + itemSubStrings[1];
-            }
-            else
-            {
-                itemString = itemSubStrings[0];
-            }
-        }
-        
-        MarketItem updated = new MarketItem(itemString, prevData, plugin.getDatabaseMarket(), name);
-        
-        if ((updated.count < 1) || (updated.count > maxPerTransaction))
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}Invalid bundle size. (Range: 1.." + maxPerTransaction + ")"));
-            return;
-        }
-        
-        if (plugin.getDatabaseMarket().update(updated))
-        {
-            sender.sendMessage(Messaging.parseColor("Item {PRM}" + updated.getName() + "{} updated:"));
-            ArrayList<String> thisList = updated.infoStringFull();
-            for (String thisLine : thisList)
-            {
-                sender.sendMessage(Messaging.parseColor(thisLine));
-            }
-        }
-        else
-        {
-            sender.sendMessage(Messaging.parseColor("Item {PRM}" + updated.getName() + "{} update {ERR}failed."));
-        }
-    }
+	public double getFunds()
+	{
+		return funds;
+	}
+	public void setFunds(double funds)
+	{
+		this.funds = funds;
+	}
+	
+	public int getMaxTransactionSize()
+	{
+		return maxTransactionSize;	
+	}
+	public void setMaxTransactionSize(int maxTransactionSize)
+	{
+		this.maxTransactionSize = maxTransactionSize;
+	}
+	
+	// Methods
+	public void addProduct(Product product)
+	{
+		try
+		{
+			getProduct(product.getType(), product.getData()); // throws IllegalArgumentException, iff this does not contain such a product.
+		}
+		catch (IllegalArgumentException e)
+		{
+			product.setShop(this);
+			products.add(product);
+			return;
+		}
+		throw new IllegalArgumentException(name + " already sells that!");
+	}
+	
+	public Product getProduct(int type, byte data) throws IllegalArgumentException
+	{
+		for (Product product : products)
+		{
+			if (product.equals(type, data))
+			{
+				return product;
+			}
+		}
+		throw new IllegalArgumentException(name + " doesn't stock that!");
+	}
+	public Product getProduct(MaterialData data)
+	{
+		return getProduct(data.getItemTypeId(), data.getData());
+	}
+	
+	public static Shop parseShop(String... args) throws IllegalArgumentException
+	{
+		try
+		{
+			return new Shop
+			(
+				args[0],
+				Format.parseBoolean(args[1]),
+				Format.parseDouble(args[2]),
+				Format.parseInteger(args[3])
+			);
+		}
+		catch (NumberFormatException e)
+		{
+			
+		}
+		catch (IndexOutOfBoundsException e)
+		{
+			
+		}
+		throw new IllegalArgumentException("That is not a valid Shop.");
+	}
+	public static Shop parseShop(String line) throws IllegalArgumentException
+	{
+		return parseShop(line.split(","));
+	}
+	public static Shop parseShop(CommandContext args) throws IllegalArgumentException
+	{
+		return null;
+		// TODO: Add parseShop command.
+	}
+	
+	public void remove(Product product)
+	{
+		products.remove(product);
+	}
+	
+	public String toCSV()
+	{
+		return Message.combine
+		(
+			",", // This is the separator
+			"'" + name + "'",
+			infiniteFunding,
+			funds,
+			Format.parseString(maxTransactionSize)
+		);
+	}
+	
+	public String toString() // TODO: Add proper spacing between columns.
+	{
+		String line = "";
+		for (Product product : products)
+		{
+			byte data = product.getData();
+			String subtype = (data == 0 ? "" : "{BKT}:{PRM}" + data);
+			line += "{CMD}" + product.getType() + subtype + " {CMD}" + product.getName() + subtype + " {}Bundle: {PRM}" + product.getBundleSize() + "{} Buy: {PRM}" + product.getBuyPrice() + " {}Sell: {PRM}" + product.getSellPrice() + "\n";
+		}
+		return line.substring(0, line.length() - 1); // Remove the extra '\n'.
+	}
 }

@@ -18,57 +18,90 @@
 
 package com.gmail.haloinverse.DynamicMarket.commands;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.material.MaterialData;
 
 import com.gmail.haloinverse.DynamicMarket.DynamicMarket;
-import com.gmail.haloinverse.DynamicMarket.ItemClump;
-import com.gmail.haloinverse.DynamicMarket.MarketItem;
+import com.gmail.haloinverse.DynamicMarket.Product;
 import com.gmail.haloinverse.DynamicMarket.Setting;
-import com.gmail.haloinverse.DynamicMarket.util.Messaging;
+import com.gmail.haloinverse.DynamicMarket.Shop;
+import com.gmail.haloinverse.DynamicMarket.Transaction;
+import com.gmail.haloinverse.DynamicMarket.util.Format;
+import com.gmail.haloinverse.DynamicMarket.util.IO;
+import com.gmail.haloinverse.DynamicMarket.util.Message;
 import com.gmail.haloinverse.DynamicMarket.util.Util;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 
-public class ShopCommands
+public class ShopCommands // TODO: All shop modification/creation/deletion commands.
 {
 	@Command
 	(
 		aliases = {"add", "a"},
 		desc = "Adds an item to the shop",
-		usage = "<id>[:<bundleSize>] [buyPrice] [sellPrice] [tagList]",
+		usage = "<id>[:<subType>] [bundleSize|basePrice|maxPrice|minPrice|salesTax|volatility|stock|maxStock|minStock:<value>|buyable<true|false>|sellable<true|false>]", // Currently one cannot issue a command this long.
 		min = 1,
-		max = -1
+		max = 12
 	)
 	@CommandPermissions("items.add")
 	public static void add(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
-		plugin.getShop().add(sender, args.getJoinedStrings(0));
+		Shop shop = plugin.getMarket().getShop(((Player)sender).getLocation());
+		Product product;
+		try
+		{
+			product = Product.parseProduct(args); // throws IllegalArgumentException, iff args is not a valid Product.
+			shop.addProduct(product);
+		}
+		catch (IllegalArgumentException e)
+		{
+			Message.send(sender, "{ERR}" + e.getMessage());
+			return;
+		}
+
+		// Update database.
+		plugin.getDatabase().save(product);
+		
+		Message.send(sender, "{}" + args.getString(0) + " is now for sale at " + shop.getName() + ".");
+		
+		// Temporary workaround. TODO: Figure out why a shop won't save during a transaction if we don't reload after adding a product to it.
+		List<Shop> shops = plugin.getMarket().getShops();
+		shops.remove(shop);
+		shops.add(plugin.getDatabase().find(Shop.class, shop.getId()));
 	}
 	
 	@Command
 	(
 		aliases = {"buy", "b"},
 		desc = "Purchases an item from the store",
-		usage = "<itemID>[:<count>]", // TODO: Make usage <itemID>[:[itemData]] [amount]
+		usage = "<itemID>[:<subType>] [amount]",
 		min = 1,
-		max = 1
+		max = 2
 	)
 	@CommandPermissions("buy")
 	public static void buy(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
-        if (sender instanceof Player)
-        {
-        	plugin.getShop().buy((Player)sender, args.getString(0));
-        }
-        else
-        {
-        	sender.sendMessage(Messaging.parseColor("{ERR}Cannot purchase items without being logged in."));
-        }
+		int amount;
+		try
+		{
+			amount = (args.argsLength() == 2 ? args.getInteger(1) : 1); // throws NumberFormatException, iff args.getString(1) is not a valid Integer.
+		}
+		catch (NumberFormatException e)
+		{
+			sender.sendMessage(Message.parseColor("{ERR}" + args.getString(1) + " is not a valid amount!"));
+			return;
+		}
+		
+        new Transaction(plugin, amount, (Player)sender, args.getString(0));
 	}
 	
 	@Command
@@ -82,14 +115,17 @@ public class ShopCommands
 	public static void exportDB(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
 		plugin.log(Level.INFO, sender.getName() + " has issued the exportDB command; exporting.");
-        if (plugin.getDatabaseMarket().dumpToCSV(plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class) + plugin.getShop().getName() + plugin.getSetting(Setting.IMPORT_EXPORT_FILE, String.class), plugin.getShop().getName()))
-        {
-            sender.sendMessage(Messaging.parseColor("{}Export successful."));
-        }
-        else
-        {
-        	sender.sendMessage(Messaging.parseColor("{ERR}Export FAILED!"));
-        }
+		try
+		{
+			IO.dumpToCSV(plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class), "shops.csv", plugin.getMarket());
+		}
+		catch (IOException e)
+		{
+			plugin.log(Level.WARNING, e.getMessage());
+			Message.send(sender, "{ERR}Export FAILED!");
+			return;
+		}
+		Message.send(sender, "{}Export successfull.");
 	}
 	
 	// Is this help command really necessary? CommandsManager provides a description and usage help. It's already written; so, I'll leave it in here.
@@ -114,17 +150,17 @@ public class ShopCommands
             }
         }
         
-        // Generate message. TODO: Migrate messages to an Enum.
+        // Generate message. TODO: Migrate messages to an Enum or some form of constant.
         if (topic.isEmpty())
         {
             String commands = "";
             String topics = "";
             String shortcuts = "";
             
-            sender.sendMessage(Messaging.parseColor("{}" + Messaging.headerify("{CMD} " + plugin.getDescription().getName() + " {BKT}{} ")));
-            sender.sendMessage(Messaging.parseColor("{} {BKT}(){} Optional, {PRM}<>{} Parameter"));
-            sender.sendMessage(Messaging.parseColor("{CMD} /shop help {BKT}({PRM}<topic/command>{BKT}){} - Show help."));
-            sender.sendMessage(Messaging.parseColor("{CMD} /shop {PRM}<command> <params>{} - Use a shop command."));
+            sender.sendMessage(Message.parseColor("{}" + Message.headerify("{CMD} " + plugin.getDescription().getName() + " {BKT}{} ")));
+            sender.sendMessage(Message.parseColor("{} {BKT}[]{} Optional, {BKT}<>{} Required"));
+            sender.sendMessage(Message.parseColor("{CMD} /shop help {PRM}[topic|command]{} - Show help."));
+            sender.sendMessage(Message.parseColor("{CMD} /shop {PRM}<command> <params>{} - Use a shop command."));
             
             commands += " list";
             shortcuts += " -? -l";
@@ -159,7 +195,6 @@ public class ShopCommands
             if (plugin.hasPermission(sender, "admin"))
             {
                 commands += " reload";
-                commands += " reset";
                 commands += " exportdb importdb";
             }
             
@@ -169,21 +204,21 @@ public class ShopCommands
                 topics += " tags";
             }
             
-            sender.sendMessage(Messaging.parseColor("{} Commands: {CMD}" + commands));
-            sender.sendMessage(Messaging.parseColor("{} Shortcuts: {CMD}" + shortcuts));
-            sender.sendMessage(Messaging.parseColor("{} Other help topics: {PRM}" + topics));
+            sender.sendMessage(Message.parseColor("{} Commands: {CMD}" + commands));
+            sender.sendMessage(Message.parseColor("{} Shortcuts: {CMD}" + shortcuts));
+            sender.sendMessage(Message.parseColor("{} Other help topics: {PRM}" + topics));
             
             return;
         }
-        sender.sendMessage(Messaging.parseColor("{}" + Messaging.headerify("{} " + plugin.getDescription().getName() + " {BKT}{} : " + topic + "{} ")));
+        sender.sendMessage(Message.parseColor("{}" + Message.headerify("{} " + plugin.getDescription().getName() + " {BKT}{} : " + topic + "{} ")));
         
         if (topic.equalsIgnoreCase("buy"))
         {
             if (plugin.hasPermission(sender, "buy"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop buy {PRM}<id>{BKT}({CMD}:{PRM}<count>{CMD})"));
-                sender.sendMessage(Messaging.parseColor("{} Buy {PRM}<count>{} bundles of an item."));
-                sender.sendMessage(Messaging.parseColor("{} If {PRM}<count>{} is missing, buys 1 bundle."));
+                sender.sendMessage(Message.parseColor("{CMD} /shop buy {PRM}<id>[{BKT}:{PRM}<subType>] [amount]"));
+                sender.sendMessage(Message.parseColor("{} Buy {PRM}<amount>{} bundles of an item."));
+                sender.sendMessage(Message.parseColor("{} If {PRM}<amount>{} is missing, buys 1 bundle."));
                 return;
             }
         }
@@ -191,31 +226,25 @@ public class ShopCommands
         {
             if (plugin.hasPermission(sender, "sell"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop sell {PRM}<id>{BKT}({CMD}:{PRM}<count>{CMD})"));
-                sender.sendMessage(Messaging.parseColor("{} Sell {PRM}<count>{} bundles of an item."));
-                sender.sendMessage(Messaging.parseColor("{} If {PRM}<count>{} is missing, sells 1 bundle."));
+                sender.sendMessage(Message.parseColor("{CMD}/shop sell {PRM}<id>[{BKT}:{PRM}<subType>] [amount]"));
+                sender.sendMessage(Message.parseColor("{} Sell {PRM}<amount>{} bundles of an item."));
+                sender.sendMessage(Message.parseColor("{} If {PRM}<amount>{} is missing, sells 1 bundle."));
                 return;
             }
         }
         if (topic.equalsIgnoreCase("info"))
         {
-            // if (plugin.hasPermission(player,"sell"))
-            // {
-            sender.sendMessage(Messaging.parseColor("{CMD} /shop info {PRM}<id>"));
-            sender.sendMessage(Messaging.parseColor("{} Show detailed information about a shop item."));
+            sender.sendMessage(Message.parseColor("{CMD}/shop info {PRM}<id>[{BKT}:{PRM}<subType>]"));
+            sender.sendMessage(Message.parseColor("{} Show detailed information about a shop item."));
             return;
-            // }
         }
         if (topic.equalsIgnoreCase("add"))
         {
             if (plugin.hasPermission(sender, "items.add"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop add {PRM}<id>{BKT}({CMD}:{PRM}<bundle>{BKT}) ({PRM}<buyPrice>{BKT} ({PRM}<sellPrice>{BKT})) {PRM}<tags>"));
-                sender.sendMessage(Messaging.parseColor("{} Adds item {PRM}<id>{} to the shop."));
-                sender.sendMessage(Messaging.parseColor("{} Transactions will be in {PRM}<bundle>{} units (default 1)."));
-                sender.sendMessage(Messaging.parseColor("{PRM} <buyPrice>{} and {PRM}<sellPrice>{} will be converted, if used."));
-                sender.sendMessage(Messaging.parseColor("{} Prices are per-bundle."));
-                sender.sendMessage(Messaging.parseColor("{} See also: {CMD}/shop help tags"));
+                sender.sendMessage(Message.parseColor("{CMD}/shop add {PRM}<id>[{BKT}:{PRM}<subType>] <tags>"));
+                sender.sendMessage(Message.parseColor("{} Adds item {PRM}<id>{BKT}:{PRM}<subType>{} to the shop."));
+                sender.sendMessage(Message.parseColor("{} See also: {CMD}/shop help tags"));
                 return;
             }
         }
@@ -223,12 +252,9 @@ public class ShopCommands
         {
             if (plugin.hasPermission(sender, "items.update"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop update {PRM}<id>{BKT}({CMD}:{PRM}<bundle>{BKT}) ({PRM}<buyPrice>{BKT} ({PRM}<sellPrice>{BKT})) {PRM}<tags>"));
-                sender.sendMessage(Messaging.parseColor("{} Changes item {PRM}<id>{}'s shop details."));
-                sender.sendMessage(Messaging.parseColor("{PRM} <bundle>{}, {PRM}<buyPrice>{}, {PRM}<sellPrice>{}, and {PRM}<tags>{} will be changed."));
-                sender.sendMessage(Messaging.parseColor("{} Transactions will be in {PRM}<bundle>{} units (default 1)."));
-                sender.sendMessage(Messaging.parseColor("{} Prices are per-bundle."));
-                sender.sendMessage(Messaging.parseColor("{} See also: {CMD}/shop help tags"));
+                sender.sendMessage(Message.parseColor("{CMD}/shop update {PRM}<id>{BKT}:{PRM}[<subType>] <tags>"));
+                sender.sendMessage(Message.parseColor("{} Changes item {PRM}<id>{BKT}:{PRM}<subType>{}'s shop details."));
+                sender.sendMessage(Message.parseColor("{} See also: {CMD}/shop help tags"));
                 return;
             }
         }
@@ -236,8 +262,8 @@ public class ShopCommands
         {
             if (plugin.hasPermission(sender, "items.remove"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop remove {PRM}<id>"));
-                sender.sendMessage(Messaging.parseColor("{} Removes item {PRM}<id>{} from the shop."));
+                sender.sendMessage(Message.parseColor("{CMD} /shop remove {PRM}<id>[{BKT}:{PRM}<subType>]"));
+                sender.sendMessage(Message.parseColor("{} Removes item {PRM}<id>{BKT}:{PRM}<subType>{} from the shop."));
                 return;
             }
         }
@@ -245,62 +271,53 @@ public class ShopCommands
         {
             if (topic.equalsIgnoreCase("reload"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop reload"));
-                sender.sendMessage(Messaging.parseColor("{} Restarts the shop plugin."));
-                sender.sendMessage(Messaging.parseColor("{} Attempts to reload all relevant config files."));
+                sender.sendMessage(Message.parseColor("{CMD} /shop reload"));
+                sender.sendMessage(Message.parseColor("{} Restarts the shop plugin."));
+                sender.sendMessage(Message.parseColor("{} Attempts to reload all relevant config files."));
                 return;
             }
-            if (topic.equalsIgnoreCase("reset"))
+            if (Util.isAny(topic, "export", "exportdb"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop reset"));
-                sender.sendMessage(Messaging.parseColor("{} Completely resets the shop database."));
-                sender.sendMessage(Messaging.parseColor("{} This will remove all items from the shop, and"));
-                sender.sendMessage(Messaging.parseColor("{} create a new empty shop database."));
+                sender.sendMessage(Message.parseColor("{CMD} /shop exportdb"));
+                sender.sendMessage(Message.parseColor("{} Dumps the shop database to a .csv file."));
+                sender.sendMessage(Message.parseColor("{} Is saved in the plugins data folder (plugins\\DynamicMarket\\shops.csv)"));
+                sender.sendMessage(Message.parseColor("{} The file can be edited by most spreadsheet programs."));
                 return;
             }
-            if (topic.equalsIgnoreCase("exportdb"))
+            if (Util.isAny(topic, "import", "importdb"))
             {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop exportdb"));
-                sender.sendMessage(Messaging.parseColor("{} Dumps the shop database to a .csv file."));
-                sender.sendMessage(Messaging.parseColor("{} Name and location are set in the main config file."));
-                sender.sendMessage(Messaging.parseColor("{} The file can be edited by most spreadsheet programs."));
-                return;
-            }
-            if (topic.equalsIgnoreCase("importdb"))
-            {
-                sender.sendMessage(Messaging.parseColor("{CMD} /shop importdb"));
-                sender.sendMessage(Messaging.parseColor("{} Reads a .csv file in to the shop database."));
-                sender.sendMessage(Messaging.parseColor("{} Name and location are set in the main config file."));
-                sender.sendMessage(Messaging.parseColor("{} The format MUST be the same as the export format."));
-                sender.sendMessage(Messaging.parseColor("{} Records matching id/subtype will be updated."));
+                sender.sendMessage(Message.parseColor("{CMD} /shop importdb"));
+                sender.sendMessage(Message.parseColor("{} Reads a .csv file in to the shop database."));
+                sender.sendMessage(Message.parseColor("{} File location is set in the main config file."));
+                sender.sendMessage(Message.parseColor("{} The format MUST be the same as the export format."));
+                sender.sendMessage(Message.parseColor("{ERR} THIS WILL DROP THE ENTIRE DATABASE! BACKUP YOUR DATABASE FIRST!"));
                 return;
             }
         }
         if (topic.equalsIgnoreCase("ids"))
         {
-            sender.sendMessage(Messaging.parseColor("{} Item ID format: {PRM}<id>{BKT}({CMD},{PRM}<subtype>{BKT})({CMD}:{PRM}<count>{BKT})"));
-            sender.sendMessage(Messaging.parseColor("{PRM} <id>{}: Full name or ID number of the item."));
-            sender.sendMessage(Messaging.parseColor("{PRM} <subtype>{}: Subtype of the item (default: 0)"));
-            sender.sendMessage(Messaging.parseColor("{} Subtypes are used for wool/dye colours, log types, etc."));
-            sender.sendMessage(Messaging.parseColor("{PRM} <count>{}: For shop items, this specifies bundle size."));
-            sender.sendMessage(Messaging.parseColor("{} For transactions, this sets the number of bundles bought or sold."));
+            sender.sendMessage(Message.parseColor("{} Item ID format: {PRM}<id>{BKT}:{PRM}<subtype> <count>)"));
+            sender.sendMessage(Message.parseColor("{PRM} <id>{}: Full name or ID number of the item."));
+            sender.sendMessage(Message.parseColor("{PRM} <subtype>{}: Subtype of the item (default: 0)"));
+            sender.sendMessage(Message.parseColor("{} Subtypes are used for wool/dye colours, log types, etc."));
+            sender.sendMessage(Message.parseColor("{} For transactions, {PRM}<count> {}this sets the number of bundles bought or sold."));
             return;
         }
         if (topic.equalsIgnoreCase("list"))
         {
-            sender.sendMessage(Messaging.parseColor("{CMD} /shop list {BKT}({PRM}<nameFilter>{BKT}) ({PRM}<page>{BKT})"));
-            sender.sendMessage(Messaging.parseColor("{} Displays the items in the shop."));
-            sender.sendMessage(Messaging.parseColor("{} List format: {BKT}[{PRM}<id#>{BKT}]{PRM} <fullName> {BKT}[{PRM}<bundleSize>{BKT}]{} Buy {BKT}[{PRM}<buyPrice>{BKT}]{} Sell {BKT}[{PRM}<sellPrice>{BKT}]"));
-            sender.sendMessage(Messaging.parseColor("{} Page 1 is displayed by default, if no page number is given."));
-            sender.sendMessage(Messaging.parseColor("{} If {PRM}<nameFilter>{} is used, displays items containing {PRM}<nameFilter>{}."));
+            sender.sendMessage(Message.parseColor("{CMD}/shop list {PRM}[filter] [page]"));
+            sender.sendMessage(Message.parseColor("{} Displays the items in the shop."));
+            sender.sendMessage(Message.parseColor("{} List format: {PRM}<id> {PRM}<fullName> {}Bundle: {PRM}<bundleSize> {}Buy: {PRM}<buyPrice> {}Sell: {PRM}<sellPrice>"));
+            sender.sendMessage(Message.parseColor("{} Page 1 is displayed by default, if no page number is given."));
+            sender.sendMessage(Message.parseColor("{} If {PRM}<nameFilter>{} is used, displays items containing {PRM}<nameFilter>{}."));
             return;
         }
         if (topic.equalsIgnoreCase("details"))
         {
-            sender.sendMessage(Messaging.parseColor("{CMD} /shop {PRM}<id>{BKT}({CMD}:{PRM}<count>{BKT})"));
-            sender.sendMessage(Messaging.parseColor("{} Displays the current buy/sell price of the selected item."));
-            sender.sendMessage(Messaging.parseColor("{} Since prices can fluctuate, use {PRM}<count>{} to get batch pricing."));
-            sender.sendMessage(Messaging.parseColor("{} See {CMD}/shop help ids{} for information on IDs."));
+            sender.sendMessage(Message.parseColor("{CMD} /shop info {PRM}<id>{PRM}[{BKT}:{PRM}<subType>]"));
+            sender.sendMessage(Message.parseColor("{} Displays the current buy/sell price of the selected item."));
+            sender.sendMessage(Message.parseColor("{} Since prices can fluctuate, use {PRM}<count>{} to get batch pricing."));
+            sender.sendMessage(Message.parseColor("{} See {CMD}/shop help ids{} for information on IDs."));
             return;
         }
         if ((Util.isAny(topic.split(" ")[0], "tags", "tag")) && ((plugin.hasPermission(sender, "items.add") || plugin.hasPermission(sender, "items.update"))))
@@ -309,185 +326,152 @@ public class ShopCommands
             {
                 // Possible tag listed!
                 String thisTag = topic.split(" ")[1].replace(":", "");
-                if (Util.isAny(thisTag, "n", "name"))
-                {
-                    sender.sendMessage(Messaging.parseColor("{CMD} n:{BKT}|{CMD}name:{} - Name/rename item"));
-                    sender.sendMessage(Messaging.parseColor("{} Sets the item's name in the shop DB."));
-                    sender.sendMessage(Messaging.parseColor("{} New name will persist until the item is removed."));
-                    sender.sendMessage(Messaging.parseColor("{} If name is blank, will try to reload the name from items.db."));
-                    return;
-                }
                 if (Util.isAny(thisTag, "bp", "baseprice"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} bp:{BKT}|{CMD}BasePrice:{} - Base purchase price"));
-                    sender.sendMessage(Messaging.parseColor("{} Buy price of the item at stock level 0."));
-                    sender.sendMessage(Messaging.parseColor("{} All other prices are derived from this starting value."));
-                    sender.sendMessage(Messaging.parseColor("{} Referenced by {PRM}SalesTax{}, {PRM}Stock{}, and {PRM}Volatility{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Soft-limited by {PRM}PriceFloor{}/{PRM}PriceCeiling{}."));
+                    sender.sendMessage(Message.parseColor("{CMD}basePrice{BKT}:{PRM}<basePrice>{} - Base purchase price"));
+                    sender.sendMessage(Message.parseColor("{} Buy price of the item at stock level 0."));
+                    sender.sendMessage(Message.parseColor("{} All other prices are derived from this starting value."));
+                    sender.sendMessage(Message.parseColor("{} Referenced by {PRM}SalesTax{}, {PRM}Stock{}, and {PRM}Volatility{}."));
+                    sender.sendMessage(Message.parseColor("{} Limited by {PRM}PriceFloor{}/{PRM}PriceCeiling{}."));
                     return;
                 }
                 if (Util.isAny(thisTag, "s", "stock"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} s:{BKT}|{CMD}Stock:{} - Current stock level"));
-                    sender.sendMessage(Messaging.parseColor("{} Stock level of this item (in bundles)."));
-                    sender.sendMessage(Messaging.parseColor("{} Increases/decreases when items are sold/bought."));
-                    sender.sendMessage(Messaging.parseColor("{} Affects buy/sell prices, if {PRM}Volatility{} > 0."));
-                    sender.sendMessage(Messaging.parseColor("{} Soft-limited by {PRM}StockFloor{}/{PRM}StockCeiling{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Hard-limited (transactions fail) by {PRM}StockLowest{}/{PRM}StockHighest{}."));
+                    sender.sendMessage(Message.parseColor("{CMD}stock{BKT}:{PRM}<stock>{} - Current stock level"));
+                    sender.sendMessage(Message.parseColor("{} Stock level of this item (in bundles)."));
+                    sender.sendMessage(Message.parseColor("{} Increases/decreases when items are sold/bought."));
+                    sender.sendMessage(Message.parseColor("{} Affects buy/sell prices, if {PRM}Volatility{} > 0."));
+                    sender.sendMessage(Message.parseColor("{} Limited (transactions fail) by {PRM}StockLowest{}/{PRM}StockHighest{}."));
                     return;
                 }
-                if (Util.isAny(thisTag, "cb", "canbuy"))
+                if (Util.isAny(thisTag, "cb", "buyable", "canbuy"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} cb:{BKT}|{CMD}CanBuy:{} - Buyability of item"));
-                    sender.sendMessage(Messaging.parseColor("{} Set to 'Y', 'T', or blank to allow buying from shop."));
-                    sender.sendMessage(Messaging.parseColor("{} Set to 'N' or 'F' to disallow buying from shop."));
+                	Message.send
+                	(
+                		sender, // The recipient.
+                    	"{CMD}buyable{BKT}:{PRM}{PRM}<buyable>{} - Buyability of item",
+                    	"{} Use to allow buying an item to the shop.",
+                    	"{} Set to 'Y' or 'T' to allow buying an item to the shop.",
+                    	"{} Set to 'N' or 'F' to disallow buying an item to the shop."
+                	);
                     return;
                 }
-                if (Util.isAny(thisTag, "cs", "cansell"))
+                if (Util.isAny(thisTag, "cs", "sellable", "cansell"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} cs:{BKT}|{CMD}CanSell:{} - Sellability of item"));
-                    sender.sendMessage(Messaging.parseColor("{} Set to 'Y', 'T', or blank to allow selling to shop."));
-                    sender.sendMessage(Messaging.parseColor("{} Set to 'N' or 'F' to disallow selling to shop."));
+                	Message.send
+                	(
+                		sender, // The recipient.
+                    	"{CMD}sellable{BKT}:{PRM}{PRM}<sellable>{} - Sellability of item",
+                    	"{} Use to allow selling an item to the shop.",
+                    	"{} Set to 'Y' or 'T' to allow selling an item to the shop.",
+                    	"{} Set to 'N' or 'F' to disallow selling an item to the shop."
+                	);
                     return;
                 }
-                if (Util.isAny(thisTag, new String[] { "v", "vol", "volatility" }))
+                if (Util.isAny(thisTag, "v", "vol", "volatility", "float"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} v:{BKT}|{CMD}Vol:{}{BKT}|{CMD}Volatility:{} - Price volatility"));
-                    sender.sendMessage(Messaging.parseColor("{} Percent increase in price per 1 bundle bought from shop, * 10000."));
-                    sender.sendMessage(Messaging.parseColor("{} v=0 prevents the price from changing with stock level."));
-                    sender.sendMessage(Messaging.parseColor("{} v=1 increases the price 1% per 100 bundles bought."));
-                    sender.sendMessage(Messaging.parseColor("{} v=10000 increases the price 100% per 1 bundle bought."));
-                    sender.sendMessage(Messaging.parseColor("{} Calculations are compound vs. current stock level."));
-                    return;
-                }
-                if (Util.isAny(thisTag, new String[] { "iv", "ivol", "invvolatility" }))
-                {
-                    sender.sendMessage(Messaging.parseColor("{CMD} iv:{BKT}|{CMD}IVol:{}{BKT}|{CMD}InvVolatility:{} - Inverse Volatility"));
-                    sender.sendMessage(Messaging.parseColor("{} Number of bundles bought in order to double the price."));
-                    sender.sendMessage(Messaging.parseColor("{} Converted to volatility when entered."));
-                    sender.sendMessage(Messaging.parseColor("{} iv=+INF prevents the price from changing with stock level."));
-                    sender.sendMessage(Messaging.parseColor("{} iv=6400 doubles the price for each 6400 items bought."));
-                    sender.sendMessage(Messaging.parseColor("{} iv=1 doubles the price for each item bought."));
-                    sender.sendMessage(Messaging.parseColor("{} Calculations are compound vs. current stock level."));
+                    sender.sendMessage(Message.parseColor("{CMD}volatility{BKT}:{PRM}<volatility>{} - Price volatility"));
+                    sender.sendMessage(Message.parseColor("{} Percent increase in price per 1 bundle bought from shop, / 100."));
+                    sender.sendMessage(Message.parseColor("{PRM} 0 {}prevents the price from changing with stock level."));
+                    sender.sendMessage(Message.parseColor("{PRM} 1 {}increases the price 1% per 100 bundles bought."));
+                    sender.sendMessage(Message.parseColor("{PRM} 10000 {}increases the price 100% per 1 bundle bought."));
+                    sender.sendMessage(Message.parseColor("{} Calculations are compound vs. current stock level."));
                     return;
                 }
                 if (Util.isAny(thisTag, "st", "salestax"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} st:{BKT}|{CMD}SalesTax:{} - Sales Tax"));
-                    sender.sendMessage(Messaging.parseColor("{} Percent difference between BuyPrice and SellPrice, * 100."));
-                    sender.sendMessage(Messaging.parseColor("{} {PRM}SellPrice{}={PRM}BuyPrice{}*(1-({PRM}SalesTax{}/100))"));
-                    sender.sendMessage(Messaging.parseColor("{} If {PRM}SellPrice{} is entered as an untagged value, it is used to calculate {PRM}SalesTax{}."));
-                    sender.sendMessage(Messaging.parseColor("{} {PRM}SalesTax{} is applied after {PRM}PriceFloor{}/{PRM}PriceCeiling{}."));
+                    sender.sendMessage(Message.parseColor("{CMD}salesTax{BKT}:{PRM}<salesTax>"));
+                    sender.sendMessage(Message.parseColor("{} Percent difference between BuyPrice and SellPrice, / 100."));
+                    sender.sendMessage(Message.parseColor("{} {PRM}SellPrice{}={PRM}BuyPrice{}*(1-({PRM}SalesTax{}/100))"));
+                    sender.sendMessage(Message.parseColor("{} {PRM}SalesTax{} is applied before {PRM}PriceFloor{}/{PRM}PriceCeiling{}."));
                     return;
                 }
-                if (Util.isAny(thisTag, "sl", "stocklowest"))
+                if (Util.isAny(thisTag, "sf", "minStock", "stockfloor", "stocklowest"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} sl:{BKT}|{CMD}StockLowest:{} - Lowest stock level (hard limit)"));
-                    sender.sendMessage(Messaging.parseColor("{} Buying from shop will fail if it would put stock below {PRM}StockLowest{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Set to 0 to to make stock 'finite'."));
-                    sender.sendMessage(Messaging.parseColor("{} Set to -INF or a negative value to use stock level as a 'relative offset'."));
+                    sender.sendMessage(Message.parseColor("{CMD}minStock{BKT}:{PRM}<minStock>{} - Lowest stock level"));
+                    sender.sendMessage(Message.parseColor("{} If the stock floor is reached, customers will no longer be able to buy that product from the shop."));
                     return;
                 }
-                if (Util.isAny(thisTag, "sh", "stockhighest"))
+                if (Util.isAny(thisTag, "sc", "maxStock", "stockceiling", "stockhighest"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} sh:{BKT}|{CMD}StockHighest:{} - Highest stock level (hard limit)"));
-                    sender.sendMessage(Messaging.parseColor("{} Selling to shop will fail if it would put stock above {PRM}StockHighest{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Set to +INF to let maximum stock be unlimited."));
+                    sender.sendMessage(Message.parseColor("{CMD}maxStock{BKT}:{PRM}<maxStock>{} - Highest stock level"));
+                    sender.sendMessage(Message.parseColor("{} If the stock ceiling is reached, customers will no longer be able to sell that product to the shop."));
                     return;
                 }
-                if (Util.isAny(thisTag, "sf", "stockfloor"))
+                if (Util.isAny(thisTag, "pf", "minPrice", "pricefloor", "priceHighest"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} sf:{BKT}|{CMD}StockFloor:{} - Lowest stock level (soft limit)"));
-                    sender.sendMessage(Messaging.parseColor("{} If {PRM}Stock{} falls below {PRM}StockFloor{}, it will be reset to {PRM}StockFloor{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Further purchases will be at a flat rate, until {PRM}Stock{} rises."));
+                    sender.sendMessage(Message.parseColor("{CMD}minPrice{BKT}:{PRM}<minPrice>{} - Lowest buy price"));
+                    sender.sendMessage(Message.parseColor("{} If {PRM}BuyPrice{} falls below {PRM}PriceFloor{}, it will be cropped at {PRM}PriceFloor{}."));
+                    sender.sendMessage(Message.parseColor("{} Buy/sell prices will be at a flat rate, until {PRM}BuyPrice{} rises above {PRM}PriceFloor{}."));
+                    sender.sendMessage(Message.parseColor("{} {PRM}PriceFloor{} is applied to {PRM}SellPrice{} after {PRM}SalesTax{}."));
                     return;
                 }
-                if (Util.isAny(thisTag, "sc", "stockceiling"))
+                if (Util.isAny(thisTag, "pc", "maxPrice", "priceceiling", "priceHighest"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} sc:{BKT}|{CMD}StockCeiling:{} - Highest stock level (soft limit)"));
-                    sender.sendMessage(Messaging.parseColor("{} If {PRM}Stock{} rises above {PRM}StockCeiling{}, it will be reset to {PRM}StockCeiling{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Further sales will be at a flat rate, until {PRM}Stock{} falls."));
+                    sender.sendMessage(Message.parseColor("{CMD}maxPrice{BKT}:{PRM}<maxPrice>{} - Highest buy price"));
+                    sender.sendMessage(Message.parseColor("{} If {PRM}BuyPrice{} rises above {PRM}PriceCeiling{}, it will be cropped at {PRM}PriceCeiling{}."));
+                    sender.sendMessage(Message.parseColor("{} Buy/sell prices will be at a flat rate, until {PRM}BuyPrice{} falls below {PRM}PriceCeiling{}."));
+                    sender.sendMessage(Message.parseColor("{} {PRM}PriceCeiling{} is applied to {PRM}SellPrice{} after {PRM}SalesTax{}."));
                     return;
                 }
-                if (Util.isAny(thisTag, "pf", "pricefloor"))
+                if (Util.isAny(thisTag, "flat", "fixed"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} pf:{BKT}|{CMD}PriceFloor:{} - Lowest buy price (soft limit)"));
-                    sender.sendMessage(Messaging.parseColor("{} If {PRM}BuyPrice{} falls below {PRM}PriceFloor{}, it will be cropped at {PRM}PriceFloor{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Buy/sell prices will be at a flat rate, until {PRM}BuyPrice{} rises above {PRM}PriceFloor{}."));
-                    sender.sendMessage(Messaging.parseColor("{} {PRM}PriceFloor{} is applied to {PRM}SellPrice{} before {PRM}SalesTax{}."));
-                    return;
-                }
-                if (Util.isAny(thisTag, "pc", "priceceiling"))
-                {
-                    sender.sendMessage(Messaging.parseColor("{CMD} pc:{BKT}|{CMD}PriceCeiling:{} - Highest buy price (soft limit)"));
-                    sender.sendMessage(Messaging.parseColor("{} If {PRM}BuyPrice{} rises above {PRM}PriceCeiling{}, it will be cropped at {PRM}PriceCeiling{}."));
-                    sender.sendMessage(Messaging.parseColor("{} Buy/sell prices will be at a flat rate, until {PRM}BuyPrice{} falls below {PRM}PriceCeiling{}."));
-                    sender.sendMessage(Messaging.parseColor("{} {PRM}PriceCeiling{} is applied to {PRM}SellPrice{} before {PRM}SalesTax{}."));
-                    return;
-                }
-                if (thisTag.equalsIgnoreCase("flat"))
-                {
-                    sender.sendMessage(Messaging.parseColor("{CMD} flat{} - Set item with flat pricing."));
-                    sender.sendMessage(Messaging.parseColor("{} Buy/sell prices for this item will not change with stock level."));
-                    sender.sendMessage(Messaging.parseColor("{} Stock level WILL be tracked, and can float freely."));
-                    sender.sendMessage(Messaging.parseColor("{} Equivalent to: {CMD}s:0 sl:-INF sh:+INF sf:-INF sc:+INF v:0 pf:0 pc:+INF"));
-                    return;
-                }
-                if (thisTag.equalsIgnoreCase("fixed"))
-                {
-                    sender.sendMessage(Messaging.parseColor("{CMD} fixed{} - Set item with fixed pricing."));
-                    sender.sendMessage(Messaging.parseColor("{} Buy/sell prices for this item will not change with transactions."));
-                    sender.sendMessage(Messaging.parseColor("{} Stock level WILL NOT be tracked, and {PRM}Stock{} will remain at 0."));
-                    sender.sendMessage(Messaging.parseColor("{} Equivalent to: {CMD}s:0 sl:-INF sh:+INF sf:0 sc:0 v:0 pf:0 pc:+INF"));
-                    return;
-                }
-                if (thisTag.equalsIgnoreCase("float"))
-                {
-                    sender.sendMessage(Messaging.parseColor("{CMD} float{} - Set item with floating pricing."));
-                    sender.sendMessage(Messaging.parseColor("{} Buy/sell prices for this item will vary by stock level."));
-                    sender.sendMessage(Messaging.parseColor("{} If {PRM}Vol{}=0, {PRM}Vol{} will be set to a default of 100."));
-                    sender.sendMessage(Messaging.parseColor("{} (For finer control, set {PRM}Volatility{} to an appropriate value.)"));
-                    sender.sendMessage(Messaging.parseColor("{} Stock level can float freely above and below 0 with transactions."));
-                    sender.sendMessage(Messaging.parseColor("{} Equivalent to: {CMD}sl:-INF sh:+INF sf:-INF sc:+INF {BKT}({CMD}v:100{BKT}){CMD} pf:0 pc:+INF"));
+                    Message.send
+                    (
+                    	sender, // The recipient.
+                    	"{}Use {CMD}/shop update {PRM}<itemID> {CMD}volatility{BKT}:{PRM}0",
+                    	"{} This will make the products price flat (not change based on stock levels)."
+                    );
                     return;
                 }
                 if (thisTag.equalsIgnoreCase("finite"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} finite{} - Set item with finite stock."));
-                    sender.sendMessage(Messaging.parseColor("{} Buying from shop will fail if it would make {PRM}Stock{} < 0."));
-                    sender.sendMessage(Messaging.parseColor("{} Any number of items can be sold to the shop."));
-                    sender.sendMessage(Messaging.parseColor("{} Equivalent to: {CMD}sl:0 sh:+INF sf:-INF sc:+INF"));
+                    Message.send
+                    (
+                    	sender, // The recipient.
+                    	"{}Use {CMD}/shop update {PRM}<itemID> {CMD}minStock{BKT}:{PRM}0",
+                    	"{} Buying from shop will fail, if it would make {PRM}Stock{} < 0.",
+                    	"{} Any number of items can be sold to the shop still."
+                    );
                     return;
                 }
                 if (thisTag.equalsIgnoreCase("renorm"))
                 {
-                    sender.sendMessage(Messaging.parseColor("{CMD} renorm{BKT}({CMD}:{PRM}<stock>{BKT}){} - Renormalize an item's price."));
-                    sender.sendMessage(Messaging.parseColor("{} Resets an item's {PRM}Stock{}, while preserving its current price."));
-                    sender.sendMessage(Messaging.parseColor("{} Sets an item's {PRM}BasePrice{} to its current {PRM}BuyPrice{},"));
-                    sender.sendMessage(Messaging.parseColor("{} then sets {PRM}Stock{} to {PRM}<stock>{} (0 if blank or missing)."));
+                	Message.send
+                	(
+                		sender, // The recipient.
+                		"{CMD}update {PRM}<itemID> {CMD}renorm{} - Renormalize an item's price.",
+                		"{} Resets an item's {PRM}Stock{}, while preserving its current price.",
+                		"{} Sets an item's {PRM}BasePrice{} to its current {PRM}BuyPrice,",
+                		"{} and sets it's {PRM}Stock{} to 0."
+                    );
                     return;
                 }
-                sender.sendMessage(Messaging.parseColor("{ERR} Unknown tag {PRM}" + thisTag + "{ERR}."));
-                sender.sendMessage(Messaging.parseColor("{ERR} Use {CMD}/shop help tags{ERR} to list tags."));
+                sender.sendMessage(Message.parseColor("{ERR} Unknown tag {PRM}" + thisTag + "{ERR}."));
+                sender.sendMessage(Message.parseColor("{ERR} Use {CMD}/shop help tags{ERR} to list tags."));
                 return;
             }
             else
             {
-                sender.sendMessage(Messaging.parseColor("{} Tag format: {PRM}<tagName>{BKT}({CMD}:{PRM}<value>{BKT}) ({PRM}<tagName>{BKT}({CMD}:{PRM}<value>{BKT}))..."));
-                sender.sendMessage(Messaging.parseColor("{} Available tags: {CMD} Name: BasePrice: SalesTax: Stock: CanBuy: CanSell: Vol: IVol:"));
-                sender.sendMessage(Messaging.parseColor("{CMD} StockLowest: StockHighest: StockFloor: StockCeiling: PriceFloor: PriceCeiling:"));
-                sender.sendMessage(Messaging.parseColor("{} Available preset tags: {CMD}Fixed Flat Float Finite Renorm:"));
-                sender.sendMessage(Messaging.parseColor("{} Use {CMD}/shop help tag {PRM}<tagName>{} for tag descriptions."));
+                sender.sendMessage(Message.parseColor("{} Tag format: {PRM}<tagName>{CMD}{BKT}:{PRM}<value> {PRM}<tagName>{CMD}{BKT}:{PRM}<value>..."));
+                sender.sendMessage(Message.parseColor("{} Available tags: {CMD}basePrice, salesTax, canBuy, canSell, volitility,"));
+                sender.sendMessage(Message.parseColor("{CMD} stock, maxStock, minStock, maxPrice, minPrice, buyable, sellable."));
+                sender.sendMessage(Message.parseColor("{} Use {CMD}/shop help tag {PRM}<tagName>{} for tag descriptions."));
                 return;
             }
         }
         if (topic.equalsIgnoreCase("about"))
         {
-            sender.sendMessage(Messaging.parseColor("{} " + plugin.getDescription().getName() + " " + plugin.getDescription().getVersion() + " written by " + plugin.getDescription().getAuthors() + "."));
+            Message.send
+            (
+            	sender,
+            	"{} " + plugin.getDescription().getName() + " " + plugin.getDescription().getVersion(),
+            	"{}Authors: {PRM}" + plugin.getDescription().getAuthors() + "."
+            );
             return;
         }
-        sender.sendMessage(Messaging.parseColor("{}Unknown help topic:{CMD} " + topic));
-        sender.sendMessage(Messaging.parseColor("{}Use {CMD}/shop help{} to list topics."));
+        sender.sendMessage(Message.parseColor("{}Unknown help topic:{CMD} " + topic));
+        sender.sendMessage(Message.parseColor("{}Use {CMD}/shop help{} to list topics."));
         return;
 	}
 	
@@ -501,20 +485,19 @@ public class ShopCommands
 	@CommandPermissions("admin")
 	public static void importDB(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
-		plugin.log(Level.INFO, sender.getName() + " has issued the importDB command; importing.");
-        if (plugin.getDatabaseMarket().inhaleFromCSV(plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class) + plugin.getShop().getName() + plugin.getSetting(Setting.IMPORT_EXPORT_FILE, String.class), plugin.getShop().getName()))
-        {
-            sender.sendMessage(Messaging.parseColor("{}Import successful."));
-        }
-        else
-        {
-        	sender.sendMessage(Messaging.parseColor("{ERR}Import FAILED!"));
-        }
+		if (plugin.importDB())
+		{
+			sender.sendMessage(Message.parseColor("{}Import successful."));
+		}
+		else
+		{
+			sender.sendMessage(Message.parseColor("{ERR}Import FAILED!"));
+		}
 	}
 	
 	@Command
 	(
-		aliases = {"info", "i"},
+		aliases = {"info", "i", "about"},
 		desc = "Displays information about an item",
 		usage = "[itemID]",
 		min = 0,
@@ -524,35 +507,31 @@ public class ShopCommands
 	{
 		if (args.argsLength() == 0) // Show plugin info.
 		{
-			sender.sendMessage(Messaging.parseColor("{}" + plugin.getDescription().getFullName() + " Copyright (C) 2011 Klezst"));
-			sender.sendMessage(Messaging.parseColor("{}" + "Authors: " + plugin.getDescription().getAuthors()));
+			sender.sendMessage(Message.parseColor("{}" + plugin.getDescription().getFullName() + " Copyright (C) 2011 Klezst"));
+			sender.sendMessage(Message.parseColor("{}" + "Authors: {PRM}" + plugin.getDescription().getAuthors()));
 		}
 		else // Show item info.
 		{
-			String shopLabel = "";
-			
-	        ItemClump requested = new ItemClump(args.getString(0), plugin.getDatabaseMarket(), shopLabel);
-	        if (requested.isValid())
-	        {
-		        MarketItem data = plugin.getDatabaseMarket().data(requested, shopLabel);
-		        if (data != null)
-		        {
-			        sender.sendMessage(Messaging.parseColor("{}Item {PRM}" + data.getName() + "{BKT}[{PRM}" + data.idString() + "{BKT}]{} info:"));
-		            ArrayList<String> thisList = data.infoStringFull();
-		            for (String thisLine : thisList)
-		            {
-		                sender.sendMessage(Messaging.parseColor(thisLine));
-		            }
-		        }
-		        else
-		        {
-		        	sender.sendMessage(Messaging.parseColor("{ERR}" + args.getString(0) + " is not currently traded in shop."));
-		        }
-	        }
-	        else
-	        {
-	            sender.sendMessage(Messaging.parseColor("{ERR}" + args.getString(0) + " is not a valid item."));
-	        }
+			if (sender instanceof Player)
+			{
+		    	Product product;
+		    	try
+		    	{
+		    		Shop shop = plugin.getMarket().getShop(((Player)sender).getLocation()); // throws IllegalArgumentException, Iff no shop at the player's location.
+		    		MaterialData data = Util.getMaterialData(args.getString(0)); // throws IllegalArgumentException, If id is not a valid MaterialData.
+		    		product = shop.getProduct(data); // throws IllegalArgumentException, Iff shop doesn't sell data.
+		    	}
+		    	catch (IllegalArgumentException e)
+		    	{
+		    		sender.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
+		    		return;
+		    	}
+				Message.send(sender, product.toString());
+			}
+			else
+			{
+				sender.sendMessage("You must be logged in to issue this command");
+			}
 		}
 	}
 	
@@ -566,63 +545,70 @@ public class ShopCommands
 	)
 	public static void list(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
-        // Possible inputs:
-        // none (default first page, unfiltered)
-        // pageNum
-        // nameFilter
-        // nameFilter pageNum
-        // TODO: Break into another method.
-        int pageSelect = 1;
-        String nameFilter = null;
-        if (args.argsLength() == 1)
-        {
-            try
-            {
-                pageSelect = Integer.valueOf(args.getString(0)).intValue();
-            }
-            catch (NumberFormatException ex)
-            {
-                nameFilter = args.getString(0);
-            }
-        }
-        if (args.argsLength() == 2)
-        {
-            nameFilter = args.getString(0);
-            try
-            {
-                pageSelect = Integer.valueOf(args.getString(1)).intValue();
-            }
-            catch (NumberFormatException ex)
-            {
-                pageSelect = 1;
-            }
-        }
-        ArrayList<MarketItem> list = plugin.getDatabaseMarket().list(pageSelect, nameFilter, plugin.getShop().getName());
-        ArrayList<MarketItem> listToCount = plugin.getDatabaseMarket().list(0, nameFilter, plugin.getShop().getName());
-        int numPages = (listToCount.size() / 8 + (listToCount.size() % 8 > 0 ? 1 : 0));
-        if (listToCount.isEmpty())
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}No items are set up in the shop yet..."));
-            return;
-        }
-        if (pageSelect > numPages)
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}The shop only has " + numPages + " pages of items."));
-            return;
-        }
-        if (list.isEmpty())
-        {
-            sender.sendMessage(Messaging.parseColor("{ERR}Horrors! The page calculation made a mistake!"));
-            return;
-        }
-        else
-        {
-            sender.sendMessage(Messaging.parseColor("{}Shop Items: Page {BKT}[{PRM}" + pageSelect + "{BKT}]{} of {BKT}[{PRM}" + numPages + "{BKT}]"));
-            for (MarketItem data : list)
-            {
-                sender.sendMessage(Messaging.parseColor(data.infoStringShort()));
-            }
-        }
+		Shop shop = plugin.getMarket().getShop(((Player)sender).getLocation());
+		String[] lines = shop.toString().split("\n");
+		
+		int page = 1;
+		if (args.argsLength() > 0)
+		{
+			try
+			{
+				page = Format.parseInteger(args.getString(0));
+			}
+			catch (NumberFormatException e)
+			{
+				if (args.argsLength() > 1)
+				{
+					try
+					{
+						page = Format.parseInteger(args.getString(1));
+					}
+					catch (NumberFormatException ex)
+					{
+						Message.send(sender, "{ERR}" + args.getString(1) + " is not a page number!");
+						return;
+					}
+				}
+				
+				// Filter
+				String filter = args.getString(0).toLowerCase();
+				List<String> temp = new ArrayList<String>();
+				for (String product : lines)
+				{
+					if (product.toLowerCase().contains(filter))
+					{
+						temp.add(product);
+					}
+				}
+				
+				lines = temp.toArray(new String[temp.size()]);
+			}
+		}
+		
+		if (page < 1)
+		{
+			Message.send(sender, "{ERR}You must specify a positive page number!");
+			return;
+		}
+		
+		int bound = Math.min(page * 8, lines.length);
+		int startIndex = (page - 1) * 8;
+		
+		if (startIndex > bound)
+		{
+			Message.send(sender, "{ERR}There aren't that many pages!");
+			return;
+		}
+		
+		lines = Arrays.copyOfRange(lines, startIndex, bound);
+		
+		if (lines.length == 0)
+		{
+			Message.send(sender, "{ERR}No such products found.");
+			return;
+		}
+		
+		Message.send(sender, lines);
 	}
 	
 	@Command
@@ -638,63 +624,63 @@ public class ShopCommands
 		plugin.log(Level.INFO, sender.getName() + " has issued the reload command; reloading.");
 		plugin.onDisable();
 		plugin.onEnable();
-		sender.sendMessage(Messaging.parseColor("{}" + plugin.getDescription().getName() + " Reloaded."));
-	}
-	
-	@Command
-	(
-		aliases = {"reset"},
-		desc = "Resets the database",
-		min = 0,
-		max = 0
-	)
-	@CommandPermissions("admin")
-	public static void reset(CommandContext args, DynamicMarket plugin, CommandSender sender)
-	{
-		plugin.log(Level.INFO, sender.getName() + " has issued the reset command; resetting the database.");
-        if (plugin.getDatabaseMarket().resetDatabase(plugin.getShop().getName()))
-        {
-        	sender.sendMessage(Messaging.parseColor("{}Database reset successful."));
-        }
-        else
-        {
-        	sender.sendMessage(Messaging.parseColor("{}Database reset {ERR}FAILED!"));
-        }
+		sender.sendMessage(Message.parseColor("{}" + plugin.getDescription().getName() + " Reloaded."));
 	}
 	
 	@Command
 	(
 		aliases = {"remove", "r"},
 		desc = "Removes an item from the shop",
-		usage = "<id>",
+		usage = "<id>[:<subType>]",
 		min = 1,
 		max = 1
 	)
 	@CommandPermissions("items.remove")
 	public static void remove(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
-		plugin.getShop().remove(sender, args.getString(0));
+		Shop shop;
+    	Product product;
+    	try
+    	{
+    		shop = plugin.getMarket().getShop(((Player)sender).getLocation()); // throws IllegalArgumentException, Iff no shop at the player's location.
+    		MaterialData data = Util.getMaterialData(args.getString(0)); // throws IllegalArgumentException, If id is not a valid MaterialData.
+    		product = shop.getProduct(data); // throws IllegalArgumentException, Iff shop doesn't sell data.
+    	}
+    	catch (IllegalArgumentException e)
+    	{
+    		sender.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
+    		return;
+    	}
+    	
+    	shop.remove(product);
+    	plugin.getDatabase().delete(product);
+    	
+    	Message.send(sender, "{}" + args.getString(0) + " is no longer sold at " + shop.getName() + ".");
 	}
 	
 	@Command
 	(
 		aliases = {"sell", "s"},
 		desc = "Sells an item to the store",
-		usage = "<itemID>[:<count>]", // TODO: Make usage <itemID>[:[itemData]] [amount]
+		usage = "<itemID>[:<subType>] [amount]",
 		min = 1,
-		max = 1
+		max = 2
 	)
 	@CommandPermissions("sell")
 	public static void sell(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
-        if (sender instanceof Player)
-        {
-        	plugin.getShop().sell((Player)sender, args.getString(0));
-        }
-        else
-        {
-        	sender.sendMessage(Messaging.parseColor("{ERR}Cannot purchase items without being logged in."));
-        }
+		int amount;
+		try
+		{
+			amount = (args.argsLength() == 2 ? args.getInteger(1) : 1);
+		}
+		catch (NumberFormatException e)
+		{
+			sender.sendMessage(Message.parseColor("{ERR}" + args.getString(1) + " is not a valid amount!"));
+			return;
+		}
+		
+        new Transaction(plugin, -amount, (Player)sender, args.getString(0));
 	}
 	
 	@Command
@@ -703,11 +689,86 @@ public class ShopCommands
 		desc = "Updates an item at the shop",
 		usage = "<id>[:<bundleSize>] [buyPrice] [sellPrice] [tagList]",
 		min = 1,
-		max = -1
+		max = 12
 	)
 	@CommandPermissions("items.update")
 	public static void update(CommandContext args, DynamicMarket plugin, CommandSender sender)
 	{
-		plugin.getShop().update(sender, args.getJoinedStrings(0));
+    	Product product;
+    	Map<String, String> properties;
+    	try
+    	{
+    		Shop shop = plugin.getMarket().getShop(((Player)sender).getLocation()); // throws IllegalArgumentException, Iff no shop at the player's location.
+    		MaterialData data = Util.getMaterialData(args.getString(0)); // throws IllegalArgumentException, If id is not a valid MaterialData.
+    		product = shop.getProduct(data); // throws IllegalArgumentException, Iff shop doesn't sell data.
+    		properties = Util.getProperties(args.getSlice(2)); // throws IllegalArgumentException, Iff an argument is not a valid property.
+    	}
+    	catch (IllegalArgumentException e)
+    	{
+    		sender.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
+    		return;
+    	}
+    	
+    	try
+    	{
+			if (properties.containsKey("bundlesize"))
+				product.setBundleSize(Format.parseInteger(properties.get("bundlesize")));
+			if (properties.containsKey("buyable"))
+				product.setBuyable(Format.parseBoolean(properties.get("buyable")));
+			if (properties.containsKey("sellable"))
+				product.setSellable(Format.parseBoolean(properties.get("sellable")));
+			if (properties.containsKey("baseprice"))
+				product.setBasePrice(Format.parseDouble(properties.get("baseprice")));
+			if (properties.containsKey("maxprice"))
+				product.setMaxPrice(Format.parseDouble(properties.get("maxprice")));
+			if (properties.containsKey("minprice"))
+				product.setMinPrice(Format.parseDouble(properties.get("minprice")));
+			if (properties.containsKey("salestax"))
+				product.setMarkup(Format.parseDouble(properties.get("salestax")));
+			if (properties.containsKey("volatility"))
+				product.setVolatility(Format.parseDouble(properties.get("volatility")));
+			if (properties.containsKey("stock"))
+				product.setStock(Format.parseInteger(properties.get("stock")));
+			if (properties.containsKey("maxstock"))
+				product.setMaxStock(Format.parseInteger(properties.get("maxstock")));
+			if (properties.containsKey("minstock"))
+				product.setMinStock(Format.parseInteger(properties.get("minstock")));
+    	}
+    	catch (NumberFormatException e)
+    	{
+    		Message.send(sender, "{ERR}Invalid flags; some of the updates may have been successful!"); 
+    		return; // Finally will still try to save any changes.
+    	}
+    	finally
+    	{
+    		plugin.getDatabase().update(product); // We must still save the product, in case earlier flags were successful.
+    	}
+    	
+    	Message.send(sender, "{}" + args.getString(0) + " updated.");
+	}
+	
+	@Deprecated
+	@Command
+	(
+		aliases = {"importold"},
+		desc = "Imports a .csv in the original format.",
+		min = 0,
+		max = 0
+	)
+	@CommandPermissions("admin")
+	public static void importOldDB(CommandContext args, DynamicMarket plugin, CommandSender sender)
+	{
+		plugin.log(Level.INFO, sender.getName() + " has issued the importOld command; importing.");
+		try
+		{
+			IO.importOld(plugin, plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class) + "shopDB.csv");
+		}
+		catch (IOException e)
+		{
+			plugin.log(Level.WARNING, e.getMessage());
+			return;
+		}
+		plugin.log(Level.INFO, "Import successful.");
+		sender.sendMessage("Import successful.");
 	}
 }

@@ -1,8 +1,9 @@
 package com.gmail.haloinverse.DynamicMarket.util;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 
-public class Messaging
+public class Message
 {
     private static String colNormal; // Normal text color {}.
     private static String colCmd; // Command highlight color {CMD}.
@@ -19,20 +20,51 @@ public class Messaging
     	colError = colErrorIn.toString();
     }
     
+    public static String combine(String separator, Object... args)
+    {
+    	String line = "";
+    	for (Object arg : args)
+    	{
+    		line += arg + separator;
+    	}
+    	line = line.substring(0, line.length() - 1); // Remove the extra '\n'.
+    	return parseColor(line);
+    }
+    
+    public static void send(CommandSender recipient, String... messages) // TODO: Update all sender.sendMessage(Messaging.parseColor((String)) to this method instead.
+    {
+    	for (String message : messages)
+    	{
+    		String[] lines = message.split("\n");
+    		for (String line : lines)
+    		{
+    			recipient.sendMessage(parseColor(line));
+    		}
+    	}
+    }
     /**
      * Surrounds text with '-'s.
      * 
      * @param innerText, The text to be surrounded by '-'s.
      * @return A string surrounded by '-'s.
-     * @author Nijikokun.
+     * @author Nijikokun
+     * @author Klezst
      */
     public static String headerify(String innerText)
     {
         // This is capable of crashing the client!
-        int extraLength = innerText.length() - stripColor(innerText).length();
-        String newString = "--" + innerText + "------------------------------------------------------------";
-        return newString.substring(0, 50 + extraLength);
-        // This is approximate, due to inability to get string width of the proportional font.
+        int dashes =  (50 - stripColor(innerText).length()) / 2;
+        return "{}" + repeat("-", dashes) + parseColor(innerText) + "{}" + repeat("-", dashes); // innerText defaults to {} color, if no color is specified.
+    }
+    
+    public static String repeat(String text, int times)
+    {
+    	String result = "";
+    	for (int i = 0; i < times; i++)
+    	{
+    		result += text;
+    	}
+    	return result;
     }
     
     /**

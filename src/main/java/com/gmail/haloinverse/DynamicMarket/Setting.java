@@ -25,8 +25,7 @@ import com.gmail.klezst.util.settings.Validation;
 public enum Setting implements Validatable
 {
 	// Do not use primitive data types or null.
-	INFINITE_FUNDING("default-shop.infinite-funding", Boolean.class), // Boolean.class is the class of the type of data you expect to get from the config.yml.
-	ITEMS_MAX_PER_TRANSACTION("default-shop.items-max-per-transaction", Integer.class),
+	VERSION("version", Double.class), // Double.class is the class of the type of data you expect to get from the config.yml.
 	BRACKET_COLOR("text-color.bracket", String.class)
 	{
 		@Override
@@ -67,17 +66,14 @@ public enum Setting implements Validatable
 			return Validation.getChatColor(this.getKey(), (String)value);
 		}
 	},
-	DATABASE_TYPE("database-type", String.class),
-	ITEMS_DB_PATH("items-db-path", String.class),
-	MYSQL_URL("mysql.url", String.class),
-	MYSQL_USER("mysql.user", String.class),
-	MYSQL_PASS("mysql.pass", String.class),
-	MYSQL_ENGINE("mysql.engine", String.class),
-	IMPORT_EXPORT_FILE("import-export.file", String.class),
-	IMPORT_EXPORT_PATH("import-export.path", String.class),
-	TRANSACTION_LOG_FILE("transaction-log.file", String.class),
-	TRANSACTION_LOG_AUTOFLUSH("transaction-log.autoflush", Boolean.class),
-	DEBUG("debug", Boolean.class);
+	DRIVER("database.driver", String.class),
+	URL("database.url", String.class),
+	USERNAME("database.username", String.class),
+	PASSWORD("database.password", String.class),
+	ISOLATION("database.isolation", String.class),
+	LOGGING("database.logging", Boolean.class),
+	IMPORT_EXPORT_PATH("import-export-path", String.class),
+	TRANSACTION_LOGGING("transaction-logging", Boolean.class);
 	
 	private String key;
 	private Class<?> type;

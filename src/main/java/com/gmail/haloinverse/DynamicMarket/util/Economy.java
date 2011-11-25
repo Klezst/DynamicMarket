@@ -26,19 +26,31 @@ public class Economy
 	 * Changes an economy account's balance.
 	 * @param amount, Amount to change the balance (can be negative).
 	 * @param name, Name of the account.
-	 * @throws NullPointerException, iff Register hasn't loaded an economy yet. // TODO: Remove listener for Register and economies and just use NullPointerException
+	 * @throws NullPointerException, iff the economy isn't loaded yet.
 	 * @author Klezst
 	 */
-	public static void deltaBalance(int amount, String name) throws NullPointerException
+	public static void deltaBalance(double amount, String name) throws NullPointerException
 	{
         Methods.getMethod().getAccount(name).add(amount);
 	}
 	
 	/**
+	 * Returns amount in display format.
+	 * @param amount, Amount to be formatted.
+	 * @return amount in display format.
+	 * @throws NullPointerException, iff the economy isn't loaded yet.
+	 * @author Klezst
+	 */
+    public static String format(double amount) throws NullPointerException
+    {
+    	return Methods.getMethod().format(amount);
+    }
+	
+	/**
 	 * Returns an economy account's balance.
 	 * @param name, Name of the account.
 	 * @return Balance of the account called name.
-	 * @throws NullPointerException, iff Register hasn't loaded an economy yet.
+	 * @throws NullPointerException, iff the economy isn't loaded yet.
 	 * @author Klezst
 	 */
     public static int getBalance(String name) throws NullPointerException
@@ -50,23 +62,22 @@ public class Economy
 	 * Returns an economy account's balance in display format.
 	 * @param name, Name of the account.
 	 * @return Balance of the account called name in display format.
-	 * @throws NullPointerException, iff Register hasn't loaded an economy yet.
+	 * @throws NullPointerException, iff the economy isn't loaded yet.
 	 * @author Klezst
 	 */
-    public static String getFormattedBalance(String name) throws IllegalArgumentException
+    public static String getFormattedBalance(String name) throws NullPointerException
     {
     	return Methods.getMethod().format(getBalance(name));
     }
     
-	/**
-	 * Returns amount in display format.
-	 * @param amount, Amount to be formatted.
-	 * @return amount in display format.
-	 * @throws NullPointerException, iff Register hasn't loaded an economy yet.
-	 * @author Klezst
-	 */
-    public static String format(double amount) throws NullPointerException
+    /**
+     * Returns whether or not the economy is loaded yet.
+     * 
+     * @return True, iff the economy is loaded.
+     * @author Klezst
+     */
+    public static boolean isLoaded()
     {
-    	return Methods.getMethod().format(amount);
+    	return Methods.hasMethod();
     }
 }

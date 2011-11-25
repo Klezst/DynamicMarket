@@ -2,12 +2,92 @@ package com.gmail.haloinverse.DynamicMarket.util;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.gmail.haloinverse.DynamicMarket.DynamicMarket;
+import com.gmail.haloinverse.DynamicMarket.Market;
+import com.gmail.haloinverse.DynamicMarket.Product;
+import com.gmail.haloinverse.DynamicMarket.Setting;
+import com.gmail.haloinverse.DynamicMarket.Shop;
 
 public class IO
 {
     final static int size = 1024;
+    
+	// Original by HaloInverse
+	public static void dumpToCSV(String filePath, String fileName, Market market) throws IOException
+	{
+		BufferedWriter writer;
+		try
+		{
+			writer = new BufferedWriter(new FileWriter(filePath + fileName, false));
+		}
+		catch (IOException ex)
+		{
+			throw new IOException("Error opening " + fileName + "!");
+		}
+
+		String line = "'itemID','subType',bundleSize','canBuy','canSell','basePrice','priceCeil','priceFloor','salesTax','volatility','stock','stockCeil','stockFloor'";
+		try
+		{
+			writer.write(line);
+		}
+		catch (IOException ex)
+		{
+			throw new IOException("Failed to write header to " + fileName + "!");
+		}
+
+		List<Shop> shops = market.getShops();
+		for (Shop shop : shops)
+		{
+			line = shop.toCSV();
+			try
+			{
+				writer.newLine();
+				writer.write(line);
+			}
+			catch (IOException e)
+			{
+				throw new IOException("Could not write line to " + fileName + ": " + line);
+			}
+			
+			// Write Products.
+			List<Product> products = shop.getProducts();
+			for (Product product : products)
+			{
+				// Write a line
+				line = product.toCSV();
+				try
+				{
+					writer.newLine();
+					writer.write(line);
+				}
+				catch (IOException ex)
+				{
+					throw new IOException("Could not write line to " + fileName + ": " + line);
+				}
+			}
+		}
+		try
+		{
+			writer.flush();
+		}
+		catch (IOException ex)
+		{
+			throw new IOException("Could not flush output to " + fileName + "!");
+		}
+		try
+		{
+			writer.close();
+		}
+		catch (IOException ex)
+		{
+			throw new IOException("Could not close " + fileName + "!");
+		}
+	}
     
     /**
     * Copy files from the .jar.
@@ -131,4 +211,196 @@ public class IO
             return false;
         }
     }
+    
+	// Original by HaloInverse
+	public static List<Shop> inhaleFromCSV(String filePath, String fileName) throws IOException
+	{
+		BufferedReader reader;
+		try
+		{
+			reader = new BufferedReader(new FileReader(filePath + fileName));
+		}
+		catch (FileNotFoundException ex)
+		{
+			throw new IOException("File, " + fileName + " does not exist!");
+		}
+
+		String line;
+		try
+		{
+			line = reader.readLine(); // Header line.
+			line = reader.readLine();
+		}
+		catch (IOException ex)
+		{
+			throw new IOException(fileName + " is not valid!");
+		}
+		
+		ArrayList<Shop> shops = new ArrayList<Shop>();
+		try
+		{
+			while (line != null)
+			{
+				line = line.replace("'", "");
+				Shop shop;
+				try
+				{
+					shop = Shop.parseShop(line);
+				}
+				catch (IllegalArgumentException e)
+				{
+					throw new IOException(fileName + " is invalid at line: \n\t" + line + "\n\t\tExpected: '<shopName>',<isInfiniteFunding>,<funds>,<maxTransactionSize>");
+				}
+				
+				line = reader.readLine();
+				
+				// Import Products.
+				while (line != null && line.trim().length() != 0)
+				{
+					// Parse a line
+					line = line.replace("'", "");
+					
+					Product product;
+					try
+					{
+						product = Product.parseProduct(line); // throws IllegalArgumentException, iff line is not a valid Product.
+					}
+					catch(IllegalArgumentException e)
+					{
+						throw new IOException(fileName + " is invalid at line: \n\t" + line + "\n\t\t" + e.getMessage());
+					}
+					
+					shop.addProduct(product);
+		
+					try
+					{
+						line = reader.readLine();
+					}
+					catch (IOException ex)
+					{
+						throw new IOException(fileName + " is invalid; unexpected end of " + fileName + "!");
+					}
+				}
+				shops.add(shop);
+			}
+		}
+		catch (IOException e) // This should never happen. I simply wanted the close statements to run if any exceptions were thrown.
+		{
+			
+		}
+		finally
+		{
+			try
+			{
+				reader.close();
+			}
+			catch (IOException ex)
+			{
+				throw new IOException("Error closing " + fileName + "."); // TODO: Not disable plugin when file closing fails.
+			}
+		}
+		
+		return shops;
+	}
+	
+	// Original by HaloInverse
+	@Deprecated
+	public static void importOld(DynamicMarket plugin, String filePath) throws IOException
+	{   
+        // Inhale from csv.
+		BufferedReader reader;
+        try
+        {
+            reader = new BufferedReader(new FileReader(filePath));
+        }
+        catch (FileNotFoundException ex)
+        {
+        	throw new IOException(filePath + " could not be found!");
+        }
+        
+        // Read first line.
+        String line;
+        try
+        {
+            line = reader.readLine(); // This is the header.
+            line = reader.readLine();
+        }
+        catch (IOException ex)
+        {
+            throw new IOException("ERROR reading " + filePath + "!");
+        }
+        
+        // Read .csv.
+        Shop shop = new Shop("DynamicMarket", true, 0, 64);
+        while (line != null)
+        {
+            if (line.trim().length() == 0)
+            {
+                continue;
+            }
+            
+            // Convert input.
+            line = line.replace("'", "");
+            String[] chaos = line.split(",");
+            if (chaos.length != 21)
+            {
+            	throw new IOException("Invalid line: " + line + "!");
+            }
+            
+            String[] order = {chaos[0], chaos[1], chaos[2], chaos[6], chaos[7], chaos[4], chaos[15], chaos[14], Format.parseString(Format.parseDouble(chaos[9]) / 10000), Format.parseString(Format.parseDouble(chaos[8]) / 10000), chaos[5], chaos[11], chaos[10]};
+            
+            // Parse input.
+            Product product;
+            try
+            {
+            	product = Product.parseProduct(order); // throws IllegalArgumentException, iff order is not a valid product.
+            }
+            catch (IllegalArgumentException e)
+            {
+            	throw new IOException(e.getMessage());
+            }
+            shop.addProduct(product);
+            
+            // Read next line.
+            try
+            {
+                line = reader.readLine();
+            }
+            catch (IOException ex)
+            {
+                try
+                {
+                	reader.close();
+                }
+                catch(IOException e)
+                {
+                	throw new IOException("Unexpected end to " + filePath + "\nAND could not close file!");
+                }
+            }
+        }
+        
+        // Delete old shops.
+        List<Shop> shops = plugin.getMarket().getShops();
+        for (Shop s : shops)
+        {
+        	plugin.getDatabase().delete(s);
+        }
+        
+        // Save new shop.
+        shops = new ArrayList<Shop>();
+        shops.add(shop);
+        plugin.getMarket().setShops(shops);
+        plugin.getDatabase().save(shop);
+        plugin.getConfig().set(Setting.VERSION.getKey(), 1);
+        
+        // Close file.
+        try
+        {
+            reader.close();
+        }
+        catch (IOException ex)
+        {
+            throw new IOException("Could not close file: " + filePath + "!");
+        }
+	}
 }

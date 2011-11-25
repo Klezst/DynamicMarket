@@ -1,23 +1,16 @@
-default-shop:
-  infinite-funding: true # Shops lose all their money after a restart currently; so, if set to false, it doesn't work as you'd expect.
-  items-max-per-transaction: 64
+version: 1.0 # Do not change this; it may break updates.
 text-color:
-  bracket: dark purple
-  command: white
+  bracket: aqua
+  command: light purple
   error: red
-  normal: gold
-  param: aqua
-database-type: sqlite
-items-db-path: plugins\DynamicMarket\
-mysql:
-  url: jdbc:mysql://localhost/minecraft
-  engine: InnoDB
-  user: root
-  pass: pass
-import-export:
-  file: shopDB.csv
-  path: plugins\DynamicMarket\
-transaction-log:
-  file: transactions.log
-  autoflush: true
-debug: false
+  normal: white
+  param: gold
+database:
+  driver: org.sqlite.JDBC
+  url: jdbc:sqlite:{DIR}{NAME}.db
+  username: root
+  password: walrus
+  isolation: SERIALIZABLE
+  logging: false
+import-export-path: plugins\DynamicMarket\ # Location of shops.csv.
+transaction-logging: true # Logs transactions in the database table "transactions".

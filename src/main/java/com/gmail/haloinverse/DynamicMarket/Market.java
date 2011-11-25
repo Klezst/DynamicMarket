@@ -16,24 +16,43 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package com.gmail.haloinverse.DynamicMarket.commands;
+package com.gmail.haloinverse.DynamicMarket;
 
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.minecraft.util.commands.NestedCommand;
+import java.util.ArrayList;
+import java.util.List;
 
-public class Commands
+import org.bukkit.Location;
+
+public class Market
 {
-	@Command
-	(
-		aliases = {"shop", "dshop"},
-		desc = "Interaction with the DynamicMarket.",
-		usage = "Type '/shop help' for more information."
-	)
-	@NestedCommand(ShopCommands.class)
-	@CommandPermissions("access")
-	public static void shop()
+	private List<Shop> shops;
+	
+	public Market()
 	{
-		// TODO: CommandsManager never calls this, fix that.
+		this(new ArrayList<Shop>());
+	}
+	public Market(List<Shop> shops)
+	{
+		this.shops = shops;
+	}
+	
+	public List<Shop> getShops()
+	{
+		return shops;
+	}
+	public void setShops(List<Shop> shops)
+	{
+		this.shops = shops;
+	}
+	
+	public void addShop(Shop shop)
+	{
+		shops.add(shop);
+	}
+	
+	public Shop getShop(Location loc) // throws IllegalArgumentException
+	{
+		return shops.get(0);
+		// throw IllegalArgumentException, Iff no shop at loc.
 	}
 }

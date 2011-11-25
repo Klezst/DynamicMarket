@@ -28,7 +28,7 @@ public class Validation
 	 * @param value
 	 * @return
 	 */
-	public static ChatColor getChatColor(String key, String value)
+	public static ChatColor getChatColor(String key, String value) // TODO: Accept color codes.
 	{
 		value = value.replace(" ", "_");
 		value = value.toUpperCase();
