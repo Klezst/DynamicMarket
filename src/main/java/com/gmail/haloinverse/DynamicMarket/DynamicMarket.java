@@ -89,13 +89,7 @@ public class DynamicMarket extends JavaPlugin
     {
         PluginManager pm = getServer().getPluginManager();
     	
-        // Check for Register (dependency).
-        if (pm.getPlugin("Register") == null)
-        {
-        	log(Level.SEVERE, "Register not detected.");
-        	pm.disablePlugin(this);
-        	return;
-        }
+        // add vault dependency
         
     	// Check for WorldEdit (dependency).
     	try
