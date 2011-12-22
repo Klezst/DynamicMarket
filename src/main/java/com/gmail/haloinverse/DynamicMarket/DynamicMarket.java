@@ -32,6 +32,9 @@ import com.sk89q.minecraft.util.commands.CommandsManager;
 import com.sk89q.minecraft.util.commands.MissingNestedCommandException;
 import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
+/**
+ * @author LennardF1989
+ */
 public class DynamicMarket extends JavaPlugin {
     private static final Logger log = Logger.getLogger("Minecraft");
     public static final double DDM_MAXVALUE = 999999999.99;
@@ -59,7 +62,7 @@ public class DynamicMarket extends JavaPlugin {
 		list.add(Transaction.class);
 
 		return list;
-	    };
+	    }
 	};
 
 	this.database.initializeDatabase(

@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.gmail.haloinverse.DynamicMarket;
 
@@ -39,184 +39,163 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 @Table(name = "shops")
 public class Shop // TODO: Add location support.
 {
-	// Fields.
-	@Id
-	private int id;
-	
-	@OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
-	private List<Product> products = new ArrayList<Product>();
-	
-	@NotEmpty
-	private String name;
-	
-	@NotNull
-	private boolean infiniteFunding;
-	
-	@NotNull
-	private double funds;
-	
-	@NotNull
-	private int maxTransactionSize;
-	
-	// Constructors.
-	public Shop()
-	{
-		
+    // Fields.
+    @Id
+    private int id;
+
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
+    private List<Product> products = new ArrayList<Product>();
+
+    @NotEmpty
+    private String name;
+
+    @NotNull
+    private boolean infiniteFunding;
+
+    @NotNull
+    private double funds;
+
+    @NotNull
+    private int maxTransactionSize;
+
+    // Constructors.
+    public Shop() {
+
+    }
+
+    public Shop(String name, boolean infiniteFunding, double funds,
+	    int maxTransactionSize) {
+	this.name = name;
+	this.infiniteFunding = infiniteFunding;
+	this.funds = funds;
+	this.maxTransactionSize = maxTransactionSize;
+    }
+
+    // Gets & sets.
+    public int getId() {
+	return this.id;
+    }
+
+    public void setId(int id) {
+	this.id = id;
+    }
+
+    public List<Product> getProducts() {
+	return this.products;
+    }
+
+    public void setProducts(List<Product> products) {
+	this.products = products;
+    }
+
+    public String getName() {
+	return this.name;
+    }
+
+    public void setName(String name) {
+	this.name = name;
+    }
+
+    public boolean isInfiniteFunding() {
+	return this.infiniteFunding;
+    }
+
+    public void setInfiniteFunding(boolean infiniteFunding) {
+	this.infiniteFunding = infiniteFunding;
+    }
+
+    public double getFunds() {
+	return this.funds;
+    }
+
+    public void setFunds(double funds) {
+	this.funds = funds;
+    }
+
+    public int getMaxTransactionSize() {
+	return this.maxTransactionSize;
+    }
+
+    public void setMaxTransactionSize(int maxTransactionSize) {
+	this.maxTransactionSize = maxTransactionSize;
+    }
+
+    // Methods
+    public void addProduct(Product product) {
+	try {
+	    getProduct(product.getType(), product.getData()); // throws IllegalArgumentException, iff this does not contain such a product.
+	} catch (IllegalArgumentException e) {
+	    product.setShop(this);
+	    this.products.add(product);
+	    return;
 	}
-	
-	public Shop(String name, boolean infiniteFunding, double funds, int maxTransactionSize)
-	{
-		this.name = name;
-		this.infiniteFunding = infiniteFunding;
-		this.funds = funds;
-		this.maxTransactionSize = maxTransactionSize;
+	throw new IllegalArgumentException(this.name + " already sells that!");
+    }
+
+    public Product getProduct(int type, byte data)
+	    throws IllegalArgumentException {
+	for (Product product : this.products) {
+	    if (product.equals(type, data)) {
+		return product;
+	    }
 	}
-	
-	// Gets & sets.
-	public int getId()
-	{
-		return id;
+	throw new IllegalArgumentException(this.name + " doesn't stock that!");
+    }
+
+    public Product getProduct(MaterialData data) {
+	return getProduct(data.getItemTypeId(), data.getData());
+    }
+
+    public static Shop parseShop(String... args)
+	    throws IllegalArgumentException {
+	try {
+	    return new Shop(args[0], Format.parseBoolean(args[1]),
+		    Format.parseDouble(args[2]), Format.parseInteger(args[3]));
+	} catch (NumberFormatException e) {
+	    // TODO: catch exception
+	    e.printStackTrace();
+
+	} catch (IndexOutOfBoundsException e) {
+	    // TODO: catch exception
+	    e.printStackTrace();
 	}
-	public void setId(int id)
-	{
-		this.id = id;
+	throw new IllegalArgumentException("That is not a valid Shop.");
+    }
+
+    public static Shop parseShop(String line) throws IllegalArgumentException {
+	return parseShop(line.split(","));
+    }
+
+    public static Shop parseShop(CommandContext args)
+	    throws IllegalArgumentException {
+	return null;
+	// TODO: Add parseShop command.
+    }
+
+    public void remove(Product product) {
+	this.products.remove(product);
+    }
+
+    public String toCSV() {
+	return Message.combine(
+		",", // This is the separator
+		"'" + this.name + "'", this.infiniteFunding, this.funds,
+		Format.parseString(this.maxTransactionSize));
+    }
+
+    @Override
+    public String toString() // TODO: Add proper spacing between columns.
+    {
+	String line = "";
+	for (Product product : this.products) {
+	    byte data = product.getData();
+	    String subtype = (data == 0 ? "" : "{BKT}:{PRM}" + data);
+	    line += "{CMD}" + product.getType() + subtype + " {CMD}"
+		    + product.getName() + subtype + " {}Bundle: {PRM}"
+		    + product.getBundleSize() + "{} Buy: {PRM}"
+		    + product.getBuyPrice() + " {}Sell: {PRM}"
+		    + product.getSellPrice() + "\n";
 	}
-	
-	public List<Product> getProducts()
-	{
-		return products;
-	}
-	public void setProducts(List<Product> products)
-	{
-			this.products = products;
-	}
-	
-	public String getName()
-	{
-		return name;
-	}
-	public void setName(String name)
-	{
-		this.name = name;
-	}
-	
-	public boolean isInfiniteFunding()
-	{
-		return infiniteFunding;
-	}
-	public void setInfiniteFunding(boolean infiniteFunding)
-	{
-		this.infiniteFunding = infiniteFunding;
-	}
-	
-	public double getFunds()
-	{
-		return funds;
-	}
-	public void setFunds(double funds)
-	{
-		this.funds = funds;
-	}
-	
-	public int getMaxTransactionSize()
-	{
-		return maxTransactionSize;	
-	}
-	public void setMaxTransactionSize(int maxTransactionSize)
-	{
-		this.maxTransactionSize = maxTransactionSize;
-	}
-	
-	// Methods
-	public void addProduct(Product product)
-	{
-		try
-		{
-			getProduct(product.getType(), product.getData()); // throws IllegalArgumentException, iff this does not contain such a product.
-		}
-		catch (IllegalArgumentException e)
-		{
-			product.setShop(this);
-			products.add(product);
-			return;
-		}
-		throw new IllegalArgumentException(name + " already sells that!");
-	}
-	
-	public Product getProduct(int type, byte data) throws IllegalArgumentException
-	{
-		for (Product product : products)
-		{
-			if (product.equals(type, data))
-			{
-				return product;
-			}
-		}
-		throw new IllegalArgumentException(name + " doesn't stock that!");
-	}
-	public Product getProduct(MaterialData data)
-	{
-		return getProduct(data.getItemTypeId(), data.getData());
-	}
-	
-	public static Shop parseShop(String... args) throws IllegalArgumentException
-	{
-		try
-		{
-			return new Shop
-			(
-				args[0],
-				Format.parseBoolean(args[1]),
-				Format.parseDouble(args[2]),
-				Format.parseInteger(args[3])
-			);
-		}
-		catch (NumberFormatException e)
-		{
-			
-		}
-		catch (IndexOutOfBoundsException e)
-		{
-			
-		}
-		throw new IllegalArgumentException("That is not a valid Shop.");
-	}
-	public static Shop parseShop(String line) throws IllegalArgumentException
-	{
-		return parseShop(line.split(","));
-	}
-	public static Shop parseShop(CommandContext args) throws IllegalArgumentException
-	{
-		return null;
-		// TODO: Add parseShop command.
-	}
-	
-	public void remove(Product product)
-	{
-		products.remove(product);
-	}
-	
-	public String toCSV()
-	{
-		return Message.combine
-		(
-			",", // This is the separator
-			"'" + name + "'",
-			infiniteFunding,
-			funds,
-			Format.parseString(maxTransactionSize)
-		);
-	}
-	
-	public String toString() // TODO: Add proper spacing between columns.
-	{
-		String line = "";
-		for (Product product : products)
-		{
-			byte data = product.getData();
-			String subtype = (data == 0 ? "" : "{BKT}:{PRM}" + data);
-			line += "{CMD}" + product.getType() + subtype + " {CMD}" + product.getName() + subtype + " {}Bundle: {PRM}" + product.getBundleSize() + "{} Buy: {PRM}" + product.getBuyPrice() + " {}Sell: {PRM}" + product.getSellPrice() + "\n";
-		}
-		return line.substring(0, line.length() - 1); // Remove the extra '\n'.
-	}
+	return line.substring(0, line.length() - 1); // Remove the extra '\n'.
+    }
 }

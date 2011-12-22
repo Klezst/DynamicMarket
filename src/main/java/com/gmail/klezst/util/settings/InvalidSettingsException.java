@@ -14,40 +14,38 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.gmail.klezst.util.settings;
 
 import java.util.List;
 import java.util.logging.Logger;
 
-public class InvalidSettingsException extends RuntimeException
-{
-	private static final long serialVersionUID = -4808725946544992759L;
-	
-	private List<InvalidSettingException> exceptions;
-	
-	public InvalidSettingsException(List<InvalidSettingException> errors)
-	{
-		super("Invalid config.yml");
-		this.exceptions = errors;
+public class InvalidSettingsException extends RuntimeException {
+    private static final long serialVersionUID = -4808725946544992759L;
+
+    private List<InvalidSettingException> exceptions;
+
+    public InvalidSettingsException(List<InvalidSettingException> errors) {
+	super("Invalid config.yml");
+	this.exceptions = errors;
+    }
+
+    public List<InvalidSettingException> getExceptions() {
+	return this.exceptions;
+    }
+
+    /**
+     * Prints the exception to log.
+     * 
+     * @param log
+     *            , The Logger to print to.
+     * @param prefix
+     *            , A String that precedes each line printed. Should have a whitespace as last character, if not empty string.
+     */
+    public void printExceptions(Logger log, String prefix) {
+	for (InvalidSettingException exception : this.exceptions) {
+	    exception.printException(log, prefix);
 	}
-	
-	public List<InvalidSettingException> getExceptions()
-	{
-		return exceptions;
-	}
-	
-	/**
-	 * Prints the exception to log.
-	 * @param log, The Logger to print to.
-	 * @param prefix, A String that precedes each line printed. Should have a whitespace as last character, if not empty string.
-	 */
-	public void printExceptions(Logger log, String prefix)
-	{
-		for (InvalidSettingException exception : exceptions)
-		{
-			exception.printException(log, prefix);
-		}
-	}
+    }
 }

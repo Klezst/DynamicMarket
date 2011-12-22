@@ -14,41 +14,38 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.gmail.klezst.util.settings;
 
 import org.bukkit.ChatColor;
 
-public class Validation
-{
-	/**
-	 * Returns the ChatColor corresponding to value. If no such ChatColor exists throws an InvalidSettingException
-	 * @param key
-	 * @param value
-	 * @return
-	 */
-	public static ChatColor getChatColor(String key, String value) // TODO: Accept color codes.
-	{
-		value = value.replace(" ", "_");
-		value = value.toUpperCase();
-		
-		ChatColor color;
-		try
-		{
-			color = ChatColor.valueOf(value);
-		}
-		catch (IllegalArgumentException e)
-		{
-			String examples = "";
-			for (ChatColor chatColor : ChatColor.values())
-			{
-				examples += chatColor.name() + ", ";
-			}
-			examples = examples.substring(0, examples.length() - 2);
-			
-			throw new InvalidSettingException(key, "Must be a color. Valid colors are:", "\t" + examples);
-		}
-		return color;
+public class Validation {
+    /**
+     * Returns the ChatColor corresponding to value. If no such ChatColor exists throws an InvalidSettingException
+     * 
+     * @param key
+     * @param value
+     * @return
+     */
+    // TODO: Accept color codes.
+    public static ChatColor getChatColor(String key, String value) {
+	value = value.replace(" ", "_");
+	value = value.toUpperCase();
+
+	ChatColor color;
+	try {
+	    color = ChatColor.valueOf(value);
+	} catch (IllegalArgumentException e) {
+	    String examples = "";
+	    for (ChatColor chatColor : ChatColor.values()) {
+		examples += chatColor.name() + ", ";
+	    }
+	    examples = examples.substring(0, examples.length() - 2);
+
+	    throw new InvalidSettingException(key,
+		    "Must be a color. Valid colors are:", "\t" + examples);
 	}
+	return color;
+    }
 }

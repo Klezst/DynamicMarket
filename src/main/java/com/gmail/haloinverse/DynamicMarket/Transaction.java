@@ -59,7 +59,7 @@ public class Transaction {
     private double price;
 
     public Transaction() {
-
+	// TODO: ? - IDragonfire
     }
 
     public Transaction(DynamicMarket plugin, int amount, Player player,

@@ -14,30 +14,35 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.gmail.klezst.util.settings;
 
-public interface Validatable
-{
-	/**
-	 * Expected to return a settings key.
-	 * @return Key of a setting.
-	 */
-	public String getKey();
-	
-	/**
-	 * Expected to return the required class of a settings value.
-	 * @return Required class of a settings value, should not be a primitive data type.
-	 */
-	public Class<?> getType();
-	
-	
-	/**
-	 * Called, iff a setting has been validated for existence and proper class. Allows further and custom validation. Must return the value to be stored for the setting or throw an InvalidSettingException.
-	 * @param value, The value to be further validated.
-	 * @return The value to be stored for the setting.
-	 * @throws InvalidSettingException or InvalidSettingsException, iff value is invalid.
-	 */
-	public Object validate(Object value) throws InvalidSettingException, InvalidSettingsException;
+public interface Validatable {
+    /**
+     * Expected to return a settings key.
+     * 
+     * @return Key of a setting.
+     */
+    public String getKey();
+
+    /**
+     * Expected to return the required class of a settings value.
+     * 
+     * @return Required class of a settings value, should not be a primitive data type.
+     */
+    public Class<?> getType();
+
+    /**
+     * Called, iff a setting has been validated for existence and proper class. Allows further and custom validation. Must return the value to be stored for the setting or throw an
+     * InvalidSettingException.
+     * 
+     * @param value
+     *            , The value to be further validated.
+     * @return The value to be stored for the setting.
+     * @throws InvalidSettingException
+     *             or InvalidSettingsException, iff value is invalid.
+     */
+    public Object validate(Object value) throws InvalidSettingException,
+	    InvalidSettingsException;
 }
