@@ -244,9 +244,11 @@ public class Product {
 		    Format.parseInteger(args[11]),
 		    Format.parseInteger(args[12]));
 	} catch (NumberFormatException e) {
-
+	    // TODO: catch exceptions
+	    e.printStackTrace();
 	} catch (IndexOutOfBoundsException e) {
-
+	    // TODO: catch exceptions
+	    e.printStackTrace();
 	}
 	throw new IllegalArgumentException("That is not a valid Product.");
 	// Does not get executed, if the constructoris returned successfully.

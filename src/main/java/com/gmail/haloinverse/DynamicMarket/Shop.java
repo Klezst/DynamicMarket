@@ -121,15 +121,10 @@ public class Shop // TODO: Add location support.
     }
 
     // Methods
+    // TODO: what did hell make these old(1) method? the bean automaticly update these ...
     public void addProduct(Product product) {
-	try {
-	    getProduct(product.getType(), product.getData()); // throws IllegalArgumentException, iff this does not contain such a product.
-	} catch (IllegalArgumentException e) {
-	    product.setShop(this);
-	    this.products.add(product);
-	    return;
-	}
-	throw new IllegalArgumentException(this.name + " already sells that!");
+	product.setShop(this);
+	this.products.add(product);
     }
 
     public Product getProduct(int type, byte data)

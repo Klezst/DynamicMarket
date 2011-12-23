@@ -53,23 +53,17 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	Shop shop = plugin.getMarket().getShop(((Player) sender).getLocation());
 	Product product;
 	try {
-	    product = Product.parseProduct(args); // throws IllegalArgumentException, iff args is not a valid Product.
+	    // throws IllegalArgumentException, iff args is not a valid Product.
+	    product = Product.parseProduct(args);
 	    shop.addProduct(product);
+	    // Update database if valid
+	    plugin.getDatabase().save(product);
+	    Message.send(sender, "{}" + args.getString(0)
+		    + " is now for sale at " + shop.getName() + ".");
 	} catch (IllegalArgumentException e) {
 	    Message.send(sender, "{ERR}" + e.getMessage());
 	    return;
 	}
-
-	// Update database.
-	plugin.getDatabase().save(product);
-
-	Message.send(sender, "{}" + args.getString(0) + " is now for sale at "
-		+ shop.getName() + ".");
-
-	// Temporary workaround. TODO: Figure out why a shop won't save during a transaction if we don't reload after adding a product to it.
-	List<Shop> shops = plugin.getMarket().getShops();
-	shops.remove(shop);
-	shops.add(plugin.getDatabase().find(Shop.class, shop.getId()));
     }
 
     @Command(aliases = { "buy", "b" }, desc = "Purchases an item from the store", usage = "<itemID>[:<subType>] [amount]", min = 1, max = 2)
