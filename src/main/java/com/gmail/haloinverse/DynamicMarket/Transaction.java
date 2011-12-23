@@ -33,8 +33,8 @@ import com.avaje.ebean.validation.NotNull;
 import com.gmail.haloinverse.DynamicMarket.util.Economy;
 import com.gmail.haloinverse.DynamicMarket.util.Message;
 import com.gmail.haloinverse.DynamicMarket.util.Util;
-import com.idragonfire.data.DMessageLibary;
-import com.idragonfire.data.DMessageLibary.MsgKey;
+import com.idragonfire.data.DMsg;
+import com.idragonfire.data.DMsg.MsgKey;
 import com.idragonfire.event.DynamicMarketException;
 
 @Entity
@@ -91,18 +91,18 @@ public class Transaction {
 	    int newVolume = amount * product.getBundleSize();
 	    if (Math.abs(newVolume) > newShop.getMaxTransactionSize()) {
 		throw new DynamicMarketException(
-			DMessageLibary.INSTANCE.get(MsgKey.BUY_TOMUCH));
+			DMsg.INSTANCE.get(MsgKey.BUY_TOMUCH));
 	    }
 
 	    if (!product.hasStock(amount)) {
 		if (newVolume < 0) {
 		    throw new DynamicMarketException(
-			    DMessageLibary.INSTANCE.get(
+			    DMsg.INSTANCE.get(
 				    MsgKey.BUY_NOSPACE,
 				    new String[][] { { "shop",
 					    newShop.getName() } }));
 		}
-		throw new DynamicMarketException(DMessageLibary.INSTANCE.get(
+		throw new DynamicMarketException(DMsg.INSTANCE.get(
 			MsgKey.SELL_NOSTOCK, new String[][] { { "shop",
 				newShop.getName() } }));
 	    }

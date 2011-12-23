@@ -7,7 +7,7 @@ import java.util.Date;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 
-public class DMessageLibary {
+public class DMsg {
 
     public enum MsgKey {
 	// add new messages here # START
@@ -36,7 +36,7 @@ public class DMessageLibary {
 
     }
 
-    public static final DMessageLibary INSTANCE = new DMessageLibary();
+    public static final DMsg INSTANCE = new DMsg();
     public static final String REPLACER = "$";
     private String msgLibPath = "plugins/DynamicMarket/messages.yml";
     private YamlConfiguration msgLib;
@@ -49,14 +49,14 @@ public class DMessageLibary {
 	String s = this.msgLib.getString(key.getKey(), key.getDefaultMsg());
 	if (replacement != null) {
 	    for (int i = 0; i < replacement.length; i++) {
-		s = s.replace(DMessageLibary.REPLACER + replacement[i][0]
-			+ DMessageLibary.REPLACER, replacement[i][1]);
+		s = s.replace(DMsg.REPLACER + replacement[i][0]
+			+ DMsg.REPLACER, replacement[i][1]);
 	    }
 	}
 	return s;
     }
 
-    private DMessageLibary() {
+    private DMsg() {
 	init();
     }
 
