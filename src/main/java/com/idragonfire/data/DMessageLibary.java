@@ -8,25 +8,45 @@ import java.util.Date;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public class DMessageLibary {
-    // add new messages here # START
-    public static final String[] BUY_TOMUCH = new String[] { "buy.tomuch",
-	    "{ERR}You can't buy that much at once!" };
-    public static final String[] BUY_NOSPACE = new String[] { "buy.nospace",
-	    "{ERR} $shop$ doesn't have enough space." };
-    public static final String[] SELL_NOSTOCK = new String[] { "buy.nostock",
-	    "{ERR} $shop$ doesn't have enough stock." };
-    // # END
-    public static final DMessageLibary INSTACE = new DMessageLibary();
+
+    public enum MsgKey {
+	// add new messages here # START
+	BUY_TOMUCH("buy.tomuch", "{ERR}You can't buy that much at once!"), 
+	BUY_NOSPACE("buy.nospace", "{ERR} $shop$ doesn't have enough space"), 
+	SELL_NOSTOCK("buy.nostock", "{ERR} $shop$ doesn't have enough stock."),
+	HELP_LINE1("example", "line1"),
+	HELP_LINE2("example", "line1"),
+	HELP_LINE3("example", "line1");
+	// # END
+	private final String key;
+	private final String msg;
+
+	private MsgKey(String key, String msg) {
+	    this.key = key;
+	    this.msg = msg;
+	}
+
+	public String getKey() {
+	    return this.key;
+	}
+
+	public String getDefaultMsg() {
+	    return this.msg;
+	}
+
+    }
+
+    public static final DMessageLibary INSTANCE = new DMessageLibary();
     public static final String REPLACER = "$";
-    private String msgLibPath = "plugins/DynamicMarket/messageLibary.yaml";
+    private String msgLibPath = "plugins/DynamicMarket/messages.yml";
     private YamlConfiguration msgLib;
 
-    public String get(String[] key) {
+    public String get(MsgKey key) {
 	return get(key, null);
     }
 
-    public String get(String[] key, String[][] replacement) {
-	String s = this.msgLib.getString(key[0], key[1]);
+    public String get(MsgKey key, String[][] replacement) {
+	String s = this.msgLib.getString(key.getKey(), key.getDefaultMsg());
 	if (replacement != null) {
 	    for (int i = 0; i < replacement.length; i++) {
 		s = s.replace(DMessageLibary.REPLACER + replacement[i][0]
