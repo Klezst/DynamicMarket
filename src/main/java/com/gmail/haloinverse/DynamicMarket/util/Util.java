@@ -35,9 +35,9 @@ public class Util {
      *             , If arg is not a valid MaterialData.
      * @author Klezst
      */
+    // TODO: Add support for custom aliases via a utility plugin?
     public static MaterialData getMaterialData(String arg)
-	    throws IllegalArgumentException // TODO: Add support for custom aliases via a utility plugin?
-    {
+	    throws IllegalArgumentException {
 	try {
 	    String[] id = arg.split(":");
 	    byte data = 0;

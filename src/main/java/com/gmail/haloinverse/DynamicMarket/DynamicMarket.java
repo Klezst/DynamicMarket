@@ -15,6 +15,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.LogLevel;
 import com.gmail.haloinverse.DynamicMarket.commands.Commands;
 import com.gmail.haloinverse.DynamicMarket.util.IO;
 import com.gmail.haloinverse.DynamicMarket.util.Message;
@@ -32,9 +33,6 @@ import com.sk89q.minecraft.util.commands.CommandsManager;
 import com.sk89q.minecraft.util.commands.MissingNestedCommandException;
 import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
-/**
- * @author LennardF1989
- */
 public class DynamicMarket extends JavaPlugin {
     private static final Logger log = Logger.getLogger("Minecraft");
     public static final double DDM_MAXVALUE = 999999999.99;
@@ -64,7 +62,6 @@ public class DynamicMarket extends JavaPlugin {
 		return list;
 	    }
 	};
-
 	this.database.initializeDatabase(
 		getSetting(Setting.DRIVER, String.class),
 		getSetting(Setting.URL, String.class),
@@ -73,6 +70,7 @@ public class DynamicMarket extends JavaPlugin {
 		getSetting(Setting.ISOLATION, String.class),
 		getSetting(Setting.LOGGING, Boolean.class), false // If an update to database structure is done, a function to determine whether or not to rebuild is be written.
 		);
+	this.database.getDatabase().getAdminLogging().setLogLevel(LogLevel.SQL);
     }
 
     @Override

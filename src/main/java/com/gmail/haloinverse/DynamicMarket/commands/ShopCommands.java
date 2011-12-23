@@ -70,16 +70,14 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("buy")
     public static void buy(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	int amount;
 	try {
-	    amount = (args.argsLength() == 2 ? args.getInteger(1) : 1); // throws NumberFormatException, iff args.getString(1) is not a valid Integer.
+	    // throws NumberFormatException, iff args.getString(1) is not a valid Integer.
+	    int amount = (args.argsLength() == 2 ? args.getInteger(1) : 1);
+	    new Transaction(plugin, amount, (Player) sender, args.getString(0));
 	} catch (NumberFormatException e) {
 	    sender.sendMessage(Message.parseColor("{ERR}" + args.getString(1)
 		    + " is not a valid amount!"));
-	    return;
 	}
-
-	new Transaction(plugin, amount, (Player) sender, args.getString(0));
     }
 
     @Command(aliases = { "exportdb" }, desc = "Saves the database to the shopDB.csv", min = 0, max = 0)

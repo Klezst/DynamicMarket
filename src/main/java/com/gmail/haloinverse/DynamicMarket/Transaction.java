@@ -33,6 +33,7 @@ import com.avaje.ebean.validation.NotNull;
 import com.gmail.haloinverse.DynamicMarket.util.Economy;
 import com.gmail.haloinverse.DynamicMarket.util.Message;
 import com.gmail.haloinverse.DynamicMarket.util.Util;
+import com.idragonfire.event.DynmiacMarketException;
 
 @Entity
 @Table(name = "transactions")
@@ -63,125 +64,131 @@ public class Transaction {
     }
 
     public Transaction(DynamicMarket plugin, int amount, Player player,
-	    String id) {
+	    String matrialid) {
 	if (!Economy.isLoaded()) {
 	    Message.send(player, "{ERR}The economy isn't loaded!");
+	} else {
+	    commitTransaction(plugin, amount, player, matrialid);
 	}
+    }
 
-	Shop shop;
+    // TODO: remove items by Exceptions
+    @SuppressWarnings("boxing")
+    private void commitTransaction(DynamicMarket plugin, int amount,
+	    Player player, String matrialid) {
 	MaterialData data;
 	Product product;
 	try {
 	    // throwsIllegalArgumentException, if no shop at the player'slocation.
-	    shop = plugin.getMarket().getShop(player.getLocation());
+	    Shop newShop = plugin.getMarket().getShop(player.getLocation());
 	    // throws IllegalArgumentException, if id is not a valid MaterialData.
-	    data = Util.getMaterialData(id);
+	    data = Util.getMaterialData(matrialid);
 	    // throws IllegalArgumentException, if shop doesn't sell data.
-	    product = shop.getProduct(data);
-	} catch (IllegalArgumentException e) {
+	    product = newShop.getProduct(data);
+
+	    int newVolume = amount * product.getBundleSize();
+	    if (Math.abs(newVolume) > newShop.getMaxTransactionSize()) {
+		throw new DynmiacMarketException(
+			"{ERR}You can't buy that much at once!");
+	    }
+
+	    if (!product.hasStock(amount)) {
+		throw new DynmiacMarketException("{ERR}" + newShop.getName()
+			+ " doesn't have enough "
+			+ (newVolume < 0 ? "space" : "stock") + ".");
+	    }
+
+	    double newPrice, newBundles;
+	    HashMap<Integer, ItemStack> overflow;
+	    if (newVolume > 0) {
+		if (!product.isBuyable()) {
+		    throw new DynmiacMarketException("{ERR}"
+			    + newShop.getName() + " refuses to sell "
+			    + matrialid + " to you!");
+		}
+
+		newPrice = amount * product.getBuyPrice();
+		if (Economy.getBalance(player.getName()) < newPrice) {
+		    throw new DynmiacMarketException(
+			    "{ERR}You don't have enough money!");
+		}
+
+		overflow = player.getInventory().addItem(
+			data.toItemStack(newVolume));
+
+		for (int i = 0; overflow.containsKey(i); i++) {
+		    newVolume -= overflow.get(i).getAmount();
+		}
+
+		if (newVolume == 0) {
+		    throw new DynmiacMarketException(
+			    "{ERR}You don't have enough space in your inventory!");
+		}
+
+		newBundles = 1.0 * newVolume / product.getBundleSize();
+		newPrice = product.getBuyPrice() * newBundles;
+	    } else {
+		if (!product.isSellable()) {
+		    throw new DynmiacMarketException("{ERR}"
+			    + newShop.getName() + "Refuses to sell "
+			    + matrialid + " to you!");
+		}
+
+		newPrice = product.getSellPrice();
+		if (!newShop.isInfiniteFunding()
+			&& newShop.getFunds() < -newPrice * amount) {
+		    throw new DynmiacMarketException("{ERR}"
+			    + newShop.getName() + " doesn't have enough money!");
+		}
+
+		overflow = player.getInventory().removeItem(
+			data.toItemStack(-newVolume));
+
+		for (int i = 0; overflow.containsKey(i); i++) {
+		    newVolume += overflow.get(i).getAmount();
+		}
+
+		if (newVolume == 0) {
+		    throw new DynmiacMarketException(
+			    "{ERR}You don't have enough of that in your inventory!");
+		}
+
+		newBundles = 1.0 * newVolume / product.getBundleSize();
+		newPrice *= newBundles;
+	    }
+
+	    Economy.deltaBalance(-newPrice, player.getName());
+
+	    product.setStock(product.getStock() - newVolume
+		    / product.getBundleSize());
+
+	    newShop.setFunds(Util.round(newShop.getFunds() + newPrice, 2));
+	    plugin.getDatabase().update(product);
+
+	    // Log transaction.
+	    Message.send(player,
+		    "{}You " + (newVolume > 0 ? "bought " : "sold ") + "{PRM}"
+			    + Math.abs(newVolume) + " {}" + matrialid
+			    + " for {PRM}" + Math.abs(newPrice));
+
+	    this.time = System.currentTimeMillis() / 1000;
+	    this.who = player.getName();
+	    this.shop = newShop.getName();
+	    this.item = data.getItemType().toString();
+	    this.volume = newVolume;
+	    this.price = newPrice;
+
+	    if (plugin.getSetting(Setting.TRANSACTION_LOGGING, Boolean.class)) {
+		plugin.getDatabase().save(this);
+	    }
+
+	} // TODO: better exception handling?
+	catch (IllegalArgumentException e) {
 	    player.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
-	    return;
-	}
-
-	int volume = amount * product.getBundleSize();
-	if (Math.abs(volume) > shop.getMaxTransactionSize()) {
-	    player.sendMessage(Message
-		    .parseColor("{ERR}You can't buy that much at once!"));
-	    return;
-	}
-
-	if (!product.hasStock(amount)) {
-	    player.sendMessage(Message.parseColor("{ERR}" + shop.getName()
-		    + " doesn't have enough "
-		    + (volume < 0 ? "space" : "stock") + "."));
-	    return;
-	}
-
-	double price;
-	double bundles;
-	HashMap<Integer, ItemStack> overflow;
-	if (volume > 0) {
-	    if (!product.isBuyable()) {
-		player.sendMessage(Message.parseColor("{ERR}" + shop.getName()
-			+ " refuses to sell " + id + " to you!"));
-		return;
-	    }
-
-	    price = amount * product.getBuyPrice();
-	    if (Economy.getBalance(player.getName()) < price) {
-		player.sendMessage(Message
-			.parseColor("{ERR}You don't have enough money!"));
-		return;
-	    }
-
-	    overflow = player.getInventory().addItem(data.toItemStack(volume));
-
-	    for (int i = 0; overflow.containsKey(i); i++) {
-		volume -= overflow.get(i).getAmount();
-	    }
-
-	    if (volume == 0) {
-		player.sendMessage(Message
-			.parseColor("{ERR}You don't have enough space in your inventory!"));
-		return;
-	    }
-
-	    bundles = 1.0 * volume / product.getBundleSize();
-	    price = product.getBuyPrice() * bundles;
-	} else {
-	    if (!product.isSellable()) {
-		player.sendMessage(Message.parseColor("{ERR}" + shop.getName()
-			+ "Refuses to sell " + id + " to you!"));
-		return;
-	    }
-
-	    price = product.getSellPrice();
-	    if (!shop.isInfiniteFunding() && shop.getFunds() < -price * amount) {
-		Message.send(player, "{ERR}" + shop.getName()
-			+ " doesn't have enough money!");
-		return;
-	    }
-
-	    overflow = player.getInventory().removeItem(
-		    data.toItemStack(-volume));
-
-	    for (int i = 0; overflow.containsKey(i); i++) {
-		volume += overflow.get(i).getAmount();
-	    }
-
-	    if (volume == 0) {
-		player.sendMessage(Message
-			.parseColor("{ERR}You don't have enough of that in your inventory!"));
-		return;
-	    }
-
-	    bundles = 1.0 * volume / product.getBundleSize();
-	    price *= bundles;
-	}
-
-	Economy.deltaBalance(-price, player.getName());
-
-	product.setStock(product.getStock() - volume / product.getBundleSize());
-
-	shop.setFunds(Util.round(shop.getFunds() + price, 2));
-	plugin.getDatabase().update(shop);
-
-	// Log transaction.
-	Message.send(
-		player,
-		"{}You " + (volume > 0 ? "bought " : "sold ") + "{PRM}"
-			+ Math.abs(volume) + " {}" + id + " for {PRM}"
-			+ Math.abs(price));
-
-	this.time = System.currentTimeMillis() / 1000;
-	this.who = player.getName();
-	this.shop = shop.getName();
-	this.item = data.getItemType().toString();
-	this.volume = volume;
-	this.price = price;
-
-	if (plugin.getSetting(Setting.TRANSACTION_LOGGING, Boolean.class)) {
-	    plugin.getDatabase().save(this);
+	} catch (DynmiacMarketException e) {
+	    player.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
+	} catch (Exception e) {
+	    e.printStackTrace();
 	}
     }
 
