@@ -1,6 +1,7 @@
 package com.gmail.haloinverse.DynamicMarket.util;
 
 public class Format {
+    @SuppressWarnings("boxing")
     public static Boolean parseBoolean(String arg) {
 	boolean result = false;
 	if (Util.isAny(arg, "yes", "y", "true", "t", "positive", "+",
@@ -10,6 +11,7 @@ public class Format {
 	return result;
     }
 
+    @SuppressWarnings("boxing")
     public static Double parseDouble(String arg) throws NumberFormatException {
 	Double result;
 	if (Util.isAny(arg, "inf", "+inf")) {
@@ -23,6 +25,7 @@ public class Format {
 	return result;
     }
 
+    @SuppressWarnings("boxing")
     public static Integer parseInteger(String arg) {
 	Integer result;
 	if (Util.isAny(arg, "inf", "+inf")) {

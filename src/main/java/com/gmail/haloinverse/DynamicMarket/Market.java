@@ -46,7 +46,7 @@ public class Market {
 	this.shops.add(shop);
     }
 
-    public Shop getShop(Location loc) {
+    public Shop getShop(Location loc) throws IllegalArgumentException {
 	// throw IllegalArgumentException, Iff no shop at loc.
 	return this.shops.get(0);
     }

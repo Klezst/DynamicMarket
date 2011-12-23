@@ -229,6 +229,7 @@ public class Product {
 	return Material.getMaterial(this.type).name().replace('_', ' ');
     }
 
+    @SuppressWarnings("boxing")
     public static Product parseProduct(String... args)
 	    throws IllegalArgumentException {
 	// TODO: Validate args individually.
@@ -293,8 +294,8 @@ public class Product {
 			: "-INF");
     }
 
-    public boolean equals(int type, byte data) {
-	return this.type == type && this.data == data;
+    public boolean equals(int type2, byte data2) {
+	return this.type == type2 && this.data == data2;
     }
 
     public double getBuyPrice() {
@@ -320,6 +321,7 @@ public class Product {
 	return newStock >= this.minStock && newStock <= this.maxStock;
     }
 
+    @SuppressWarnings("boxing")
     public String toCSV() {
 	return Message.combine(
 		",", // This is the separator.

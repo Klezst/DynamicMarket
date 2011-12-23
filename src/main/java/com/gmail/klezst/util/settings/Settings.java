@@ -94,13 +94,11 @@ public class Settings {
 	if (value != null) {
 	    if (value.getClass().equals(type)) {
 		return (T) value;
-	    } else {
-		throw new IllegalArgumentException("The setting " + setting
-			+ " is not a " + type.getSimpleName() + ".");
 	    }
-	} else {
-	    throw new IllegalArgumentException(
-		    "You ignored an InvalidSettingsException.");
+	    throw new IllegalArgumentException("The setting " + setting
+		    + " is not a " + type.getSimpleName() + ".");
 	}
+	throw new IllegalArgumentException(
+		"You ignored an InvalidSettingsException.");
     }
 }

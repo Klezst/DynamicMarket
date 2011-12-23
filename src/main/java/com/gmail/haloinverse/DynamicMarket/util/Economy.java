@@ -21,7 +21,7 @@ package com.gmail.haloinverse.DynamicMarket.util;
 import org.bukkit.Bukkit;
 
 public class Economy {
-    // TODO: check or logging by exceptions
+    // TODO: 8. check or logging by exceptions
     public static net.milkbowl.vault.economy.Economy economy = Bukkit
 	    .getServer().getServicesManager()
 	    .getRegistration(net.milkbowl.vault.economy.Economy.class)

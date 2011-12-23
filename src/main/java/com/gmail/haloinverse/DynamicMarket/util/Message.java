@@ -28,8 +28,8 @@ public class Message {
 	return parseColor(line);
     }
 
-    public static void send(CommandSender recipient, String... messages) // TODO: Update all sender.sendMessage(Messaging.parseColor((String)) to this method instead.
-    {
+    // TODO: Update all sender.sendMessage(Messaging.parseColor((String)) to this method instead.
+    public static void send(CommandSender recipient, String... messages) {
 	for (String message : messages) {
 	    String[] lines = message.split("\n");
 	    for (String line : lines) {

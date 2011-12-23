@@ -75,8 +75,9 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 
     @Command(aliases = { "exportdb" }, desc = "Saves the database to the shopDB.csv", min = 0, max = 0)
     @CommandPermissions("admin")
-    public static void exportDB(CommandContext args, DynamicMarket plugin,
-	    CommandSender sender) {
+    public static void exportDB(
+	    @SuppressWarnings("unused") CommandContext args,
+	    DynamicMarket plugin, CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
 		+ " has issued the exportDB command; exporting.");
 	try {
@@ -443,17 +444,16 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		sender.sendMessage(Message
 			.parseColor("{ERR} Use {CMD}/shop help tags{ERR} to list tags."));
 		return;
-	    } else {
-		sender.sendMessage(Message
-			.parseColor("{} Tag format: {PRM}<tagName>{CMD}{BKT}:{PRM}<value> {PRM}<tagName>{CMD}{BKT}:{PRM}<value>..."));
-		sender.sendMessage(Message
-			.parseColor("{} Available tags: {CMD}basePrice, salesTax, canBuy, canSell, volitility,"));
-		sender.sendMessage(Message
-			.parseColor("{CMD} stock, maxStock, minStock, maxPrice, minPrice, buyable, sellable."));
-		sender.sendMessage(Message
-			.parseColor("{} Use {CMD}/shop help tag {PRM}<tagName>{} for tag descriptions."));
-		return;
 	    }
+	    sender.sendMessage(Message
+		    .parseColor("{} Tag format: {PRM}<tagName>{CMD}{BKT}:{PRM}<value> {PRM}<tagName>{CMD}{BKT}:{PRM}<value>..."));
+	    sender.sendMessage(Message
+		    .parseColor("{} Available tags: {CMD}basePrice, salesTax, canBuy, canSell, volitility,"));
+	    sender.sendMessage(Message
+		    .parseColor("{CMD} stock, maxStock, minStock, maxPrice, minPrice, buyable, sellable."));
+	    sender.sendMessage(Message
+		    .parseColor("{} Use {CMD}/shop help tag {PRM}<tagName>{} for tag descriptions."));
+	    return;
 	}
 	if (topic.equalsIgnoreCase("about")) {
 	    Message.send(sender, "{} " + plugin.getDescription().getName()
@@ -471,8 +471,9 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 
     @Command(aliases = { "importdb" }, desc = "Loads the database from the shopDB.csv", min = 0, max = 0)
     @CommandPermissions("admin")
-    public static void importDB(CommandContext args, DynamicMarket plugin,
-	    CommandSender sender) {
+    public static void importDB(
+	    @SuppressWarnings("unused") CommandContext args,
+	    DynamicMarket plugin, CommandSender sender) {
 	if (plugin.importDB()) {
 	    sender.sendMessage(Message.parseColor("{}Import successful."));
 	} else {
@@ -511,6 +512,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	}
     }
 
+    @SuppressWarnings("boxing")
     @Command(aliases = { "list", "l" }, desc = "Lists items for sale", usage = "[filter] [page]", min = 0, max = 2)
     public static void list(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
@@ -571,8 +573,8 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 
     @Command(aliases = { "reload" }, desc = "Restarts the plugin", min = 0, max = 0)
     @CommandPermissions("admin")
-    public static void reload(CommandContext args, DynamicMarket plugin,
-	    CommandSender sender) {
+    public static void reload(@SuppressWarnings("unused") CommandContext args,
+	    DynamicMarket plugin, CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
 		+ " has issued the reload command; reloading.");
 	plugin.onDisable();
@@ -626,6 +628,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	}
     }
 
+    @SuppressWarnings("boxing")
     @Command(aliases = { "update", "u" }, desc = "Updates an item at the shop", usage = "<id>[:<bundleSize>] [buyPrice] [sellPrice] [tagList]", min = 1, max = 12)
     @CommandPermissions("items.update")
     public static void update(CommandContext args, DynamicMarket plugin,
@@ -701,8 +704,9 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @Deprecated
     @Command(aliases = { "importold" }, desc = "Imports a .csv in the original format.", min = 0, max = 0)
     @CommandPermissions("admin")
-    public static void importOldDB(CommandContext args, DynamicMarket plugin,
-	    CommandSender sender) {
+    public static void importOldDB(
+	    @SuppressWarnings("unused") CommandContext args,
+	    DynamicMarket plugin, CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
 		+ " has issued the importOld command; importing.");
 	try {

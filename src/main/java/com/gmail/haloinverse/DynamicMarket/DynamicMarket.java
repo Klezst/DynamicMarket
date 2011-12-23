@@ -15,7 +15,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
-import com.avaje.ebean.LogLevel;
 import com.gmail.haloinverse.DynamicMarket.commands.Commands;
 import com.gmail.haloinverse.DynamicMarket.util.IO;
 import com.gmail.haloinverse.DynamicMarket.util.Message;
@@ -50,6 +49,7 @@ public class DynamicMarket extends JavaPlugin {
     }
 
     // Method template by LennardF1989
+    @SuppressWarnings("boxing")
     private void initializeDatabase() {
 	this.database = new MyDatabase(this) {
 	    @Override
@@ -70,7 +70,6 @@ public class DynamicMarket extends JavaPlugin {
 		getSetting(Setting.ISOLATION, String.class),
 		getSetting(Setting.LOGGING, Boolean.class), false // If an update to database structure is done, a function to determine whether or not to rebuild is be written.
 		);
-	this.database.getDatabase().getAdminLogging().setLogLevel(LogLevel.SQL);
     }
 
     @Override
@@ -83,11 +82,10 @@ public class DynamicMarket extends JavaPlugin {
     public void onEnable() {
 	PluginManager pm = getServer().getPluginManager();
 
-	// add vault dependency
-
 	// Check for WorldEdit (dependency).
 	try {
 	    // Setup permissions.
+	    // TODO 9. use vault permissions
 	    this.permissionsManager = new PermissionsResolverManager(this,
 		    getDescription().getName(), Logger.getLogger("Minecraft."
 			    + getDescription().getName())); // Creates our instance of WorldEdit Permissions Interoperability Framework (WEPIF)
@@ -248,6 +246,7 @@ public class DynamicMarket extends JavaPlugin {
 	return this.settings.getSetting(setting, type);
     }
 
+    // TODO 9. use vault permissions
     public boolean hasPermission(CommandSender sender, String permission) {
 	return ((PermissionsResolverManager) this.permissionsManager)
 		.hasPermission(sender.getName(), getDescription().getName()

@@ -121,7 +121,6 @@ public class Shop // TODO: Add location support.
     }
 
     // Methods
-    // TODO: what did hell make these old(1) method? the bean automaticly update these ...
     public void addProduct(Product product) {
 	product.setShop(this);
 	this.products.add(product);
@@ -141,6 +140,7 @@ public class Shop // TODO: Add location support.
 	return getProduct(data.getItemTypeId(), data.getData());
     }
 
+    @SuppressWarnings("boxing")
     public static Shop parseShop(String... args)
 	    throws IllegalArgumentException {
 	try {
@@ -161,6 +161,7 @@ public class Shop // TODO: Add location support.
 	return parseShop(line.split(","));
     }
 
+    // TODO 2. location
     public static Shop parseShop(CommandContext args)
 	    throws IllegalArgumentException {
 	return null;
@@ -171,6 +172,7 @@ public class Shop // TODO: Add location support.
 	this.products.remove(product);
     }
 
+    @SuppressWarnings("boxing")
     public String toCSV() {
 	return Message.combine(
 		",", // This is the separator
