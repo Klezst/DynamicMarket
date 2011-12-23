@@ -33,7 +33,7 @@ import com.avaje.ebean.validation.NotNull;
 import com.gmail.haloinverse.DynamicMarket.util.Economy;
 import com.gmail.haloinverse.DynamicMarket.util.Message;
 import com.gmail.haloinverse.DynamicMarket.util.Util;
-import com.idragonfire.event.DynmiacMarketException;
+import com.idragonfire.event.DynamicMarketException;
 
 @Entity
 @Table(name = "transactions")
@@ -88,12 +88,12 @@ public class Transaction {
 
 	    int newVolume = amount * product.getBundleSize();
 	    if (Math.abs(newVolume) > newShop.getMaxTransactionSize()) {
-		throw new DynmiacMarketException(
+		throw new DynamicMarketException(
 			"{ERR}You can't buy that much at once!");
 	    }
 
 	    if (!product.hasStock(amount)) {
-		throw new DynmiacMarketException("{ERR}" + newShop.getName()
+		throw new DynamicMarketException("{ERR}" + newShop.getName()
 			+ " doesn't have enough "
 			+ (newVolume < 0 ? "space" : "stock") + ".");
 	    }
@@ -102,14 +102,14 @@ public class Transaction {
 	    HashMap<Integer, ItemStack> overflow;
 	    if (newVolume > 0) {
 		if (!product.isBuyable()) {
-		    throw new DynmiacMarketException("{ERR}"
+		    throw new DynamicMarketException("{ERR}"
 			    + newShop.getName() + " refuses to sell "
 			    + matrialid + " to you!");
 		}
 
 		newPrice = amount * product.getBuyPrice();
 		if (Economy.getBalance(player.getName()) < newPrice) {
-		    throw new DynmiacMarketException(
+		    throw new DynamicMarketException(
 			    "{ERR}You don't have enough money!");
 		}
 
@@ -121,7 +121,7 @@ public class Transaction {
 		}
 
 		if (newVolume == 0) {
-		    throw new DynmiacMarketException(
+		    throw new DynamicMarketException(
 			    "{ERR}You don't have enough space in your inventory!");
 		}
 
@@ -129,7 +129,7 @@ public class Transaction {
 		newPrice = product.getBuyPrice() * newBundles;
 	    } else {
 		if (!product.isSellable()) {
-		    throw new DynmiacMarketException("{ERR}"
+		    throw new DynamicMarketException("{ERR}"
 			    + newShop.getName() + "Refuses to sell "
 			    + matrialid + " to you!");
 		}
@@ -137,7 +137,7 @@ public class Transaction {
 		newPrice = product.getSellPrice();
 		if (!newShop.isInfiniteFunding()
 			&& newShop.getFunds() < -newPrice * amount) {
-		    throw new DynmiacMarketException("{ERR}"
+		    throw new DynamicMarketException("{ERR}"
 			    + newShop.getName() + " doesn't have enough money!");
 		}
 
@@ -149,7 +149,7 @@ public class Transaction {
 		}
 
 		if (newVolume == 0) {
-		    throw new DynmiacMarketException(
+		    throw new DynamicMarketException(
 			    "{ERR}You don't have enough of that in your inventory!");
 		}
 
@@ -185,7 +185,7 @@ public class Transaction {
 	} // TODO: 1.add better exception handling
 	catch (IllegalArgumentException e) {
 	    player.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
-	} catch (DynmiacMarketException e) {
+	} catch (DynamicMarketException e) {
 	    player.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
 	} catch (Exception e) {
 	    e.printStackTrace();
