@@ -182,7 +182,7 @@ public class Transaction {
 		plugin.getDatabase().save(this);
 	    }
 
-	} // TODO: better exception handling?
+	} // TODO: 1.add better exception handling
 	catch (IllegalArgumentException e) {
 	    player.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
 	} catch (DynmiacMarketException e) {

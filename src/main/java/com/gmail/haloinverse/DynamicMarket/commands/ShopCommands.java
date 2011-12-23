@@ -70,14 +70,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("buy")
     public static void buy(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	try {
-	    // throws NumberFormatException, iff args.getString(1) is not a valid Integer.
-	    int amount = (args.argsLength() == 2 ? args.getInteger(1) : 1);
-	    new Transaction(plugin, amount, (Player) sender, args.getString(0));
-	} catch (NumberFormatException e) {
-	    sender.sendMessage(Message.parseColor("{ERR}" + args.getString(1)
-		    + " is not a valid amount!"));
-	}
+	sellOrBuyAction(args, plugin, sender, false);
     }
 
     @Command(aliases = { "exportdb" }, desc = "Saves the database to the shopDB.csv", min = 0, max = 0)
@@ -614,16 +607,23 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("sell")
     public static void sell(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	int amount;
+	sellOrBuyAction(args, plugin, sender, true);
+    }
+
+    private static void sellOrBuyAction(CommandContext args,
+	    DynamicMarket plugin, CommandSender sender, boolean sell) {
+	// TODO: 1.add better exception handling
 	try {
-	    amount = (args.argsLength() == 2 ? args.getInteger(1) : 1);
+	    // throws NumberFormatException, iff args.getString(1) is not a valid Integer.
+	    int amount = (args.argsLength() == 2 ? args.getInteger(1) : 1);
+	    if (sell) {
+		amount *= -1;
+	    }
+	    new Transaction(plugin, amount, (Player) sender, args.getString(0));
 	} catch (NumberFormatException e) {
 	    sender.sendMessage(Message.parseColor("{ERR}" + args.getString(1)
 		    + " is not a valid amount!"));
-	    return;
 	}
-
-	new Transaction(plugin, -amount, (Player) sender, args.getString(0));
     }
 
     @Command(aliases = { "update", "u" }, desc = "Updates an item at the shop", usage = "<id>[:<bundleSize>] [buyPrice] [sellPrice] [tagList]", min = 1, max = 12)
