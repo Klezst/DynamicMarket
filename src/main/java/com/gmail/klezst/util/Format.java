@@ -1,4 +1,4 @@
-package com.gmail.klezst.DynamicMarket.util;
+package com.gmail.klezst.util;
 
 public class Format {
     @SuppressWarnings("boxing")

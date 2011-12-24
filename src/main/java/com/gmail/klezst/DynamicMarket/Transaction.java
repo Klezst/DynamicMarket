@@ -30,9 +30,9 @@ import org.bukkit.material.MaterialData;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
-import com.gmail.klezst.DynamicMarket.util.Economy;
-import com.gmail.klezst.DynamicMarket.util.Message;
-import com.gmail.klezst.DynamicMarket.util.Util;
+import com.gmail.klezst.util.Economy;
+import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.Util;
 import com.idragonfire.data.DMsg;
 import com.idragonfire.data.DMsg.MsgKey;
 import com.idragonfire.event.DynamicMarketException;

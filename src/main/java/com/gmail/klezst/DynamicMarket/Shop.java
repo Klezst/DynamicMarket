@@ -31,8 +31,8 @@ import org.bukkit.material.MaterialData;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
-import com.gmail.klezst.DynamicMarket.util.Format;
-import com.gmail.klezst.DynamicMarket.util.Message;
+import com.gmail.klezst.util.Format;
+import com.gmail.klezst.util.Message;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
 @Entity

@@ -18,9 +18,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
 import com.gmail.klezst.DynamicMarket.commands.Commands;
-import com.gmail.klezst.DynamicMarket.util.IO;
-import com.gmail.klezst.DynamicMarket.util.Message;
-import com.gmail.klezst.DynamicMarket.util.Util;
+import com.gmail.klezst.util.IO;
+import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.Util;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Settings;
 import com.gmail.klezst.util.settings.Validatable;
@@ -36,9 +36,10 @@ import com.sk89q.minecraft.util.commands.MissingNestedCommandException;
 import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
 public class DynamicMarket extends JavaPlugin {
-    private static final Logger log = Logger.getLogger("Minecraft");
     public static final double DDM_MAXVALUE = 999999999.99;
     public static DynamicMarket INSTANCE;
+	
+    private static Logger log = Logger.getLogger("Minecraft");
 
     private Market market;
     private MyDatabase database;
