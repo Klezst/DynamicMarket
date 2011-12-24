@@ -7,6 +7,10 @@ import java.util.Date;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 
+/**
+ * DragonMessageLibary to load message from a yaml file
+ * @author IDragonfire
+ */
 public class DMsg {
 
     public enum MsgKey {
@@ -14,9 +18,9 @@ public class DMsg {
 	BUY_TOMUCH("buy.tomuch", "{ERR}You can't buy that much at once!"), 
 	BUY_NOSPACE("buy.nospace", "{ERR} $shop$ doesn't have enough space"), 
 	SELL_NOSTOCK("buy.nostock", "{ERR} $shop$ doesn't have enough stock."),
-	HELP_LINE1("example", "line1"),
-	HELP_LINE2("example", "line1"),
-	HELP_LINE3("example", "line1");
+	HELP_LINE1("help.example1", "line1"),
+	HELP_LINE2("help.example2", "line2"),
+	HELP_LINE3("help.example3", "line3");
 	// # END
 	private final String key;
 	private final String msg;
@@ -41,6 +45,7 @@ public class DMsg {
     private String msgLibPath = "plugins/DynamicMarket/messages.yml";
     private YamlConfiguration msgLib;
 
+    //TODO add split function for multiline support
     public String get(MsgKey key) {
 	return get(key, null);
     }

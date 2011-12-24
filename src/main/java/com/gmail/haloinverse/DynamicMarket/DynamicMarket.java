@@ -11,6 +11,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,6 +24,7 @@ import com.gmail.haloinverse.DynamicMarket.util.Util;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Settings;
 import com.gmail.klezst.util.settings.Validatable;
+import com.idragonfire.event.DynamicMargetMasterShopAreaListener;
 import com.lennardf1989.bukkitex.MyDatabase;
 import com.sk89q.bukkit.migration.PermissionsResolverManager;
 import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
@@ -35,6 +38,7 @@ import com.sk89q.minecraft.util.commands.WrappedCommandException;
 public class DynamicMarket extends JavaPlugin {
     private static final Logger log = Logger.getLogger("Minecraft");
     public static final double DDM_MAXVALUE = 999999999.99;
+    public static DynamicMarket INSTANCE;
 
     private Market market;
     private MyDatabase database;
@@ -81,7 +85,10 @@ public class DynamicMarket extends JavaPlugin {
     @Override
     public void onEnable() {
 	PluginManager pm = getServer().getPluginManager();
-
+	
+	DynamicMarket.INSTANCE = this;
+	pm.registerEvent(Event.Type.BLOCK_BREAK, DynamicMargetMasterShopAreaListener.INSTANCE, Priority.Normal, this);
+	
 	// Check for WorldEdit (dependency).
 	try {
 	    // Setup permissions.
