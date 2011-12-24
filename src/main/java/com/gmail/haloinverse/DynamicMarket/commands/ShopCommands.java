@@ -38,7 +38,7 @@ import com.gmail.haloinverse.DynamicMarket.util.Format;
 import com.gmail.haloinverse.DynamicMarket.util.IO;
 import com.gmail.haloinverse.DynamicMarket.util.Message;
 import com.gmail.haloinverse.DynamicMarket.util.Util;
-import com.idragonfire.event.DynamicMargetMasterShopAreaListener;
+import com.idragonfire.event.DynamicMarketMasterShopAreaListener;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
@@ -708,7 +708,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    CommandSender sender) {
 	((Player) sender).sendMessage("update");
 	// TODO: dont create new listener if exists
-	DynamicMargetMasterShopAreaListener.INSTANCE
+	DynamicMarketMasterShopAreaListener.INSTANCE
 		.addListener((Player) sender);
     }
 

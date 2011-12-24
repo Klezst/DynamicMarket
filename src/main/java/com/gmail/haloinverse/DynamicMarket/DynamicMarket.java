@@ -24,7 +24,7 @@ import com.gmail.haloinverse.DynamicMarket.util.Util;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Settings;
 import com.gmail.klezst.util.settings.Validatable;
-import com.idragonfire.event.DynamicMargetMasterShopAreaListener;
+import com.idragonfire.event.DynamicMarketMasterShopAreaListener;
 import com.lennardf1989.bukkitex.MyDatabase;
 import com.sk89q.bukkit.migration.PermissionsResolverManager;
 import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
@@ -87,7 +87,7 @@ public class DynamicMarket extends JavaPlugin {
 	PluginManager pm = getServer().getPluginManager();
 	
 	DynamicMarket.INSTANCE = this;
-	pm.registerEvent(Event.Type.BLOCK_BREAK, DynamicMargetMasterShopAreaListener.INSTANCE, Priority.Normal, this);
+	pm.registerEvent(Event.Type.BLOCK_BREAK, DynamicMarketMasterShopAreaListener.INSTANCE, Priority.Normal, this);
 	
 	// Check for WorldEdit (dependency).
 	try {

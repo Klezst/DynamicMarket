@@ -12,12 +12,12 @@ import org.bukkit.event.block.BlockListener;
  * 
  * @author IDragonfire
  */
-public class DynamicMargetMasterShopAreaListener extends BlockListener {
-    public static final DynamicMargetMasterShopAreaListener INSTANCE = new DynamicMargetMasterShopAreaListener();
+public class DynamicMarketMasterShopAreaListener extends BlockListener {
+    public static final DynamicMarketMasterShopAreaListener INSTANCE = new DynamicMarketMasterShopAreaListener();
     private Vector<DynamicCreateShopAreaListener> listeners;
     private boolean active;
 
-    private DynamicMargetMasterShopAreaListener() {
+    private DynamicMarketMasterShopAreaListener() {
 	this.listeners = new Vector<DynamicCreateShopAreaListener>();
     }
 

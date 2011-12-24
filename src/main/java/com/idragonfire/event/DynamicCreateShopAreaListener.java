@@ -55,6 +55,7 @@ public class DynamicCreateShopAreaListener extends BlockListener {
 		    .getBlockTypeIdAt(this.pos2), (byte) 0);
 	}
 	this.pos2 = null;
+	DynamicMarketMasterShopAreaListener.INSTANCE.removeListener(this);
 	if (restart) {
 	    initThread();
 	    this.abortThread.start();
@@ -76,7 +77,7 @@ public class DynamicCreateShopAreaListener extends BlockListener {
 			.sendMessage("Save pos2 ... break block to confirm type new area");
 	    } else {
 		this.abortThread.interrupt();
-		this.creator.sendMessage("Gespeichert");
+		this.creator.sendMessage("save all (dummy method)");
 		reset(false);
 	    }
 	}
