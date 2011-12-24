@@ -18,7 +18,7 @@ public class Permission {
      * Returns true, iff sender has the permission node.
      * 
      * @param sender
-     *            Whom to check for permission.
+     *            Who to check for permission.
      * @param node
      *            The permission needed.
      * @return, true, iff sender has the permission node.

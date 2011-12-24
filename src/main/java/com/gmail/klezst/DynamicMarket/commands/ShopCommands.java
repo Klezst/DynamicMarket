@@ -37,6 +37,7 @@ import com.gmail.klezst.DynamicMarket.Transaction;
 import com.gmail.klezst.util.Format;
 import com.gmail.klezst.util.IO;
 import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.Permission;
 import com.gmail.klezst.util.Util;
 import com.idragonfire.event.DynamicMarketMasterShopAreaListener;
 import com.sk89q.minecraft.util.commands.Command;
@@ -77,7 +78,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @Command(aliases = { "exportdb" }, desc = "Saves the database to the shopDB.csv", min = 0, max = 0)
     @CommandPermissions("admin")
     public static void exportDB(
-	    @SuppressWarnings("unused") CommandContext args,
+	    CommandContext args,
 	    DynamicMarket plugin, CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
 		+ " has issued the exportDB command; exporting.");
@@ -124,37 +125,37 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 
 	    commands += " list";
 	    shortcuts += " -? -l";
-	    if (plugin.hasPermission(sender, "buy")) {
+	    if (Permission.hasPermission(sender, "buy")) {
 		commands += " buy";
 		shortcuts += " -b";
 	    }
-	    if (plugin.hasPermission(sender, "sell")) {
+	    if (Permission.hasPermission(sender, "sell")) {
 		commands += " sell";
 		shortcuts += " -s";
 	    }
 	    commands += " info";
 	    shortcuts += " -i";
 
-	    if (plugin.hasPermission(sender, "items.add")) {
+	    if (Permission.hasPermission(sender, "items.add")) {
 		commands += " add";
 		shortcuts += " -a";
 	    }
-	    if (plugin.hasPermission(sender, "items.update")) {
+	    if (Permission.hasPermission(sender, "items.update")) {
 		commands += " update";
 		shortcuts += " -u";
 	    }
-	    if (plugin.hasPermission(sender, "items.remove")) {
+	    if (Permission.hasPermission(sender, "items.remove")) {
 		commands += " remove";
 		shortcuts += " -r";
 	    }
-	    if (plugin.hasPermission(sender, "admin")) {
+	    if (Permission.hasPermission(sender, "admin")) {
 		commands += " reload";
 		commands += " exportdb importdb";
 	    }
 
 	    topics += "ids details about";
-	    if (plugin.hasPermission(sender, "items.add")
-		    || plugin.hasPermission(sender, "items.update")) {
+	    if (Permission.hasPermission(sender, "items.add")
+		    || Permission.hasPermission(sender, "items.update")) {
 		topics += " tags";
 	    }
 
@@ -172,7 +173,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 			+ " {BKT}{} : " + topic + "{} ")));
 
 	if (topic.equalsIgnoreCase("buy")) {
-	    if (plugin.hasPermission(sender, "buy")) {
+	    if (Permission.hasPermission(sender, "buy")) {
 		sender.sendMessage(Message
 			.parseColor("{CMD} /shop buy {PRM}<id>[{BKT}:{PRM}<subType>] [amount]"));
 		sender.sendMessage(Message
@@ -183,7 +184,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    }
 	}
 	if (topic.equalsIgnoreCase("sell")) {
-	    if (plugin.hasPermission(sender, "sell")) {
+	    if (Permission.hasPermission(sender, "sell")) {
 		sender.sendMessage(Message
 			.parseColor("{CMD}/shop sell {PRM}<id>[{BKT}:{PRM}<subType>] [amount]"));
 		sender.sendMessage(Message
@@ -201,7 +202,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    return;
 	}
 	if (topic.equalsIgnoreCase("add")) {
-	    if (plugin.hasPermission(sender, "items.add")) {
+	    if (Permission.hasPermission(sender, "items.add")) {
 		sender.sendMessage(Message
 			.parseColor("{CMD}/shop add {PRM}<id>[{BKT}:{PRM}<subType>] <tags>"));
 		sender.sendMessage(Message
@@ -212,7 +213,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    }
 	}
 	if (topic.equalsIgnoreCase("update")) {
-	    if (plugin.hasPermission(sender, "items.update")) {
+	    if (Permission.hasPermission(sender, "items.update")) {
 		sender.sendMessage(Message
 			.parseColor("{CMD}/shop update {PRM}<id>{BKT}:{PRM}[<subType>] <tags>"));
 		sender.sendMessage(Message
@@ -223,7 +224,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    }
 	}
 	if (topic.equalsIgnoreCase("remove")) {
-	    if (plugin.hasPermission(sender, "items.remove")) {
+	    if (Permission.hasPermission(sender, "items.remove")) {
 		sender.sendMessage(Message
 			.parseColor("{CMD} /shop remove {PRM}<id>[{BKT}:{PRM}<subType>]"));
 		sender.sendMessage(Message
@@ -231,7 +232,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		return;
 	    }
 	}
-	if (plugin.hasPermission(sender, "admin")) {
+	if (Permission.hasPermission(sender, "admin")) {
 	    if (topic.equalsIgnoreCase("reload")) {
 		sender.sendMessage(Message.parseColor("{CMD} /shop reload"));
 		sender.sendMessage(Message
@@ -301,7 +302,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    return;
 	}
 	if ((Util.isAny(topic.split(" ")[0], "tags", "tag"))
-		&& ((plugin.hasPermission(sender, "items.add") || plugin
+		&& ((Permission.hasPermission(sender, "items.add") || Permission
 			.hasPermission(sender, "items.update")))) {
 	    if (topic.indexOf(" ") > -1) {
 		// Possible tag listed!
@@ -473,7 +474,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @Command(aliases = { "importdb" }, desc = "Loads the database from the shopDB.csv", min = 0, max = 0)
     @CommandPermissions("admin")
     public static void importDB(
-	    @SuppressWarnings("unused") CommandContext args,
+	    CommandContext args,
 	    DynamicMarket plugin, CommandSender sender) {
 	if (plugin.importDB()) {
 	    sender.sendMessage(Message.parseColor("{}Import successful."));
@@ -574,7 +575,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 
     @Command(aliases = { "reload" }, desc = "Restarts the plugin", min = 0, max = 0)
     @CommandPermissions("admin")
-    public static void reload(@SuppressWarnings("unused") CommandContext args,
+    public static void reload(CommandContext args,
 	    DynamicMarket plugin, CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
 		+ " has issued the reload command; reloading.");
@@ -716,7 +717,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @Command(aliases = { "importold" }, desc = "Imports a .csv in the original format.", min = 0, max = 0)
     @CommandPermissions("admin")
     public static void importOldDB(
-	    @SuppressWarnings("unused") CommandContext args,
+	    CommandContext args,
 	    DynamicMarket plugin, CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
 		+ " has issued the importOld command; importing.");

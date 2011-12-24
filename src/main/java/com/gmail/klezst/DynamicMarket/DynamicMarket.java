@@ -20,14 +20,13 @@ import com.avaje.ebean.EbeanServer;
 import com.gmail.klezst.DynamicMarket.commands.Commands;
 import com.gmail.klezst.util.IO;
 import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.Permission;
 import com.gmail.klezst.util.Util;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Settings;
 import com.gmail.klezst.util.settings.Validatable;
 import com.idragonfire.event.DynamicMarketMasterShopAreaListener;
 import com.lennardf1989.bukkitex.MyDatabase;
-import com.sk89q.bukkit.migration.PermissionsResolverManager;
-import com.sk89q.bukkit.migration.PermissionsResolverServerListener;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissionsException;
 import com.sk89q.minecraft.util.commands.CommandUsageException;
@@ -38,14 +37,13 @@ import com.sk89q.minecraft.util.commands.WrappedCommandException;
 public class DynamicMarket extends JavaPlugin {
     public static final double DDM_MAXVALUE = 999999999.99;
     public static DynamicMarket INSTANCE;
-	
+
     private static Logger log = Logger.getLogger("Minecraft");
 
     private Market market;
     private MyDatabase database;
     private Settings settings;
-    private Object permissionsManager; // PermissionsResolverManager (Must be Object to prevent NoClassFoundException, iff WorldEdit isn't present).
-    private Object commandsManager; // CommandsManager (Must be Object to prevent NoClassFoundException, iff WorldEdit isn't present).
+    private CommandsManager<CommandSender> commandsManager;
 
     // Method template by LennardF1989
     @Override
@@ -82,40 +80,23 @@ public class DynamicMarket extends JavaPlugin {
 	log(Level.INFO, "Disabled.");
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void onEnable() {
 	PluginManager pm = getServer().getPluginManager();
-	
-	DynamicMarket.INSTANCE = this;
-	pm.registerEvent(Event.Type.BLOCK_BREAK, DynamicMarketMasterShopAreaListener.INSTANCE, Priority.Normal, this);
-	
-	// Check for WorldEdit (dependency).
-	try {
-	    // Setup permissions.
-	    // TODO 9. use vault permissions
-	    this.permissionsManager = new PermissionsResolverManager(this,
-		    getDescription().getName(), Logger.getLogger("Minecraft."
-			    + getDescription().getName())); // Creates our instance of WorldEdit Permissions Interoperability Framework (WEPIF)
-	    new PermissionsResolverServerListener(
-		    (PermissionsResolverManager) this.permissionsManager, this); // Tells WEPIF to check for changes in what permissions plugin is used.
 
-	    // Setup commands.
-	    final DynamicMarket plugin = this;
-	    this.commandsManager = new CommandsManager<CommandSender>() {
-		@Override
-		public boolean hasPermission(CommandSender sender,
-			String permission) {
-		    return plugin.hasPermission(sender, permission);
-		}
-	    };
-	    ((CommandsManager<CommandSender>) this.commandsManager)
-		    .register(Commands.class);
-	} catch (NoClassDefFoundError e) {
-	    log(Level.SEVERE, "WorldEdit not detected");
-	    pm.disablePlugin(this);
-	    return;
-	}
+	DynamicMarket.INSTANCE = this;
+	pm.registerEvent(Event.Type.BLOCK_BREAK,
+		DynamicMarketMasterShopAreaListener.INSTANCE, Priority.Normal,
+		this);
+
+	// Setup commands.
+	this.commandsManager = new CommandsManager<CommandSender>() {
+	    @Override
+	    public boolean hasPermission(CommandSender sender, String permission) {
+		return Permission.hasPermission(sender, "dynamicmarket." + permission);
+	    }
+	};
+	this.commandsManager.register(Commands.class);
 
 	// Set up directory.
 	getDataFolder().mkdirs();
@@ -204,7 +185,6 @@ public class DynamicMarket extends JavaPlugin {
 	}
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean onCommand(CommandSender sender, Command cmd,
 	    String commandLabel, String[] args) {
@@ -217,8 +197,7 @@ public class DynamicMarket extends JavaPlugin {
 	}
 
 	try {
-	    ((CommandsManager<CommandSender>) this.commandsManager).execute(
-		    cmd.getName(), args, sender, this, sender);
+	    commandsManager.execute(cmd.getName(), args, sender, this, sender);
 	} catch (CommandPermissionsException e) {
 	    sender.sendMessage(Message.parseColor("{ERR}"
 		    + "You don't have permission"));
@@ -252,13 +231,6 @@ public class DynamicMarket extends JavaPlugin {
 
     public <T> T getSetting(Validatable setting, Class<T> type) {
 	return this.settings.getSetting(setting, type);
-    }
-
-    // TODO 9. use vault permissions - consider com.gmail.klezst.util.Permission
-    public boolean hasPermission(CommandSender sender, String permission) {
-	return ((PermissionsResolverManager) this.permissionsManager)
-		.hasPermission(sender.getName(), getDescription().getName()
-			.toLowerCase() + "." + permission);
     }
 
     public boolean importDB() {
