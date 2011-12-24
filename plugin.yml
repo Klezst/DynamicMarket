@@ -1,18 +1,12 @@
 authors: [HaloInverse, IDragonfire, Klezst, Magik, Nijikokun, N3X15]
 depend: [WorldEdit, Vault]
 description: A shop plugin building towards an interesting and flexible market system.
-name: DynamicMarket
 main: com.gmail.klezst.DynamicMarket.DynamicMarket
+name: DynamicMarket
 version: 0.1 Dragon
 commands:
     shop:
-       description: Accesses the shop command system.
-       usage: |
-              /<command>
-              /<command> help <topic/command>
-              /<command> <itemid>
-              /<command> <subcommand> <args>
-    dshop:
+       aliases: dshop
        description: Accesses the shop command system.
        usage: |
               /<command>
