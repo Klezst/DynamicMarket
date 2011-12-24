@@ -20,12 +20,17 @@ package com.gmail.klezst.util;
 
 import org.bukkit.Bukkit;
 
+/**
+ * Controls communication with economy plugins.
+ * 
+ * @author Klezst
+ */
 public class Economy {
-    // TODO: 8. check or logging by exceptions
+    // TODO: What to do? This assumes Vault loads the economy before this file loads. Nothing, since we throw NullPointerException, iff no economy is loaded?
     public static net.milkbowl.vault.economy.Economy economy = Bukkit
 	    .getServer().getServicesManager()
 	    .getRegistration(net.milkbowl.vault.economy.Economy.class)
-	    .getProvider();
+	    .getProvider(); // Will not throw NullPointerException, since Vault is a dependency.
 
     /**
      * Changes an economy account's balance.

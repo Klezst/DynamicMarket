@@ -254,7 +254,7 @@ public class DynamicMarket extends JavaPlugin {
 	return this.settings.getSetting(setting, type);
     }
 
-    // TODO 9. use vault permissions
+    // TODO 9. use vault permissions - consider com.gmail.klezst.util.Permission
     public boolean hasPermission(CommandSender sender, String permission) {
 	return ((PermissionsResolverManager) this.permissionsManager)
 		.hasPermission(sender.getName(), getDescription().getName()
