@@ -33,7 +33,7 @@ public class DynamicCreateShopAreaListener extends BlockListener {
 		    return;
 		}
 		DynamicCreateShopAreaListener.this.creator
-			.sendMessage("Area abgebrochen");
+			.sendMessage("Area abort");
 		reset(false);
 	    }
 	};
