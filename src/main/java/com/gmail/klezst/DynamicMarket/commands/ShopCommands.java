@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.gmail.haloinverse.DynamicMarket.commands;
+package com.gmail.klezst.DynamicMarket.commands;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,15 +29,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.material.MaterialData;
 
-import com.gmail.haloinverse.DynamicMarket.DynamicMarket;
-import com.gmail.haloinverse.DynamicMarket.Product;
-import com.gmail.haloinverse.DynamicMarket.Setting;
-import com.gmail.haloinverse.DynamicMarket.Shop;
-import com.gmail.haloinverse.DynamicMarket.Transaction;
-import com.gmail.haloinverse.DynamicMarket.util.Format;
-import com.gmail.haloinverse.DynamicMarket.util.IO;
-import com.gmail.haloinverse.DynamicMarket.util.Message;
-import com.gmail.haloinverse.DynamicMarket.util.Util;
+import com.gmail.klezst.DynamicMarket.DynamicMarket;
+import com.gmail.klezst.DynamicMarket.Product;
+import com.gmail.klezst.DynamicMarket.Setting;
+import com.gmail.klezst.DynamicMarket.Shop;
+import com.gmail.klezst.DynamicMarket.Transaction;
+import com.gmail.klezst.DynamicMarket.util.Format;
+import com.gmail.klezst.DynamicMarket.util.IO;
+import com.gmail.klezst.DynamicMarket.util.Message;
+import com.gmail.klezst.DynamicMarket.util.Util;
 import com.idragonfire.event.DynamicMarketMasterShopAreaListener;
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;

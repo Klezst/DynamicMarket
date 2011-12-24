@@ -1,4 +1,4 @@
-package com.gmail.haloinverse.DynamicMarket.util;
+package com.gmail.klezst.DynamicMarket.util;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;

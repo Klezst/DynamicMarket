@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.gmail.haloinverse.DynamicMarket.commands;
+package com.gmail.klezst.DynamicMarket.commands;
 
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandPermissions;

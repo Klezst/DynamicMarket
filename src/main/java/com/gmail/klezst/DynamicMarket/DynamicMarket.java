@@ -1,4 +1,4 @@
-package com.gmail.haloinverse.DynamicMarket;
+package com.gmail.klezst.DynamicMarket;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,10 +17,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
-import com.gmail.haloinverse.DynamicMarket.commands.Commands;
-import com.gmail.haloinverse.DynamicMarket.util.IO;
-import com.gmail.haloinverse.DynamicMarket.util.Message;
-import com.gmail.haloinverse.DynamicMarket.util.Util;
+import com.gmail.klezst.DynamicMarket.commands.Commands;
+import com.gmail.klezst.DynamicMarket.util.IO;
+import com.gmail.klezst.DynamicMarket.util.Message;
+import com.gmail.klezst.DynamicMarket.util.Util;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Settings;
 import com.gmail.klezst.util.settings.Validatable;

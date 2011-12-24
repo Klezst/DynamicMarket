@@ -1,4 +1,4 @@
-package com.gmail.haloinverse.DynamicMarket.util;
+package com.gmail.klezst.DynamicMarket.util;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -18,11 +18,11 @@ import java.util.List;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.gmail.haloinverse.DynamicMarket.DynamicMarket;
-import com.gmail.haloinverse.DynamicMarket.Market;
-import com.gmail.haloinverse.DynamicMarket.Product;
-import com.gmail.haloinverse.DynamicMarket.Setting;
-import com.gmail.haloinverse.DynamicMarket.Shop;
+import com.gmail.klezst.DynamicMarket.DynamicMarket;
+import com.gmail.klezst.DynamicMarket.Market;
+import com.gmail.klezst.DynamicMarket.Product;
+import com.gmail.klezst.DynamicMarket.Setting;
+import com.gmail.klezst.DynamicMarket.Shop;
 
 public class IO {
     final static int size = 1024;

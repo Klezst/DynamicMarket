@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.gmail.haloinverse.DynamicMarket;
+package com.gmail.klezst.DynamicMarket;
 
 import java.util.HashMap;
 
@@ -30,9 +30,9 @@ import org.bukkit.material.MaterialData;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
-import com.gmail.haloinverse.DynamicMarket.util.Economy;
-import com.gmail.haloinverse.DynamicMarket.util.Message;
-import com.gmail.haloinverse.DynamicMarket.util.Util;
+import com.gmail.klezst.DynamicMarket.util.Economy;
+import com.gmail.klezst.DynamicMarket.util.Message;
+import com.gmail.klezst.DynamicMarket.util.Util;
 import com.idragonfire.data.DMsg;
 import com.idragonfire.data.DMsg.MsgKey;
 import com.idragonfire.event.DynamicMarketException;

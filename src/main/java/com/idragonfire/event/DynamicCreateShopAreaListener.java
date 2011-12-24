@@ -21,22 +21,21 @@ public class DynamicCreateShopAreaListener extends BlockListener {
     }
 
     private void initThread() {
-	this.abortThread = new Thread() {
-
-	    @SuppressWarnings("synthetic-access")
-	    @Override
-	    public void run() {
-		try {
-		    Thread.sleep(terminateTime);
-		} catch (Exception e) {
-		    // reset interupt and remove Listener
-		    return;
-		}
-		DynamicCreateShopAreaListener.this.creator
-			.sendMessage("Area abort");
-		reset(false);
-	    }
-	};
+		this.abortThread = new Thread() {
+		    @SuppressWarnings("synthetic-access")
+		    @Override
+		    public void run() {
+				try {
+				    Thread.sleep(terminateTime);
+				} catch (Exception e) {
+				    // reset interupt and remove Listener
+				    return;
+				}
+				DynamicCreateShopAreaListener.this.creator
+					.sendMessage("Area abort");
+				reset(false);
+		    }
+		};
     }
 
     public boolean samePlayer(Player player) {

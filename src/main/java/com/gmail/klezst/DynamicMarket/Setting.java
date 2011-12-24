@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.gmail.haloinverse.DynamicMarket;
+package com.gmail.klezst.DynamicMarket;
 
 import com.gmail.klezst.util.settings.InvalidSettingsException;
 import com.gmail.klezst.util.settings.Validatable;
