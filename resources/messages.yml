@@ -1,9 +1,9 @@
 buy:
   toomuch: You cannot buy that much at once.
   nospace: The shop doesn't have enough of that to sell to you.
-help: /shop <help/?> - Show help.
+help:
   add: |
-    /shop add <id>[:<subtype>] [tags]
+    {DARK_PURPLE}/shop add <id>[{AQUA}:{DARK_PURPLE}<subtype>] [tags]
     Adds a product to the shop.
     See also: /shop help tags
   buy: |

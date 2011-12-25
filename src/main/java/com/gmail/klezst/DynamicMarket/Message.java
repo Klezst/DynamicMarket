@@ -5,6 +5,8 @@ import java.io.File;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import com.gmail.klezst.util.Messaging;
+
 /**
  * Handles messaging.
  * 
@@ -51,7 +53,7 @@ public enum Message
 	
 	private Message(String key)
 	{
-		message = getConfig().getString(key, ""); // TODO: Parse color.
+		message = Messaging.parseColor(getConfig().getString(key, ""));
 	}
 	
 	public String getMessage()
