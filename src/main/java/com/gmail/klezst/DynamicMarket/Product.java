@@ -31,7 +31,7 @@ import org.bukkit.material.MaterialData;
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 import com.gmail.klezst.util.Format;
-import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.Messaging;
 import com.gmail.klezst.util.Util;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
@@ -323,7 +323,7 @@ public class Product {
 
     @SuppressWarnings("boxing")
     public String toCSV() {
-	return Message.combine(
+	return Messaging.combine(
 		",", // This is the separator.
 		this.type, this.data, this.bundleSize, this.buyable,
 		this.sellable, this.basePrice,
@@ -335,10 +335,10 @@ public class Product {
 
     @Override
     public String toString() {
-	return Message.combine(
+	return Messaging.combine(
 		"\n", // This is the separator between each line.
-		Message.headerify("{PRM}" + getName()
-			+ (this.data == 0 ? "" : "{BKT}:{PRM}" + this.data)),
+		"{PRM}" + getName()
+			+ (this.data == 0 ? "" : "{BKT}:{PRM}" + this.data),
 		"{}Can buy: {PRM}" + Format.parseString(this.buyable),
 		"{}Can sell: {PRM}" + Format.parseString(this.sellable),
 		"{}Base price: {PRM}" + this.basePrice, "{}Max price: {PRM}"

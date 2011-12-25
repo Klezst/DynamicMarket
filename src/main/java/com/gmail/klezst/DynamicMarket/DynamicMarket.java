@@ -5,21 +5,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import com.avaje.ebean.EbeanServer;
 import com.gmail.klezst.DynamicMarket.commands.Commands;
 import com.gmail.klezst.util.IO;
-import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.BukkitUtilJavaPlugin;
 import com.gmail.klezst.util.Permission;
 import com.gmail.klezst.util.Util;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
@@ -34,17 +31,20 @@ import com.sk89q.minecraft.util.commands.CommandsManager;
 import com.sk89q.minecraft.util.commands.MissingNestedCommandException;
 import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
-public class DynamicMarket extends JavaPlugin {
+public class DynamicMarket extends BukkitUtilJavaPlugin {
     public static final double DDM_MAXVALUE = 999999999.99;
     public static DynamicMarket INSTANCE;
-
-    private static Logger log = Logger.getLogger("Minecraft");
 
     private Market market;
     private MyDatabase database;
     private Settings settings;
     private CommandsManager<CommandSender> commandsManager;
-
+    
+    public DynamicMarket()
+    {
+	super("[DynamicMarket]");
+    }
+    
     // Method template by LennardF1989
     @Override
     public EbeanServer getDatabase() {
@@ -103,7 +103,7 @@ public class DynamicMarket extends JavaPlugin {
 
 	// Extract files.
 	try {
-	    IO.extract(this, "config.yml", "shops.csv", "LICENSE.txt");
+	    IO.extract(this, "config.yml", "messages.yml", "shops.csv", "LICENSE.txt");
 	} catch (IOException e) {
 	    log(Level.SEVERE, "Error extracting resources; disabling.");
 	    e.printStackTrace();
@@ -116,17 +116,10 @@ public class DynamicMarket extends JavaPlugin {
 	    this.settings = new Settings(getConfig(), Setting.values());
 	} catch (InvalidSettingsException e) {
 	    log(Level.SEVERE, "Invalid config.yml:");
-	    e.printExceptions(log, "[" + getDescription().getName() + "]\t");
+	    e.printExceptions(BukkitUtilJavaPlugin.logger, "[" + getDescription().getName() + "]\t");
 	    pm.disablePlugin(this);
 	    return;
 	}
-
-	// Set messaging settings.
-	Message.initialize(getSetting(Setting.NORMAL_COLOR, ChatColor.class),
-		getSetting(Setting.COMMAND_COLOR, ChatColor.class),
-		getSetting(Setting.BRACKET_COLOR, ChatColor.class),
-		getSetting(Setting.PARAM_COLOR, ChatColor.class),
-		getSetting(Setting.ERROR_COLOR, ChatColor.class));
 
 	// Setup & load database.
 	initializeDatabase();
@@ -199,29 +192,19 @@ public class DynamicMarket extends JavaPlugin {
 	try {
 	    commandsManager.execute(cmd.getName(), args, sender, this, sender);
 	} catch (CommandPermissionsException e) {
-	    sender.sendMessage(Message.parseColor("{ERR}"
-		    + "You don't have permission"));
+	    sender.sendMessage("You don't have permission"); // TODO: Add to messages.yml and Message.
 	} catch (MissingNestedCommandException e) {
-	    sender.sendMessage(Message.parseColor("{ERR}" + e.getUsage()));
+	    sender.sendMessage(e.getUsage());
 	} catch (CommandUsageException e) {
-	    sender.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
-	    sender.sendMessage(Message.parseColor("{ERR}" + e.getUsage()));
+	    sender.sendMessage(e.getMessage());
+	    sender.sendMessage(e.getUsage());
 	} catch (WrappedCommandException e) {
 	    e.printStackTrace();
 	} catch (CommandException e) {
-	    sender.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
+	    sender.sendMessage(e.getMessage());
 	}
 
 	return true;
-    }
-
-    public void log(Level level, String... messages) {
-	for (String message : messages) {
-	    String[] lines = message.split("\n");
-	    for (String line : lines) {
-		log.log(level, "[" + getDescription().getName() + "] " + line);
-	    }
-	}
     }
 
     // Access Methods

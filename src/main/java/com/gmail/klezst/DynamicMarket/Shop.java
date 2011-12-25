@@ -32,7 +32,7 @@ import org.bukkit.material.MaterialData;
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 import com.gmail.klezst.util.Format;
-import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.Messaging;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
 @Entity
@@ -174,7 +174,7 @@ public class Shop // TODO: Add location support.
 
     @SuppressWarnings("boxing")
     public String toCSV() {
-	return Message.combine(
+	return Messaging.combine(
 		",", // This is the separator
 		"'" + this.name + "'", this.infiniteFunding, this.funds,
 		Format.parseString(this.maxTransactionSize));

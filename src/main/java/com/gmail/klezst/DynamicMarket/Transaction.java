@@ -31,7 +31,7 @@ import org.bukkit.material.MaterialData;
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 import com.gmail.klezst.util.Economy;
-import com.gmail.klezst.util.Message;
+import com.gmail.klezst.util.Messaging;
 import com.gmail.klezst.util.Util;
 import com.idragonfire.data.DMsg;
 import com.idragonfire.data.DMsg.MsgKey;
@@ -68,7 +68,7 @@ public class Transaction {
     public Transaction(DynamicMarket plugin, int amount, Player player,
 	    String matrialid) {
 	if (!Economy.isLoaded()) {
-	    Message.send(player, "{ERR}The economy isn't loaded!");
+	    Messaging.send(player, "{ERR}The economy isn't loaded!");
 	} else {
 	    commitTransaction(plugin, amount, player, matrialid);
 	}
@@ -175,7 +175,7 @@ public class Transaction {
 	    plugin.getDatabase().update(product);
 
 	    // Log transaction.
-	    Message.send(player,
+	    Messaging.send(player,
 		    "{}You " + (newVolume > 0 ? "bought " : "sold ") + "{PRM}"
 			    + Math.abs(newVolume) + " {}" + matrialid
 			    + " for {PRM}" + Math.abs(newPrice));
@@ -193,9 +193,9 @@ public class Transaction {
 
 	} // TODO: 1.add better exception handling
 	catch (IllegalArgumentException e) {
-	    player.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
+	    player.sendMessage(e.getMessage());
 	} catch (DynamicMarketException e) {
-	    player.sendMessage(Message.parseColor("{ERR}" + e.getMessage()));
+	    player.sendMessage(e.getMessage());
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

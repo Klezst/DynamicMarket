@@ -1,3 +1,21 @@
+/*
+	BukkitUtil
+	Copyright (C) 2011 Klezst
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.gmail.klezst.util;
 
 import java.io.BufferedOutputStream;
@@ -86,24 +104,29 @@ public class IO {
      * Copy files from the .jar.
      * 
      * @param names
-     *            , Names of the files to be copied.
+     *            Names of the files to be copied.
+     *            
+     * @throws IllegalArgumentException
+     *             If name is null.
      * @throws IOException
-     *             , if an IOException occurs.
-     * @author sk89q
+     *             Iff an I/O error occurs.
+     * 
      * @author Klezst
+     * @author sk89q
      */
     public static void extract(JavaPlugin plugin, String... names)
-	    throws IOException {
+	    throws IOException, NullPointerException {
 	for (String name : names) {
 	    // Check, if file already exists.
-	    File actual = new File(plugin.getDataFolder(), name);
+	    File actual = new File(plugin.getDataFolder(), name); // throws NullPointerException if name is null.
 	    if (!actual.exists()) {
 		// Get input.
-		InputStream input = plugin.getResource("resources/" + name); // Will throw IllegalArgumentException, iff name == null.
+		InputStream input = plugin.getResource("resources/" + name);
 		if (input == null) {
 		    throw new IOException(
 			    "Unable to get InputStream for INTERNAL file "
-				    + name + ".");
+				    + name
+				    + ". Please contact plugin developer.");
 		}
 
 		// Get & write to output
@@ -113,16 +136,18 @@ public class IO {
 		    byte[] buf = new byte[8192];
 		    int length = 0;
 		    while ((length = input.read(buf)) > 0) {
-			output.write(buf, 0, length);
+			output.write(buf, 0, length); // throws IOException, if an I/O error occurs.
 		    }
 		}
+
 		// Close files.
 		finally {
-		    if (input != null) {
-			input.close();
-		    }
-		    if (output != null) {
-			output.close();
+		    try {
+			input.close(); // throws IOException, if an I/O error occurs.
+		    } finally {
+			if (output != null) {
+			    output.close(); // throws IOException, if an I/O error occurs.
+			}
 		    }
 		}
 	    }
