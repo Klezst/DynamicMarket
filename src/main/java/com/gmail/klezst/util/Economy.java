@@ -26,7 +26,6 @@ import org.bukkit.Bukkit;
  * @author Klezst
  */
 public class Economy {
-    // TODO: What to do? This assumes Vault loads the economy before this file loads. Nothing, since we throw NullPointerException, iff no economy is loaded?
     public static net.milkbowl.vault.economy.Economy economy = Bukkit
 	    .getServer().getServicesManager()
 	    .getRegistration(net.milkbowl.vault.economy.Economy.class)
@@ -98,6 +97,9 @@ public class Economy {
      * @author Klezst
      */
     public static boolean isLoaded() {
+	if (economy == null) {
+	    return false;
+	}
 	return economy.isEnabled();
     }
 }
