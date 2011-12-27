@@ -1,7 +1,7 @@
 authors: [HaloInverse, IDragonfire, Klezst, Magik, Nijikokun, N3X15]
 depend: [WorldEdit, Vault]
 description: A shop plugin building towards an interesting and flexible market system.
-main: com.gmail.klezst.DynamicMarket.DynamicMarket
+main: dynamicmarket.core.DynamicMarket
 name: DynamicMarket
 version: 0.1 Dragon
 commands:
