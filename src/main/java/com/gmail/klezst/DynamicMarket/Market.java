@@ -24,6 +24,7 @@ import java.util.List;
 import org.bukkit.Location;
 
 public class Market {
+    // TODO: refactor?
     private List<Shop> shops;
 
     public Market() {
@@ -44,6 +45,15 @@ public class Market {
 
     public void addShop(Shop shop) {
 	this.shops.add(shop);
+    }
+
+    public Shop getShopById(int id) {
+	for (int i = 0; i < this.shops.size(); i++) {
+	    if (this.shops.get(i).getId() == id) {
+		return this.shops.get(i);
+	    }
+	}
+	return null;
     }
 
     public Shop getShop(Location loc) throws IllegalArgumentException {

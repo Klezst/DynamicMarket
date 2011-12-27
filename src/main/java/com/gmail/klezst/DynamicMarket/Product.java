@@ -36,7 +36,7 @@ import com.gmail.klezst.util.Util;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
 @Entity
-@Table(name = "products")
+@Table(name = "dm_products")
 public class Product {
     // Fields.
     @Id

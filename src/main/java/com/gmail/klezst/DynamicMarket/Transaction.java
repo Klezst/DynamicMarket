@@ -38,7 +38,7 @@ import com.idragonfire.data.DMsg.MsgKey;
 import com.idragonfire.event.DynamicMarketException;
 
 @Entity
-@Table(name = "transactions")
+@Table(name = "dm_transactions")
 public class Transaction {
     @Id
     private int id;
@@ -96,15 +96,13 @@ public class Transaction {
 
 	    if (!product.hasStock(amount)) {
 		if (newVolume < 0) {
-		    throw new DynamicMarketException(
-			    DMsg.INSTANCE.get(
-				    MsgKey.BUY_NOSPACE,
-				    new String[][] { { "shop",
-					    newShop.getName() } }));
+		    throw new DynamicMarketException(DMsg.INSTANCE.get(
+			    MsgKey.BUY_NOSPACE, new String[][] { { "shop",
+				    newShop.getName() } }));
 		}
 		throw new DynamicMarketException(DMsg.INSTANCE.get(
-			MsgKey.SELL_NOSTOCK, new String[][] { { "shop",
-				newShop.getName() } }));
+			MsgKey.SELL_NOSTOCK,
+			new String[][] { { "shop", newShop.getName() } }));
 	    }
 
 	    double newPrice, newBundles;

@@ -14,9 +14,10 @@ import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginManager;
 
 import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.LogLevel;
 import com.gmail.klezst.DynamicMarket.commands.Commands;
-import com.gmail.klezst.util.IO;
 import com.gmail.klezst.util.BukkitUtilJavaPlugin;
+import com.gmail.klezst.util.IO;
 import com.gmail.klezst.util.Permission;
 import com.gmail.klezst.util.Util;
 import com.gmail.klezst.util.settings.InvalidSettingsException;
@@ -39,12 +40,11 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
     private MyDatabase database;
     private Settings settings;
     private CommandsManager<CommandSender> commandsManager;
-    
-    public DynamicMarket()
-    {
+
+    public DynamicMarket() {
 	super("[DynamicMarket]");
     }
-    
+
     // Method template by LennardF1989
     @Override
     public EbeanServer getDatabase() {
@@ -73,6 +73,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 		getSetting(Setting.ISOLATION, String.class),
 		getSetting(Setting.LOGGING, Boolean.class), false // If an update to database structure is done, a function to determine whether or not to rebuild is be written.
 		);
+	this.database.getDatabase().getAdminLogging().setLogLevel(LogLevel.SQL);
     }
 
     @Override
@@ -93,7 +94,8 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	this.commandsManager = new CommandsManager<CommandSender>() {
 	    @Override
 	    public boolean hasPermission(CommandSender sender, String permission) {
-		return Permission.hasPermission(sender, "dynamicmarket." + permission);
+		return Permission.hasPermission(sender, "dynamicmarket."
+			+ permission);
 	    }
 	};
 	this.commandsManager.register(Commands.class);
@@ -103,7 +105,8 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
 	// Extract files.
 	try {
-	    IO.extract(this, "config.yml", "messages.yml", "shops.csv", "LICENSE.txt");
+	    IO.extract(this, "config.yml", "messages.yml", "shops.csv",
+		    "LICENSE.txt");
 	} catch (IOException e) {
 	    log(Level.SEVERE, "Error extracting resources; disabling.");
 	    e.printStackTrace();
@@ -116,7 +119,8 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    this.settings = new Settings(getConfig(), Setting.values());
 	} catch (InvalidSettingsException e) {
 	    log(Level.SEVERE, "Invalid config.yml:");
-	    e.printExceptions(BukkitUtilJavaPlugin.logger, "[" + getDescription().getName() + "]\t");
+	    e.printExceptions(BukkitUtilJavaPlugin.logger, "["
+		    + getDescription().getName() + "]\t");
 	    pm.disablePlugin(this);
 	    return;
 	}
@@ -190,7 +194,8 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	}
 
 	try {
-	    commandsManager.execute(cmd.getName(), args, sender, this, sender);
+	    this.commandsManager.execute(cmd.getName(), args, sender, this,
+		    sender);
 	} catch (CommandPermissionsException e) {
 	    sender.sendMessage("You don't have permission"); // TODO: Add to messages.yml and Message.
 	} catch (MissingNestedCommandException e) {

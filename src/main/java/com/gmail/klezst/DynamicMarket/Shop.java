@@ -36,7 +36,7 @@ import com.gmail.klezst.util.Messaging;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
 @Entity
-@Table(name = "shops")
+@Table(name = "dm_shops")
 public class Shop // TODO: Add location support.
 {
     // Fields.
@@ -57,6 +57,13 @@ public class Shop // TODO: Add location support.
 
     @NotNull
     private int maxTransactionSize;
+
+    private int pos1x;
+    private int pos1y;
+    private int pos1z;
+    private int pos2x;
+    private int pos2y;
+    private int pos2z;
 
     // Constructors.
     public Shop() {
@@ -194,5 +201,53 @@ public class Shop // TODO: Add location support.
 		    + product.getSellPrice() + "\n";
 	}
 	return line.substring(0, line.length() - 1); // Remove the extra '\n'.
+    }
+
+    public int getPos1x() {
+	return this.pos1x;
+    }
+
+    public void setPos1x(int pos1x) {
+	this.pos1x = pos1x;
+    }
+
+    public int getPos1y() {
+	return this.pos1y;
+    }
+
+    public void setPos1y(int pos1y) {
+	this.pos1y = pos1y;
+    }
+
+    public int getPos1z() {
+	return this.pos1z;
+    }
+
+    public void setPos1z(int pos1z) {
+	this.pos1z = pos1z;
+    }
+
+    public int getPos2x() {
+	return this.pos2x;
+    }
+
+    public void setPos2x(int pos2x) {
+	this.pos2x = pos2x;
+    }
+
+    public int getPos2y() {
+	return this.pos2y;
+    }
+
+    public void setPos2y(int pos2y) {
+	this.pos2y = pos2y;
+    }
+
+    public int getPos2z() {
+	return this.pos2z;
+    }
+
+    public void setPos2z(int pos2z) {
+	this.pos2z = pos2z;
     }
 }

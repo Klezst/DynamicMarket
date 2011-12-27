@@ -112,7 +112,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    String commands = "";
 	    String topics = "";
 	    String shortcuts = "";
-	    
+
 	    sender.sendMessage("/shop help [topic]");
 	    sender.sendMessage("Displays information about the topic.");
 	    // TODO: Add generic help message to Message and message.yml.
@@ -159,15 +159,16 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 
 	    return;
 	}
-	sender.sendMessage("----------" + plugin.getDescription().getName() + "----------");
+	sender.sendMessage("----------" + plugin.getDescription().getName()
+		+ "----------");
 
 	if (topic.equalsIgnoreCase("buy")) {
-		Message.HELP_BUY.send(sender);
-		return;
+	    Message.HELP_BUY.send(sender);
+	    return;
 	}
 	if (topic.equalsIgnoreCase("sell")) {
-		Message.HELP_SELL.send(sender);
-		return;
+	    Message.HELP_SELL.send(sender);
+	    return;
 	}
 	if (topic.equalsIgnoreCase("info")) {
 	    Message.HELP_INFO.send(sender);
@@ -175,28 +176,28 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	}
 	if (topic.equalsIgnoreCase("add")) {
 	    Message.HELP_ADD.send(sender);
-		return;
+	    return;
 	}
 	if (topic.equalsIgnoreCase("update")) {
-		Message.HELP_UPDATE.send(sender);
-		return;
+	    Message.HELP_UPDATE.send(sender);
+	    return;
 	}
 	if (topic.equalsIgnoreCase("remove")) {
 	    Message.HELP_REMOVE.send(sender);
-		return;
+	    return;
 	}
-	    if (topic.equalsIgnoreCase("reload")) {
-		Message.HELP_RELOAD.send(sender);
-		return;
-	    }
-	    if (Util.isAny(topic, "export", "exportdb")) {
-		Message.HELP_EXPORT.send(sender);
-		return;
-	    }
-	    if (Util.isAny(topic, "import", "importdb")) {
-		Message.HELP_IMPORT.send(sender);
-		return;
-	    }
+	if (topic.equalsIgnoreCase("reload")) {
+	    Message.HELP_RELOAD.send(sender);
+	    return;
+	}
+	if (Util.isAny(topic, "export", "exportdb")) {
+	    Message.HELP_EXPORT.send(sender);
+	    return;
+	}
+	if (Util.isAny(topic, "import", "importdb")) {
+	    Message.HELP_IMPORT.send(sender);
+	    return;
+	}
 	if (topic.equalsIgnoreCase("ids")) {
 	    Message.HELP_IDS.send(sender);
 	    return;
@@ -237,7 +238,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		}
 		if (Util.isAny(thisTag, "sf", "minStock", "stockfloor",
 			"stocklowest")) {
-		    	Message.HELP_TAG_MIN_STOCK.send(sender);
+		    Message.HELP_TAG_MIN_STOCK.send(sender);
 		    return;
 		}
 		if (Util.isAny(thisTag, "sc", "maxStock", "stockceiling",
@@ -255,36 +256,16 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		    Message.HELP_TAG_MAX_PRICE.send(sender);
 		    return;
 		}
-		
+
 		// TODO: Implement these flags. Don't forget to add the messages to Message and messages.yml.
-		/*
-		if (Util.isAny(thisTag, "flat", "fixed")) {
-		    Messaging
-			    .send(sender, // The recipient.
-				    "{}Use {CMD}/shop update {PRM}<itemID> {CMD}volatility{BKT}:{PRM}0",
-				    "{} This will make the products price flat (not change based on stock levels).");
-		    return;
-		}
-		if (thisTag.equalsIgnoreCase("finite")) {
-		    Messaging
-			    .send(sender, // The recipient.
-				    "{}Use {CMD}/shop update {PRM}<itemID> {CMD}minStock{BKT}:{PRM}0",
-				    "{} Buying from shop will fail, if it would make {PRM}Stock{} < 0.",
-				    "{} Any number of items can be sold to the shop still.");
-		    return;
-		}
-		if (thisTag.equalsIgnoreCase("renorm")) {
-		    Messaging
-			    .send(sender, // The recipient.
-				    "{CMD}update {PRM}<itemID> {CMD}renorm{} - Renormalize an item's price.",
-				    "{} Resets an item's {PRM}Stock{}, while preserving its current price.",
-				    "{} Sets an item's {PRM}BasePrice{} to its current {PRM}BuyPrice,",
-				    "{} and sets it's {PRM}Stock{} to 0.");
-		    return;
-		}
-		*/
-		
-		sender.sendMessage("Unknown tag" + thisTag + "."); //TODO: Add to messages.yml and Message.
+		/* if (Util.isAny(thisTag, "flat", "fixed")) { Messaging .send(sender, // The recipient. "{}Use {CMD}/shop update {PRM}<itemID> {CMD}volatility{BKT}:{PRM}0",
+		 * "{} This will make the products price flat (not change based on stock levels)."); return; } if (thisTag.equalsIgnoreCase("finite")) { Messaging .send(sender, // The recipient.
+		 * "{}Use {CMD}/shop update {PRM}<itemID> {CMD}minStock{BKT}:{PRM}0", "{} Buying from shop will fail, if it would make {PRM}Stock{} < 0.",
+		 * "{} Any number of items can be sold to the shop still."); return; } if (thisTag.equalsIgnoreCase("renorm")) { Messaging .send(sender, // The recipient.
+		 * "{CMD}update {PRM}<itemID> {CMD}renorm{} - Renormalize an item's price.", "{} Resets an item's {PRM}Stock{}, while preserving its current price.",
+		 * "{} Sets an item's {PRM}BasePrice{} to its current {PRM}BuyPrice,", "{} and sets it's {PRM}Stock{} to 0."); return; } */
+
+		sender.sendMessage("Unknown tag" + thisTag + "."); // TODO: Add to messages.yml and Message.
 		sender.sendMessage("Use /shop help tags to list tags.");
 		return;
 	    }
@@ -322,8 +303,10 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    CommandSender sender) {
 	if (args.argsLength() == 0) // Show plugin info.
 	{
-	    sender.sendMessage(plugin.getDescription().getFullName() + " Copyright (C) 2011 Klezst");
-	    sender.sendMessage("Authors: " + plugin.getDescription().getAuthors());
+	    sender.sendMessage(plugin.getDescription().getFullName()
+		    + " Copyright (C) 2011 Klezst");
+	    sender.sendMessage("Authors: "
+		    + plugin.getDescription().getAuthors());
 	} else // Show item info.
 	{
 	    if (sender instanceof Player) {
@@ -432,8 +415,8 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	shop.remove(product);
 	plugin.getDatabase().delete(product);
 
-	Messaging.send(sender, args.getString(0)
-		+ " is no longer sold at " + shop.getName() + "."); // TODO: Add to messages.yml and Message.
+	Messaging.send(sender, args.getString(0) + " is no longer sold at "
+		+ shop.getName() + "."); // TODO: Add to messages.yml and Message.
     }
 
     @Command(aliases = { "sell", "s" }, desc = "Sells an item to the store", usage = "<itemID>[:<subType>] [amount]", min = 1, max = 2)
@@ -454,8 +437,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    }
 	    new Transaction(plugin, amount, (Player) sender, args.getString(0));
 	} catch (NumberFormatException e) {
-	    sender.sendMessage(args.getString(1)
-		    + " is not a valid amount!"); // TODO: Add to messages.yml and Message.
+	    sender.sendMessage(args.getString(1) + " is not a valid amount!"); // TODO: Add to messages.yml and Message.
 	}
     }
 
@@ -537,10 +519,25 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("items.update")
     public static void area(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	((Player) sender).sendMessage("update");
-	// TODO: dont create new listener if exists
-	DynamicMarketMasterShopAreaListener.INSTANCE
-		.addListener((Player) sender);
+	if (args.argsLength() == 1) {
+	    try {
+		Shop shop = plugin.getMarket().getShopById(args.getInteger(0));
+		if (shop != null) {
+		    DynamicMarketMasterShopAreaListener.INSTANCE.addListener(
+			    (Player) sender, shop);
+		} else {
+		    // TODO 0.Message System
+		    sender.sendMessage("shop doesn't exists");
+		}
+	    } catch (Exception e) {
+		// TODO 0.Message System
+		e.printStackTrace();
+		sender.sendMessage("no valid shop id");
+	    }
+	} else {
+	    // TODO 0.Message System
+	    sender.sendMessage("enter only one shopid");
+	}
     }
 
     @Deprecated
