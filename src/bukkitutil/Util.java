@@ -1,5 +1,5 @@
 /*
-	DynamicMarket
+	BukkitUtil
 	Copyright (C) 2011 Klezst
 
 	This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package dynamicmarket.util;
+package bukkitutil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,8 +24,13 @@ import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.material.MaterialData;
 
-import dynamicmarket.event.DynamicMarketException;
+import dynamicmarket.DynamicMarketException;
 
+/**
+ * Provides miscellaneous convenience functions.
+ * 
+ * @author Klezst
+ */
 public class Util {
     /**
      * Returns the MaterialData corresponding to arg.

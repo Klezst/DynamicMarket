@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package dynamicmarket.event;
+package dynamicmarket.command;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,21 +29,24 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.material.MaterialData;
 
+import bukkitutil.Format;
+import bukkitutil.Messaging;
+import bukkitutil.Util;
+import bukkitutil.compatibility.Permission;
+
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 
+import dynamicmarket.DynamicMarketException;
 import dynamicmarket.core.DynamicMarket;
 import dynamicmarket.core.Product;
 import dynamicmarket.core.Shop;
 import dynamicmarket.core.Transaction;
 import dynamicmarket.data.IO;
 import dynamicmarket.data.Message;
-import dynamicmarket.data.Messaging;
 import dynamicmarket.data.Setting;
-import dynamicmarket.util.Format;
-import dynamicmarket.util.Permission;
-import dynamicmarket.util.Util;
+import dynamicmarket.event.DynamicMarketMasterShopAreaListener;
 
 public class ShopCommands // TODO: All shop modification/creation/deletion commands.
 {

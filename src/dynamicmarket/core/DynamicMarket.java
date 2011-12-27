@@ -13,6 +13,13 @@ import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.plugin.PluginManager;
 
+import bukkitutil.BukkitUtilJavaPlugin;
+import bukkitutil.Util;
+import bukkitutil.compatibility.Permission;
+import bukkitutil.configuration.InvalidSettingsException;
+import bukkitutil.configuration.Settings;
+import bukkitutil.configuration.Validatable;
+
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.LogLevel;
 import com.sk89q.minecraft.util.commands.CommandException;
@@ -22,17 +29,11 @@ import com.sk89q.minecraft.util.commands.CommandsManager;
 import com.sk89q.minecraft.util.commands.MissingNestedCommandException;
 import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
+import dynamicmarket.command.Commands;
 import dynamicmarket.data.IO;
 import dynamicmarket.data.MyDatabase;
 import dynamicmarket.data.Setting;
-import dynamicmarket.data.Settings;
-import dynamicmarket.data.Validatable;
-import dynamicmarket.event.Commands;
 import dynamicmarket.event.DynamicMarketMasterShopAreaListener;
-import dynamicmarket.event.InvalidSettingsException;
-import dynamicmarket.util.BukkitUtilJavaPlugin;
-import dynamicmarket.util.Permission;
-import dynamicmarket.util.Util;
 
 public class DynamicMarket extends BukkitUtilJavaPlugin {
     public static final double DDM_MAXVALUE = 999999999.99;
@@ -107,7 +108,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
 	// Extract files.
 	try {
-	    IO.extract(this, "config.yml", "messages.yml", "shops.csv",
+	    bukkitutil.IO.extract(this, "config.yml", "messages.yml", "shops.csv",
 		    "LICENSE.txt");
 	} catch (IOException e) {
 	    log(Level.SEVERE, "Error extracting resources; disabling.");

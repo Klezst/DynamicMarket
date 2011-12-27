@@ -21,7 +21,6 @@ package dynamicmarket.data;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -34,14 +33,13 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import bukkitutil.Format;
 
+import dynamicmarket.DynamicMarketException;
 import dynamicmarket.core.DynamicMarket;
 import dynamicmarket.core.Market;
 import dynamicmarket.core.Product;
 import dynamicmarket.core.Shop;
-import dynamicmarket.event.DynamicMarketException;
-import dynamicmarket.util.Format;
 
 public class IO {
     final static int size = 1024;
@@ -98,61 +96,6 @@ public class IO {
 	    writer.close();
 	} catch (IOException ex) {
 	    throw new IOException("Could not close " + fileName + "!");
-	}
-    }
-
-    /**
-     * Copy files from the .jar.
-     * 
-     * @param names
-     *            Names of the files to be copied.
-     * 
-     * @throws NullPointerException
-     *             If name is null.
-     * @throws IOException
-     *             Iff an I/O error occurs.
-     * 
-     * @author Klezst
-     * @author sk89q
-     */
-    public static void extract(JavaPlugin plugin, String... names)
-	    throws IOException, NullPointerException {
-	for (String name : names) {
-	    // Check, if file already exists.
-	    // throws NullPointerException if name is null.
-	    File actual = new File(plugin.getDataFolder(), name);
-	    if (!actual.exists()) {
-		// Get input.
-		InputStream input = plugin.getResource("resources/" + name);
-		if (input == null) {
-		    throw new IOException(
-			    "Unable to get InputStream for INTERNAL file "
-				    + name
-				    + ". Please contact plugin developer.");
-		}
-
-		// Get & write to output
-		FileOutputStream output = null;
-		try {
-		    output = new FileOutputStream(actual);
-		    byte[] buf = new byte[8192];
-		    int length = 0;
-		    while ((length = input.read(buf)) > 0) {
-			output.write(buf, 0, length); // throws IOException, if an I/O error occurs.
-		    }
-		}
-
-		// Close files.
-		finally {
-		    try {
-			input.close(); // throws IOException, if an I/O error occurs.
-		    } finally {
-			if (output != null) {
-			    output.close(); // throws IOException, if an I/O error occurs.
-			}
-		    }
-		}
-	    }
 	}
     }
 

@@ -28,16 +28,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 
+import bukkitutil.Messaging;
+import bukkitutil.Util;
+import bukkitutil.compatibility.Economy;
+
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 
+import dynamicmarket.DynamicMarketException;
 import dynamicmarket.data.DMsg;
 import dynamicmarket.data.DMsg.MsgKey;
-import dynamicmarket.data.Messaging;
 import dynamicmarket.data.Setting;
-import dynamicmarket.event.DynamicMarketException;
-import dynamicmarket.util.Economy;
-import dynamicmarket.util.Util;
 
 @Entity
 @Table(name = "dm_transactions")

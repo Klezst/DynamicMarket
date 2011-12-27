@@ -16,11 +16,10 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package dynamicmarket.data;
+package bukkitutil.configuration;
 
 import org.bukkit.ChatColor;
 
-import dynamicmarket.event.InvalidSettingException;
 
 public class Validation {
     /**

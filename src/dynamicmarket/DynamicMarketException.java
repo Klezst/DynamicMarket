@@ -1,4 +1,4 @@
-package dynamicmarket.event;
+package dynamicmarket;
 
 public class DynamicMarketException extends Exception {
     private static final long serialVersionUID = 1L;

@@ -18,6 +18,8 @@
 
 package dynamicmarket.data;
 
+import bukkitutil.configuration.Validatable;
+
 
 public enum Setting implements Validatable {
     // Do not use primitive data types or null.

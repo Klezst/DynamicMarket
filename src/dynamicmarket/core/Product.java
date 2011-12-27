@@ -28,14 +28,15 @@ import javax.persistence.Table;
 import org.bukkit.Material;
 import org.bukkit.material.MaterialData;
 
+import bukkitutil.Format;
+import bukkitutil.Messaging;
+import bukkitutil.Util;
+
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
-import dynamicmarket.data.Messaging;
-import dynamicmarket.event.DynamicMarketException;
-import dynamicmarket.util.Format;
-import dynamicmarket.util.Util;
+import dynamicmarket.DynamicMarketException;
 
 @Entity
 @Table(name = "dm_products")

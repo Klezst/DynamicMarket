@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package dynamicmarket.data;
+package bukkitutil.configuration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,8 +24,6 @@ import java.util.Map;
 
 import org.bukkit.configuration.file.FileConfiguration;
 
-import dynamicmarket.event.InvalidSettingException;
-import dynamicmarket.event.InvalidSettingsException;
 
 public class Settings {
     private Map<Validatable, Object> settings = new HashMap<Validatable, Object>();

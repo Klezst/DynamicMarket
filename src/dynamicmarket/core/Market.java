@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.bukkit.Location;
 
-import dynamicmarket.event.DynamicMarketException;
+import dynamicmarket.DynamicMarketException;
 
 public class Market {
     // TODO: refactor?

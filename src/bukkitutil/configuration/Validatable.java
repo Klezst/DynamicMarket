@@ -16,10 +16,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package dynamicmarket.data;
+package bukkitutil.configuration;
 
-import dynamicmarket.event.InvalidSettingException;
-import dynamicmarket.event.InvalidSettingsException;
 
 public interface Validatable {
     /**

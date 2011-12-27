@@ -5,6 +5,8 @@ import java.io.File;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import bukkitutil.Messaging;
+
 
 /**
  * Handles messaging.

@@ -16,7 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package dynamicmarket.util;
+package bukkitutil.compatibility;
 
 import org.bukkit.Bukkit;
 
