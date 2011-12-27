@@ -24,6 +24,8 @@ import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.material.MaterialData;
 
+import dynamicmarket.event.DynamicMarketException;
+
 public class Util {
     /**
      * Returns the MaterialData corresponding to arg.
@@ -31,13 +33,13 @@ public class Util {
      * @param arg
      *            , The alias of the MaterialData or <type>[:<data>].
      * @return The MaterialData corresponding to arg.
-     * @throws IllegalArgumentException
+     * @throws DynamicMarketException
      *             , If arg is not a valid MaterialData.
      * @author Klezst
      */
     // TODO: Add support for custom aliases via a utility plugin?
     public static MaterialData getMaterialData(String arg)
-	    throws IllegalArgumentException {
+	    throws DynamicMarketException {
 	try {
 	    String[] id = arg.split(":");
 	    byte data = 0;
@@ -58,7 +60,7 @@ public class Util {
 	    }
 	    return material.getNewData(data); // May throw NullPointerException.
 	} catch (Exception e) {
-	    throw new IllegalArgumentException(arg + " is not a valid item!");
+	    throw new DynamicMarketException(arg + " is not a valid item!");
 	}
 
     }
@@ -95,12 +97,12 @@ public class Util {
     }
 
     public static Map<String, String> getProperties(String... args)
-	    throws IllegalArgumentException {
+	    throws DynamicMarketException {
 	Map<String, String> properties = new HashMap<String, String>();
 	for (String arg : args) {
 	    String[] entry = arg.split(":");
 	    if (entry.length != 2) {
-		throw new IllegalArgumentException(arg
+		throw new DynamicMarketException(arg
 			+ " isn't a valid property!");
 	    }
 	    properties.put(entry[0].toLowerCase(), entry[1]);

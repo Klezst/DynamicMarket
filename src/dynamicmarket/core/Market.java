@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.bukkit.Location;
 
+import dynamicmarket.event.DynamicMarketException;
+
 public class Market {
     // TODO: refactor?
     private List<Shop> shops;
@@ -56,8 +58,13 @@ public class Market {
 	return null;
     }
 
-    public Shop getShop(Location loc) throws IllegalArgumentException {
-	// throw IllegalArgumentException, Iff no shop at loc.
-	return this.shops.get(0);
+    // TODO: more then one shop per location?
+    public Shop getShop(Location loc) throws DynamicMarketException {
+	for (int i = 0; i < this.shops.size(); i++) {
+	    if (this.shops.get(i).isShopInLocation(loc)) {
+		return this.shops.get(i);
+	    }
+	}
+	throw new DynamicMarketException("No Shop found in these location");
     }
 }

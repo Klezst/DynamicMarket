@@ -40,6 +40,7 @@ import dynamicmarket.core.DynamicMarket;
 import dynamicmarket.core.Market;
 import dynamicmarket.core.Product;
 import dynamicmarket.core.Shop;
+import dynamicmarket.event.DynamicMarketException;
 import dynamicmarket.util.Format;
 
 public class IO {
@@ -105,8 +106,8 @@ public class IO {
      * 
      * @param names
      *            Names of the files to be copied.
-     *            
-     * @throws IllegalArgumentException
+     * 
+     * @throws NullPointerException
      *             If name is null.
      * @throws IOException
      *             Iff an I/O error occurs.
@@ -118,7 +119,8 @@ public class IO {
 	    throws IOException, NullPointerException {
 	for (String name : names) {
 	    // Check, if file already exists.
-	    File actual = new File(plugin.getDataFolder(), name); // throws NullPointerException if name is null.
+	    // throws NullPointerException if name is null.
+	    File actual = new File(plugin.getDataFolder(), name);
 	    if (!actual.exists()) {
 		// Get input.
 		InputStream input = plugin.getResource("resources/" + name);
@@ -239,7 +241,7 @@ public class IO {
 		Shop shop;
 		try {
 		    shop = Shop.parseShop(line);
-		} catch (IllegalArgumentException e) {
+		} catch (DynamicMarketException e) {
 		    throw new IOException(
 			    fileName
 				    + " is invalid at line: \n\t"
@@ -256,8 +258,9 @@ public class IO {
 
 		    Product product;
 		    try {
-			product = Product.parseProduct(line); // throws IllegalArgumentException, iff line is not a valid Product.
-		    } catch (IllegalArgumentException e) {
+			// throws DynamicMarketException, iff line is not a valid Product.
+			product = Product.parseProduct(line);
+		    } catch (DynamicMarketException e) {
 			throw new IOException(fileName
 				+ " is invalid at line: \n\t" + line + "\n\t\t"
 				+ e.getMessage());
@@ -333,8 +336,9 @@ public class IO {
 	    // Parse input.
 	    Product product;
 	    try {
-		product = Product.parseProduct(order); // throws IllegalArgumentException, iff order is not a valid product.
-	    } catch (IllegalArgumentException e) {
+		// throws DynamicMarketException, iff order is not a valid product.
+		product = Product.parseProduct(order);
+	    } catch (DynamicMarketException e) {
 		throw new IOException(e.getMessage());
 	    }
 	    shop.addProduct(product);

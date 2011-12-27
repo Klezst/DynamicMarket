@@ -32,9 +32,9 @@ import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 
 import dynamicmarket.data.DMsg;
+import dynamicmarket.data.DMsg.MsgKey;
 import dynamicmarket.data.Messaging;
 import dynamicmarket.data.Setting;
-import dynamicmarket.data.DMsg.MsgKey;
 import dynamicmarket.event.DynamicMarketException;
 import dynamicmarket.util.Economy;
 import dynamicmarket.util.Util;
@@ -83,11 +83,11 @@ public class Transaction {
 	MaterialData data;
 	Product product;
 	try {
-	    // throwsIllegalArgumentException, if no shop at the player'slocation.
+	    // DynamicMarketException, if no shop at the player'slocation.
 	    Shop newShop = plugin.getMarket().getShop(player.getLocation());
-	    // throws IllegalArgumentException, if id is not a valid MaterialData.
+	    // throws DynamicMarketException, if id is not a valid MaterialData.
 	    data = Util.getMaterialData(matrialid);
-	    // throws IllegalArgumentException, if shop doesn't sell data.
+	    // throws DynamicMarketException, if shop doesn't sell data.
 	    product = newShop.getProduct(data);
 
 	    int newVolume = amount * product.getBundleSize();
@@ -191,9 +191,6 @@ public class Transaction {
 		plugin.getDatabase().save(this);
 	    }
 
-	} // TODO: 1.add better exception handling
-	catch (IllegalArgumentException e) {
-	    player.sendMessage(e.getMessage());
 	} catch (DynamicMarketException e) {
 	    player.sendMessage(e.getMessage());
 	} catch (Exception e) {

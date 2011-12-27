@@ -53,17 +53,19 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("items.add")
     public static void add(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	Shop shop = plugin.getMarket().getShop(((Player) sender).getLocation());
-	Product product;
+	// TODO: over id
 	try {
-	    // throws IllegalArgumentException, iff args is not a valid Product.
-	    product = Product.parseProduct(args);
+	    // throws DynamicMarketExceotion, iff args is not a valid Product.
+	    Shop shop = plugin.getMarket().getShop(
+		    ((Player) sender).getLocation());
+	    // throws DynamicMarketExceotion, iff args is not a valid Product.
+	    Product product = Product.parseProduct(args);
 	    shop.addProduct(product);
 	    // Update database if valid
 	    plugin.getDatabase().save(product);
 	    Messaging.send(sender, "{}" + args.getString(0)
 		    + " is now for sale at " + shop.getName() + ".");
-	} catch (IllegalArgumentException e) {
+	} catch (DynamicMarketException e) {
 	    Messaging.send(sender, "{ERR}" + e.getMessage());
 	    return;
 	}
@@ -312,11 +314,14 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    if (sender instanceof Player) {
 		Product product;
 		try {
+		    // throws DynamicMarketException, Iff no shop at the player's location.
 		    Shop shop = plugin.getMarket().getShop(
-			    ((Player) sender).getLocation()); // throws IllegalArgumentException, Iff no shop at the player's location.
-		    MaterialData data = Util.getMaterialData(args.getString(0)); // throws IllegalArgumentException, If id is not a valid MaterialData.
-		    product = shop.getProduct(data); // throws IllegalArgumentException, Iff shop doesn't sell data.
-		} catch (IllegalArgumentException e) {
+			    ((Player) sender).getLocation());
+		    // throws DynamicMarketException, If id is not a valid MaterialData.
+		    MaterialData data = Util.getMaterialData(args.getString(0));
+		    // throws DynamicMarketException, Iff shop doesn't sell data.
+		    product = shop.getProduct(data);
+		} catch (DynamicMarketException e) {
 		    sender.sendMessage(e.getMessage());
 		    return;
 		}
@@ -331,59 +336,64 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @Command(aliases = { "list", "l" }, desc = "Lists items for sale", usage = "[filter] [page]", min = 0, max = 2)
     public static void list(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	Shop shop = plugin.getMarket().getShop(((Player) sender).getLocation());
-	String[] lines = shop.toString().split("\n");
+	try {
+	    Shop shop = plugin.getMarket().getShop(
+		    ((Player) sender).getLocation());
+	    String[] lines = shop.toString().split("\n");
 
-	int page = 1;
-	if (args.argsLength() > 0) {
-	    try {
-		page = Format.parseInteger(args.getString(0));
-	    } catch (NumberFormatException e) {
-		if (args.argsLength() > 1) {
-		    try {
-			page = Format.parseInteger(args.getString(1));
-		    } catch (NumberFormatException ex) {
-			Messaging.send(sender, "{ERR}" + args.getString(1)
-				+ " is not a page number!");
-			return;
+	    int page = 1;
+	    if (args.argsLength() > 0) {
+		try {
+		    page = Format.parseInteger(args.getString(0));
+		} catch (NumberFormatException e) {
+		    if (args.argsLength() > 1) {
+			try {
+			    page = Format.parseInteger(args.getString(1));
+			} catch (NumberFormatException ex) {
+			    Messaging.send(sender, "{ERR}" + args.getString(1)
+				    + " is not a page number!");
+			    return;
+			}
 		    }
-		}
 
-		// Filter
-		String filter = args.getString(0).toLowerCase();
-		List<String> temp = new ArrayList<String>();
-		for (String product : lines) {
-		    if (product.toLowerCase().contains(filter)) {
-			temp.add(product);
+		    // Filter
+		    String filter = args.getString(0).toLowerCase();
+		    List<String> temp = new ArrayList<String>();
+		    for (String product : lines) {
+			if (product.toLowerCase().contains(filter)) {
+			    temp.add(product);
+			}
 		    }
-		}
 
-		lines = temp.toArray(new String[temp.size()]);
+		    lines = temp.toArray(new String[temp.size()]);
+		}
 	    }
+
+	    if (page < 1) {
+		Messaging.send(sender,
+			"{ERR}You must specify a positive page number!");
+		return;
+	    }
+
+	    int bound = Math.min(page * 8, lines.length);
+	    int startIndex = (page - 1) * 8;
+
+	    if (startIndex > bound) {
+		Messaging.send(sender, "{ERR}There aren't that many pages!");
+		return;
+	    }
+
+	    lines = Arrays.copyOfRange(lines, startIndex, bound);
+
+	    if (lines.length == 0) {
+		Messaging.send(sender, "{ERR}No such products found.");
+		return;
+	    }
+
+	    Messaging.send(sender, lines);
+	} catch (DynamicMarketException e) {
+	    e.printStackTrace();
 	}
-
-	if (page < 1) {
-	    Messaging.send(sender,
-		    "{ERR}You must specify a positive page number!");
-	    return;
-	}
-
-	int bound = Math.min(page * 8, lines.length);
-	int startIndex = (page - 1) * 8;
-
-	if (startIndex > bound) {
-	    Messaging.send(sender, "{ERR}There aren't that many pages!");
-	    return;
-	}
-
-	lines = Arrays.copyOfRange(lines, startIndex, bound);
-
-	if (lines.length == 0) {
-	    Messaging.send(sender, "{ERR}No such products found.");
-	    return;
-	}
-
-	Messaging.send(sender, lines);
     }
 
     @Command(aliases = { "reload" }, desc = "Restarts the plugin", min = 0, max = 0)
@@ -401,22 +411,23 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("items.remove")
     public static void remove(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	Shop shop;
-	Product product;
 	try {
-	    shop = plugin.getMarket().getShop(((Player) sender).getLocation()); // throws IllegalArgumentException, Iff no shop at the player's location.
-	    MaterialData data = Util.getMaterialData(args.getString(0)); // throws IllegalArgumentException, If id is not a valid MaterialData.
-	    product = shop.getProduct(data); // throws IllegalArgumentException, Iff shop doesn't sell data.
-	} catch (IllegalArgumentException e) {
+	    // throws DynamicMarketException, Iff no shop at the player's location.
+	    Shop shop = plugin.getMarket().getShop(
+		    ((Player) sender).getLocation());
+	    // throws DynamicMarketException, If id is not a valid MaterialData.
+	    MaterialData data = Util.getMaterialData(args.getString(0));
+	    // throws DynamicMarketException, Iff shop doesn't sell data.
+	    Product product = shop.getProduct(data);
+	    shop.remove(product);
+	    plugin.getDatabase().delete(product);
+
+	    Messaging.send(sender, args.getString(0) + " is no longer sold at "
+		    + shop.getName() + "."); // TODO: Add to messages.yml and Message.
+	} catch (DynamicMarketException e) {
 	    sender.sendMessage(e.getMessage());
 	    return;
 	}
-
-	shop.remove(product);
-	plugin.getDatabase().delete(product);
-
-	Messaging.send(sender, args.getString(0) + " is no longer sold at "
-		+ shop.getName() + "."); // TODO: Add to messages.yml and Message.
     }
 
     @Command(aliases = { "sell", "s" }, desc = "Sells an item to the store", usage = "<itemID>[:<subType>] [amount]", min = 1, max = 2)
@@ -446,20 +457,18 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("items.update")
     public static void update(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	Product product;
-	Map<String, String> properties;
 	try {
+	    // throws DynamicMarketException, Iff no shop at the player's location.
 	    Shop shop = plugin.getMarket().getShop(
-		    ((Player) sender).getLocation()); // throws IllegalArgumentException, Iff no shop at the player's location.
-	    MaterialData data = Util.getMaterialData(args.getString(0)); // throws IllegalArgumentException, If id is not a valid MaterialData.
-	    product = shop.getProduct(data); // throws IllegalArgumentException, Iff shop doesn't sell data.
-	    properties = Util.getProperties(args.getSlice(2)); // throws IllegalArgumentException, Iff an argument is not a valid property.
-	} catch (IllegalArgumentException e) {
-	    sender.sendMessage(e.getMessage());
-	    return;
-	}
+		    ((Player) sender).getLocation());
+	    // throws DynamicMarketException, If id is not a valid MaterialData.
+	    MaterialData data = Util.getMaterialData(args.getString(0));
+	    // throws DynamicMarketException, Iff shop doesn't sell data.
+	    Product product = shop.getProduct(data);
+	    // throws DynamicMarketException, Iff an argument is not a valid property.
+	    Map<String, String> properties = Util.getProperties(args
+		    .getSlice(2));
 
-	try {
 	    if (properties.containsKey("bundlesize")) {
 		product.setBundleSize(Format.parseInteger(properties
 			.get("bundlesize")));
@@ -502,17 +511,19 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		product.setMinStock(Format.parseInteger(properties
 			.get("minstock")));
 	    }
+	    Messaging.send(sender, "{}" + args.getString(0) + " updated.");
+	} catch (DynamicMarketException e) {
+	    sender.sendMessage(e.getMessage());
 	} catch (NumberFormatException e) {
 	    Messaging
 		    .send(sender,
 			    "{ERR}Invalid flags; some of the updates may have been successful!");
-	    // Finally will still try to save any changes.
-	    return;
 	} finally {
-	    plugin.getDatabase().update(product); // We must still save the product, in case earlier flags were successful.
+	    // TODO: check if we WANT to update, make no sense for me - IDragonfire
+	    // Finally will still try to save any changes.
+	    // plugin.getDatabase().update(product);
+	    // We must still save the product, in case earlier flags were successful.
 	}
-
-	Messaging.send(sender, "{}" + args.getString(0) + " updated.");
     }
 
     @Command(aliases = { "area", "a" }, desc = "Go into Shop area mode", usage = "<shopid>", min = 1, max = 12)

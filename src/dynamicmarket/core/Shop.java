@@ -27,6 +27,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.bukkit.Location;
 import org.bukkit.material.MaterialData;
 
 import com.avaje.ebean.validation.NotEmpty;
@@ -34,6 +35,7 @@ import com.avaje.ebean.validation.NotNull;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
 import dynamicmarket.data.Messaging;
+import dynamicmarket.event.DynamicMarketException;
 import dynamicmarket.util.Format;
 
 @Entity
@@ -59,6 +61,7 @@ public class Shop // TODO: Add location support.
     @NotNull
     private int maxTransactionSize;
 
+    // TODO: own Location class
     private int pos1x;
     private int pos1y;
     private int pos1z;
@@ -135,22 +138,21 @@ public class Shop // TODO: Add location support.
     }
 
     public Product getProduct(int type, byte data)
-	    throws IllegalArgumentException {
+	    throws DynamicMarketException {
 	for (Product product : this.products) {
 	    if (product.equals(type, data)) {
 		return product;
 	    }
 	}
-	throw new IllegalArgumentException(this.name + " doesn't stock that!");
+	throw new DynamicMarketException(this.name + " doesn't stock that!");
     }
 
-    public Product getProduct(MaterialData data) {
+    public Product getProduct(MaterialData data) throws DynamicMarketException {
 	return getProduct(data.getItemTypeId(), data.getData());
     }
 
     @SuppressWarnings("boxing")
-    public static Shop parseShop(String... args)
-	    throws IllegalArgumentException {
+    public static Shop parseShop(String... args) throws DynamicMarketException {
 	try {
 	    return new Shop(args[0], Format.parseBoolean(args[1]),
 		    Format.parseDouble(args[2]), Format.parseInteger(args[3]));
@@ -162,16 +164,17 @@ public class Shop // TODO: Add location support.
 	    // TODO: catch exception
 	    e.printStackTrace();
 	}
-	throw new IllegalArgumentException("That is not a valid Shop.");
+	throw new DynamicMarketException("That is not a valid Shop.");
     }
 
-    public static Shop parseShop(String line) throws IllegalArgumentException {
+    public static Shop parseShop(String line) throws DynamicMarketException {
 	return parseShop(line.split(","));
     }
 
     // TODO 2. location
+    @Deprecated
     public static Shop parseShop(CommandContext args)
-	    throws IllegalArgumentException {
+	    throws DynamicMarketException {
 	return null;
 	// TODO: Add parseShop command.
     }
@@ -203,6 +206,21 @@ public class Shop // TODO: Add location support.
 	}
 	return line.substring(0, line.length() - 1); // Remove the extra '\n'.
     }
+
+    // TODO: later save min, max if loaded !!
+    public boolean isShopInLocation(Location loc) {
+	int minX = Math.min(this.pos1x, this.pos2x), maxX = Math.max(
+		this.pos1x, this.pos2x);
+	int minY = Math.min(this.pos1y, this.pos2y), maxY = Math.max(
+		this.pos1y, this.pos2y);
+	int minZ = Math.min(this.pos1z, this.pos2z), maxZ = Math.max(
+		this.pos1z, this.pos2z);
+	return minX <= loc.getX() && loc.getX() <= maxX && minY <= loc.getY()
+		&& loc.getY() <= maxY && minZ <= loc.getZ()
+		&& loc.getZ() <= maxZ;
+    }
+
+    // dirty Location stuff
 
     public int getPos1x() {
 	return this.pos1x;

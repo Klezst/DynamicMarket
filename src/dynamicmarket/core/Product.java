@@ -33,6 +33,7 @@ import com.avaje.ebean.validation.NotNull;
 import com.sk89q.minecraft.util.commands.CommandContext;
 
 import dynamicmarket.data.Messaging;
+import dynamicmarket.event.DynamicMarketException;
 import dynamicmarket.util.Format;
 import dynamicmarket.util.Util;
 
@@ -232,9 +233,9 @@ public class Product {
 
     @SuppressWarnings("boxing")
     public static Product parseProduct(String... args)
-	    throws IllegalArgumentException {
+	    throws DynamicMarketException {
 	// TODO: Validate args individually.
-	// throws IllegalArgumentException, if the argument isn't a valid MaterialData.
+	// throws DynamicMarketException, if the argument isn't a valid MaterialData.
 	MaterialData data = Util.getMaterialData(args[0] + ":" + args[1]);
 	try {
 	    return new Product(data.getItemTypeId(), data.getData(),
@@ -252,23 +253,23 @@ public class Product {
 	    // TODO: catch exceptions
 	    e.printStackTrace();
 	}
-	throw new IllegalArgumentException("That is not a valid Product.");
+	throw new DynamicMarketException("That is not a valid Product.");
 	// Does not get executed, if the constructoris returned successfully.
     }
 
     public static Product parseProduct(String arg)
-	    throws IllegalArgumentException {
+	    throws DynamicMarketException {
 	// throws InvalidArgumentException, if args.split(",") is not a valid Product.
 	return parseProduct(arg.split(","));
     }
 
     public static Product parseProduct(CommandContext args)
-	    throws IllegalArgumentException {
+	    throws DynamicMarketException {
 	Map<String, String> properties = Util.getProperties(args.getSlice(2));
 	String[] data = args.getString(0).split(":");
 	// TODO: These string literals should really be constants
 	// & support multiple names for each property.
-	// throws IllegalArgumentException, ifarguments do not make a valid Product.
+	// throws DynamicMarketException, if arguments do not make a valid Product.
 	return parseProduct(
 		data[0],
 		data.length > 1 ? data[1] : "0",
