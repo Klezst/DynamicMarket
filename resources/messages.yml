@@ -1,6 +1,8 @@
 buy:
-  toomuch: You cannot buy that much at once.
-  nospace: The shop doesn't have enough of that to sell to you.
+  too_much: You cannot buy that much at once.
+  low_stock: [$store$] We don't have enough in stock, sorry. 
+sell:
+  no_space: The shop doesn't have enough of that to sell to you.
 help:
   add: |
     {DARK_PURPLE}/shop add <id>[{AQUA}:{DARK_PURPLE}<subtype>] [tags]

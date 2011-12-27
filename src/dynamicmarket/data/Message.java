@@ -15,7 +15,7 @@ import bukkitutil.Messaging;
  */
 public enum Message {
     // Alphanumeric order.
-    BUY_TOO_MUCH("buy.toomuch"),
+    BUY_TOO_MUCH("buy.too_much"),
     HELP_ADD("help.add"),
     HELP_BUY("help.buy"),
     HELP_EXPORT("help.export"),
@@ -37,7 +37,8 @@ public enum Message {
     HELP_TAG_STOCK("help.tag.stock"),
     HELP_TAG_VOLATILITY("help.tag.volatility"),
     HELP_UPDATE("help.update"),
-    NO_SPACE("buy.nospace");
+    LOW_STOCK("buy.low_stock"),
+    NO_SPACE("sell.no_space");
 
     private static YamlConfiguration config;
 

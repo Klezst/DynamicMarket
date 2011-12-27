@@ -36,8 +36,7 @@ import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 
 import dynamicmarket.DynamicMarketException;
-import dynamicmarket.data.DMsg;
-import dynamicmarket.data.DMsg.MsgKey;
+import dynamicmarket.data.Message;
 import dynamicmarket.data.Setting;
 
 @Entity
@@ -94,18 +93,14 @@ public class Transaction {
 	    int newVolume = amount * product.getBundleSize();
 	    if (Math.abs(newVolume) > newShop.getMaxTransactionSize()) {
 		throw new DynamicMarketException(
-			DMsg.INSTANCE.get(MsgKey.BUY_TOMUCH));
+			Message.BUY_TOO_MUCH.getMessage());
 	    }
 
 	    if (!product.hasStock(amount)) {
 		if (newVolume < 0) {
-		    throw new DynamicMarketException(DMsg.INSTANCE.get(
-			    MsgKey.BUY_NOSPACE, new String[][] { { "shop",
-				    newShop.getName() } }));
+		    throw new DynamicMarketException(Message.NO_SPACE.getMessage());
 		}
-		throw new DynamicMarketException(DMsg.INSTANCE.get(
-			MsgKey.SELL_NOSTOCK,
-			new String[][] { { "shop", newShop.getName() } }));
+		throw new DynamicMarketException(Message.LOW_STOCK.getMessage());
 	    }
 
 	    double newPrice, newBundles;
