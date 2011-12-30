@@ -1,6 +1,11 @@
 buy:
   too_much: You cannot buy that much at once.
-  low_stock: [$store$] We don't have enough in stock, sorry. 
+  low_stock: We don't have enough in stock, sorry. 
+export:
+  # Available variables: filepath.
+  success: |
+    Database successfully exported to:
+        $filepath$\shops.csv
 sell:
   no_space: The shop doesn't have enough of that to sell to you.
 help:

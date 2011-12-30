@@ -87,16 +87,18 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
 		+ " has issued the exportDB command; exporting.");
+	
+	String filePath = plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class);
 	try {
 	    IO.dumpToCSV(
-		    plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class),
+		    filePath,
 		    "shops.csv", plugin.getMarket());
 	} catch (IOException e) {
 	    plugin.log(Level.WARNING, e.getMessage());
-	    Messaging.send(sender, "{ERR}Export FAILED!");
+	    Messaging.send(sender, "{ERR}Export FAILED!"); // TODO: Add to messages.yml and Message.
 	    return;
 	}
-	Messaging.send(sender, "{}Export successfull.");
+	Message.EXPORT_SUCCESS.send(sender, Messaging.buildContext("filepath", filePath));
     }
 
     // Is this help command really necessary? CommandsManager provides a description and usage help. It's already written; so, I'll leave it in here.

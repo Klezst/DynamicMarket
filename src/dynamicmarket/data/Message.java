@@ -1,12 +1,13 @@
 package dynamicmarket.data;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import bukkitutil.Messaging;
-
 
 /**
  * Handles messaging.
@@ -16,6 +17,7 @@ import bukkitutil.Messaging;
 public enum Message {
     // Alphanumeric order.
     BUY_TOO_MUCH("buy.too_much"),
+    EXPORT_SUCCESS("export.success"),
     HELP_ADD("help.add"),
     HELP_BUY("help.buy"),
     HELP_EXPORT("help.export"),
@@ -42,7 +44,17 @@ public enum Message {
 
     private static YamlConfiguration config;
 
-    // Java initializes enums before enum static fields, so we need this function to use the static field during the constructor.
+    private String message;
+
+    private Message(String key) {
+	this.message = Messaging.parseColor(getConfig().getString(key, ""));
+    }
+
+    /**
+     * Java initializes Enums before Enum static fields, so we need this function to use the static field during the constructor.
+     * 
+     * @author Klezst
+     */
     private static YamlConfiguration getConfig() {
 	if (config == null) {
 	    config = YamlConfiguration.loadConfiguration(new File(
@@ -51,19 +63,51 @@ public enum Message {
 	return config;
     }
 
-    private String message;
-
-    private Message(String key) {
-	this.message = Messaging.parseColor(getConfig().getString(key, ""));
-    }
-
+    /**
+     * Returns message.
+     * 
+     * @return message.
+     * 
+     * @author Klezst
+     */
     public String getMessage() {
 	return this.message;
     }
 
-    public void send(CommandSender sender) {
-	for (String line : this.message.split("\n")) {
-	    sender.sendMessage(line); // TODO: insert items like $shop$!?!?
+    /**
+     * Sends the Message to sender.
+     * 
+     * @param sender
+     *            Who to send the Message to.
+     * 
+     * @throws NullPointerException
+     *             If sender is null.
+     * 
+     * @author Klezst
+     */
+    public void send(CommandSender sender) throws NullPointerException {
+	send(sender, new HashMap<String, String>());
+    }
+
+    /**
+     * Sends the Message to sender in the context provided.
+     * 
+     * @param sender
+     *            Who to send the Message to.
+     * @param context
+     *            A Map of keywords to replace with values.
+     * 
+     * @throws NullPointerException
+     *             If sender is null or context is null.
+     * 
+     * @author Klezst
+     */
+    public void send(CommandSender sender, Map<String, String> context)
+	    throws NullPointerException {
+	String msg = Messaging.replace(this.message, context, "$", "$");
+	
+	for (String line : msg.split("\n")) {
+	    sender.sendMessage(line);
 	}
     }
 }
