@@ -1,3 +1,7 @@
+# Please use ALL CAPS when dealing with colors.
+custom_colors:
+  CMD: AQUA
+  PRM: GOLD
 buy:
   too_much: You cannot buy that much at once.
   low_stock: We don't have enough in stock, sorry. 
@@ -15,7 +19,7 @@ help:
     See also: /shop help tags
   buy: |
     /shop buy <id>[:<subtype>] [amount]
-    amount is the number of bundles of the item you want to buy.
+    {PRM}amount {CMD}is the number of bundles of the item you want to buy.
     If no amount is specified it defaults to 1.
   export: |
     /shop export

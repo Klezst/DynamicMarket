@@ -21,7 +21,6 @@ package bukkitutil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -32,16 +31,60 @@ import org.bukkit.command.CommandSender;
  * @author Klezst
  */
 public class Messaging {
-    private static Set<Map.Entry<String, String>> chatColors;
+    private static Map<String, String> chatColors = new HashMap<String, String>();
     static {
 	// Get the names of the ChatColors.
-	Map<String, String> map = new HashMap<String, String>();
 	for (ChatColor chatColor : ChatColor.values()) {
-	    map.put("{" + chatColor.name() + "}", chatColor.toString());
+	    chatColors.put(chatColor.name(), chatColor.toString());
 	}
-	chatColors = map.entrySet();
     }
 
+    /**
+     * Adds a new color tag for use with parseColor(String).
+     * 
+     * @param name
+     *    The color tag.
+     * @param color
+     *    The color. Must be a color tag that is already registered for use with parseColor(String).
+     *    
+     * @throws IllegalArgumentException
+     *     If there is no color tag already registered for use with parseColor(String) by the name of color.
+     *     
+     * @author Klezst
+     */
+    public static void addColor(String name, String color) throws IllegalArgumentException
+    {
+	String chatColor = null;
+	for (Map.Entry<String, String> entry : chatColors.entrySet())
+	{
+	    if (color.equalsIgnoreCase(entry.getKey()))
+	    {
+		chatColor = entry.getValue();
+	    }
+	}
+	
+	if (chatColor == null)
+	{
+	    throw new IllegalArgumentException(color + " is not a valid ChatColor!");
+	}
+	
+	chatColors.put(name, chatColor);
+    }
+    /**
+     * Adds a new color tag for use with parseColor(String).
+     * 
+     * @param name
+     *    The color tag.
+     * @param chatColor
+     *    The ChatColor for name to represent.
+     *    
+     * @author Klezst
+     */
+    public static void addColor(String name, ChatColor chatColor)
+    {
+	chatColors.put(name, chatColor.toString());
+    }
+    
     /**
      * Returns a Map<String, String> with even indexed values as the keys and odd indexed values as the values.
      * 
@@ -195,8 +238,8 @@ public class Messaging {
     public static String parseColor(final String message)
 	    throws NullPointerException {
 	String colored = message;
-	for (Entry<String, String> entry : chatColors) {
-	    colored = colored.replace(entry.getKey(), entry.getValue());
+	for (Entry<String, String> entry : chatColors.entrySet()) {
+	    colored = colored.replace("{" + entry.getKey() + "}", entry.getValue());
 	}
 	return colored;
     }
