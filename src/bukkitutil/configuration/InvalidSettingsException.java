@@ -21,6 +21,11 @@ package bukkitutil.configuration;
 import java.util.List;
 import java.util.logging.Logger;
 
+/**
+ * Represents invalid settings.
+ * 
+ * @author Klezst
+ */
 public class InvalidSettingsException extends RuntimeException {
     private static final long serialVersionUID = -4808725946544992759L;
 
@@ -39,9 +44,11 @@ public class InvalidSettingsException extends RuntimeException {
      * Prints the exception to log.
      * 
      * @param log
-     *            , The Logger to print to.
+     *            The Logger to print to.
      * @param prefix
-     *            , A String that precedes each line printed. Should have a whitespace as last character, if not empty string.
+     *            A String that precedes each line printed. Should have a whitespace as last character, if not empty string.
+     *            
+     * @author Klezst
      */
     public void printExceptions(Logger log, String prefix) {
 	for (InvalidSettingException exception : this.exceptions) {

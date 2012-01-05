@@ -20,17 +20,28 @@ package bukkitutil.configuration;
 
 import org.bukkit.ChatColor;
 
-
+/**
+ * Provides convenience functions for use with validating settings.
+ * 
+ * @author Klezst
+ */
 public class Validation {
     /**
      * Returns the ChatColor corresponding to value. If no such ChatColor exists throws an InvalidSettingException
      * 
      * @param key
      * @param value
-     * @return
+     * 
+     * @return The ChatColor corresponding to value.
+     * 
+     * @throws InvalidSettingException
+     *             If value is not a ChatColor.
+     * 
+     * @author Klezst
      */
     // TODO: Accept color codes.
-    public static ChatColor getChatColor(String key, String value) {
+    public static ChatColor getChatColor(String key, String value)
+	    throws InvalidSettingException {
 	value = value.replace(" ", "_");
 	value = value.toUpperCase();
 

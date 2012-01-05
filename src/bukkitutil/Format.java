@@ -25,12 +25,12 @@ package bukkitutil;
  */
 public class Format {
     /**
-     * Returns true, iff arg is any of the following; yes, y, true, t, positive, +, affirmative, indubitably, YaY.
+     * Returns true, if arg is any of the following; yes, y, true, t, positive, +, affirmative, indubitably, YaY.
      * 
      * @param arg
      *            The String to turn into a boolean.
      * 
-     * @return true, iff arg is any of the following; yes, y, true, t, positive, +, affirmative, indubitably, YaY.
+     * @return true, if arg is any of the following; yes, y, true, t, positive, +, affirmative, indubitably, YaY.
      * 
      * @author Klezst
      */

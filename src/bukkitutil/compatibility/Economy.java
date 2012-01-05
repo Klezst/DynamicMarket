@@ -1,5 +1,5 @@
 /*
-	DynamicMarket
+	BukkitUtil
 	Copyright (C) 2011 Klezst
 
 	This program is free software: you can redistribute it and/or modify
@@ -38,8 +38,10 @@ public class Economy {
      *            Amount to change the balance (can be negative).
      * @param name
      *            Name of the account.
+     *            
      * @throws NullPointerException
-     *             iff the economy isn't loaded yet.
+     *             If the economy isn't loaded yet.
+     *             
      * @author Klezst
      */
     public static void deltaBalance(double amount, String name)
@@ -52,9 +54,12 @@ public class Economy {
      * 
      * @param amount
      *            Amount to be formatted.
+     *            
      * @return amount in display format.
+     * 
      * @throws NullPointerException
-     *             iff the economy isn't loaded yet.
+     *             If the economy isn't loaded yet.
+     *             
      * @author Klezst
      */
     public static String format(double amount) throws NullPointerException {
@@ -66,9 +71,12 @@ public class Economy {
      * 
      * @param name
      *            Name of the account.
+     *            
      * @return Balance of the account called name.
+     * 
      * @throws NullPointerException
-     *             iff the economy isn't loaded yet.
+     *             If the economy isn't loaded yet.
+     *             
      * @author Klezst
      */
     public static int getBalance(String name) throws NullPointerException {
@@ -80,9 +88,12 @@ public class Economy {
      * 
      * @param name
      *            Name of the account.
+     *            
      * @return Balance of the account called name in display format.
+     * 
      * @throws NullPointerException
-     *             iff the economy isn't loaded yet.
+     *             If the economy isn't loaded yet.
+     *             
      * @author Klezst
      */
     public static String getFormattedBalance(String name)
@@ -93,7 +104,8 @@ public class Economy {
     /**
      * Returns whether or not the economy is loaded yet.
      * 
-     * @return True, iff the economy is loaded.
+     * @return True, If the economy is loaded.
+     * 
      * @author Klezst
      */
     public static boolean isLoaded() {

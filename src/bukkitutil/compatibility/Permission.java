@@ -33,13 +33,14 @@ public class Permission {
 	    .getProvider(); // Will not throw NullPointerException, since Vault is a dependency.
 
     /**
-     * Returns true, iff sender has the permission node.
+     * Returns true, if sender has the permission node.
      * 
      * @param sender
      *            Who to check for permission.
      * @param node
      *            The permission needed.
-     * @return, true, iff sender has the permission node.
+     *            
+     * @return True, if sender has the permission node.
      * 
      * @author Klezst
      */

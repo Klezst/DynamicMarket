@@ -37,9 +37,12 @@ public class Util {
      * 
      * @param arg
      *            , The alias of the MaterialData or <type>[:<data>].
+     * 
      * @return The MaterialData corresponding to arg.
+     * 
      * @throws DynamicMarketException
      *             , If arg is not a valid MaterialData.
+     * 
      * @author Klezst
      */
     // TODO: Add support for custom aliases via a utility plugin?
@@ -71,13 +74,15 @@ public class Util {
     }
 
     /**
-     * Returns true, iff text equalsIgnoreCase any member of against.
+     * Returns true, if text equalsIgnoreCase any member of against.
      * 
      * @param text
-     *            , The string to check.
+     *            The string to check.
      * @param against
-     *            , The strings to compare to.
+     *            The strings to compare to.
+     * 
      * @return True, iff text equalsIgnoreCase any member of against.
+     * 
      * @author Nijikokun
      * @author Klezst
      */
@@ -90,6 +95,18 @@ public class Util {
 	return false;
     }
 
+    /**
+     * Rounds num to the precision-th decimal place.
+     * 
+     * @param num
+     *            The double to round.
+     * @param precision
+     *            The number of decimal places to round to.
+     * 
+     * @return num rounded to the precision-th decimal place.
+     * 
+     * @author Klezst
+     */
     public static double round(double num, int precision) {
 	double modifier = Math.pow(10, precision);
 
@@ -97,10 +114,37 @@ public class Util {
 	return result / modifier;
     }
 
+    /**
+     * Clamps arg between min and max.
+     * 
+     * @param min
+     *            The minimum value arg can be.
+     * @param arg
+     *            The value to clamp.
+     * @param max
+     *            The maximum value arg can be.
+     * 
+     * @return arg clamped between min and max.
+     * 
+     * @author Klezst
+     */
     public static double clamp(double min, double arg, double max) {
 	return Math.min(max, Math.max(min, arg));
     }
 
+    /**
+     * Turns args into a Map<String, String> of properties.
+     * 
+     * @param args
+     *            The strings to turn into properties ([key:value, key1:value1, key2:value2]).
+     * 
+     * @return A Map<String, String> representing the properties args.
+     * 
+     * @throws DynamicMarketException
+     *             If an element of args is not a valid property.
+     * 
+     * @author Klezst
+     */
     public static Map<String, String> getProperties(String... args)
 	    throws DynamicMarketException {
 	Map<String, String> properties = new HashMap<String, String>();

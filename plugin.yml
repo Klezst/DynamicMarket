@@ -1,6 +1,6 @@
-authors: [HaloInverse, IDragonfire, Klezst, Magik, Nijikokun, N3X15]
+authors: [HaloInverse, IDragonfire, Klezst, Magik, Nijikokun, N3X15, RchGrav]
 depend: [WorldEdit, Vault]
-description: A shop plugin building towards an interesting and flexible market system.
+description: Provides command based shops with dynamic pricing.
 main: dynamicmarket.core.DynamicMarket
 name: DynamicMarket
 version: 0.1 Dragon
