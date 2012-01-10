@@ -1,0 +1,110 @@
+# Please use ALL CAPS when dealing with colors.
+custom_colors:
+  CMD: AQUA
+  PRM: GOLD
+buy:
+  too_much: You cannot buy that much at once.
+  low_stock: We don't have enough in stock, sorry. 
+export:
+  # Available variables: filepath.
+  success: |
+    Database successfully exported to:
+        $filepath$\shops.csv
+sell:
+  no_space: The shop doesn't have enough of that to sell to you.
+help:
+  add: |
+    {DARK_PURPLE}/shop add <id>[{AQUA}:{DARK_PURPLE}<subtype>] [tags]
+    Adds a product to the shop.
+    See also: /shop help tags
+  buy: |
+    /shop buy <id>[:<subtype>] [amount]
+    {PRM}amount {CMD}is the number of bundles of the item you want to buy.
+    If no amount is specified it defaults to 1.
+  export: |
+    /shop export
+    Exports the database to shops.csv.
+    The file's location can be set in the config.yml.
+    The file is editable by most spreadsheet programs.
+  ids: |
+    Format: <id>[:<subtype>]
+    Subtypes are used for wool/dye colors, log types, etc...
+    You can use the full name of the item instead.
+  import: |
+    /shop import
+    Imports the database from shops.csv.
+    The file's location can be set in the config.yml.
+    The format MUST be in the same format as the export format.
+    THIS WILL OVERWRITE THE DATABASE; backup your database first.
+  info: |
+    /shop info <id>[:<subtype>]
+    Shows detailed information about a product.
+  list: |
+    /shop list [filter] [page]
+    Displays items for sale.
+    List format: <id> <fullName> Bundle: <bundleSize> Buy: <buyPrice> Sell: <sellPrice>
+    Page 1 is displayed if no page number is given.
+    If filter is provided, displays only products related to the filter.
+    Ex: /shop list diamond 2 - Shows the second page of products related to diamond.
+  reload: |
+    Restarts the plugin.
+    Reloads config.yml and the database.
+    Does not reload messages.yml (restart the server to do this).
+  remove: |
+    /shop remove <id>[:<subtype>]
+    Removes an item from the shop.
+  sell: |
+    /shop buy <id>[:<subtype>] [amount]
+    amount is the number of bundles of the item you want to sell.
+    If no amount is specified it defaults to 1.
+  update: |
+    /shop update <id>[:<subtype>] <tags>
+    Changes the characteristics of the item.
+    See also: /shop help tags
+  tag:
+    baseprice: |
+      basePrice:<basePrice> - Base purchase price.
+      Base price of the item at stock level 0.
+      All other prices are derrived from this starting value.
+      Referenced by salesTax, stock, volatility.
+      Limited by minPrice and maxPrice.
+    buyable: |
+      buyable:<T/F> - Buyability of an product.
+      Use to allow buying an product from the shop.
+      Set to Y or T to allow buying the product from the shop.
+      Set to N or F to prohibit buying the product from the shop.
+    maxprice: |
+      maxPrice:<maxPrice> - Highest price.
+      The price will never go above maxPrice.
+    maxstock: |
+      maxStock:<maxStock> - Highest stock level.
+      If maxStock is reached, customers will no longer be able to sell the product.
+    minprice: |
+      minPrice:<minPrice> - Lowest price.
+      The price will never go below minPrice.
+    minstock: |
+      minStock:<minStock> - Lowest stock level.
+      If minStock is reached, customers will no longer be able to buy the product.
+    salestax: |
+      salesTax:<salesTax>
+      Percent difference in buy and sell price in decimal format.
+      buyPrice = sellPrice + sellPrice * salesTax
+      salesTax is applied before maxPrice and minPrice.
+    sellable: |
+      sellable:<T/F> - Sellability of an product.
+      Use to allow selling an product from the shop.
+      Set to Y or T to allow selling the product from the shop.
+      Set to N or F to prohibit selling the product from the shop.
+    stock: |
+      stock:<stock> - Current stock level.
+      Stock level of this item in bundles.
+      Increases or decreases when products are bought or sold.
+      Affects buy and sell prices, if volatility > 0.
+      Limited by minStock and maxStock.
+    volatility: |
+      volatility:<volatility> - Price volatility.
+      Percent price increase in decimal format per bundle bought.
+      0 prevents the price from changing with the stock level (flat pricing).
+      1 increases the price by 100% per each bundle bought.
+      0.01 increases the price by 1% per each bundle bought.
+      Calculations are compound versus current stock level.

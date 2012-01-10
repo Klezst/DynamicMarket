@@ -14,7 +14,7 @@
         <pathelement location="bin"/>
         <pathelement location="dist/craftbukkit.jar"/>
         <pathelement location="dist/bukkit-0.0.1-SNAPSHOT.jar"/>    	
-        <pathelement location="dist/plugins/iConomy.jar"/>
+        <pathelement location="dist/plugins/Vault.jar"/>
         <pathelement location="dist/plugins/Permissions.jar"/>
     </path>
     <target name="init">

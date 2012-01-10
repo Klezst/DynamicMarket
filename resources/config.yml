@@ -1,10 +1,4 @@
 version: 1.0 # Do not change this; it may break updates.
-text-color:
-  bracket: aqua
-  command: light purple
-  error: red
-  normal: white
-  param: gold
 database:
   driver: org.sqlite.JDBC
   url: jdbc:sqlite:{DIR}{NAME}.db
