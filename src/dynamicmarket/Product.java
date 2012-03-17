@@ -28,9 +28,9 @@ import javax.persistence.Table;
 import org.bukkit.Material;
 import org.bukkit.material.MaterialData;
 
-import bukkitutil.Format;
-import bukkitutil.Messaging;
-import bukkitutil.Util;
+import bukkitutil.util.Format;
+import bukkitutil.util.Messaging;
+import bukkitutil.util.Util;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;

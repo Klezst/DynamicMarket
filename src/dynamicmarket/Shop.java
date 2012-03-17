@@ -30,8 +30,8 @@ import javax.persistence.Table;
 import org.bukkit.Location;
 import org.bukkit.material.MaterialData;
 
-import bukkitutil.Format;
-import bukkitutil.Messaging;
+import bukkitutil.util.Format;
+import bukkitutil.util.Messaging;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;

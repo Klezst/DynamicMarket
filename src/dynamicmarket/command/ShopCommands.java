@@ -29,10 +29,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.material.MaterialData;
 
-import bukkitutil.Format;
-import bukkitutil.Messaging;
-import bukkitutil.Util;
 import bukkitutil.compatibility.Permission;
+import bukkitutil.util.Format;
+import bukkitutil.util.Messaging;
+import bukkitutil.util.Util;
 
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;

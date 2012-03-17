@@ -11,11 +11,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 
 import bukkitutil.BukkitUtilJavaPlugin;
-import bukkitutil.Util;
 import bukkitutil.compatibility.Permission;
 import bukkitutil.configuration.InvalidSettingsException;
 import bukkitutil.configuration.Settings;
 import bukkitutil.configuration.Validatable;
+import bukkitutil.util.Logging;
+import bukkitutil.util.Util;
 
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.LogLevel;
@@ -101,7 +102,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
 	// Extract files.
 	try {
-	    bukkitutil.IO.extract(this, "config.yml", "messages.yml", "shops.csv",
+	    bukkitutil.util.IO.extract(this, "config.yml", "messages.yml", "shops.csv",
 		    "LICENSE.txt");
 	} catch (IOException e) {
 	    log(Level.SEVERE, "Error extracting resources; disabling.");
@@ -115,7 +116,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    this.settings = new Settings(getConfig(), Setting.values());
 	} catch (InvalidSettingsException e) {
 	    log(Level.SEVERE, "Invalid config.yml:");
-	    e.printExceptions(BukkitUtilJavaPlugin.logger, "["
+	    e.printExceptions(Logging.getLogger(), "["
 		    + getDescription().getName() + "]\t");
 	    pm.disablePlugin(this);
 	    return;

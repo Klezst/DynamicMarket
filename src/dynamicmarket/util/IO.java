@@ -33,7 +33,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-import bukkitutil.Format;
+import bukkitutil.util.Format;
 
 import dynamicmarket.DynamicMarket;
 import dynamicmarket.Market;

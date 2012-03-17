@@ -8,7 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import bukkitutil.Messaging;
+import bukkitutil.util.Messaging;
 
 /**
  * Handles messaging.

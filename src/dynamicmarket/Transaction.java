@@ -28,9 +28,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 
-import bukkitutil.Messaging;
-import bukkitutil.Util;
 import bukkitutil.compatibility.Economy;
+import bukkitutil.util.Messaging;
+import bukkitutil.util.Util;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
@@ -68,7 +68,7 @@ public class Transaction {
 
     public Transaction(DynamicMarket plugin, int amount, Player player,
 	    String matrialid) {
-	if (!Economy.isLoaded()) {
+	if (!Economy.isEnabled()) {
 	    Messaging.send(player, "{ERR}The economy isn't loaded!");
 	} else {
 	    commitTransaction(plugin, amount, player, matrialid);
