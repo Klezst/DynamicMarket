@@ -1,18 +1,12 @@
+authors: [HaloInverse, IDragonfire, Klezst, Magik, Nijikokun, N3X15, RchGrav]
+depend: [WorldEdit, Vault]
+description: Provides command based shops with dynamic pricing.
+main: dynamicmarket.DynamicMarket
 name: DynamicMarket
-main: com.gmail.haloinverse.DynamicMarket.DynamicMarket
-version: 0.9 Sentinel
-authors: [Klezst, RchGrav, N3X15, Magik, HaloInverse, Nijikokun]
-description: >
-             A shop plugin building towards an interesting and flexible market system.
+version: 0.1 Dragon
 commands:
     shop:
-       description: Accesses the shop command system.
-       usage: |
-              /<command>
-              /<command> help <topic/command>
-              /<command> <itemid>
-              /<command> <subcommand> <args>
-    dshop:
+       aliases: dshop
        description: Accesses the shop command system.
        usage: |
               /<command>

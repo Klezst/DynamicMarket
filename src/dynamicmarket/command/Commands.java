@@ -14,26 +14,19 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
-package com.gmail.haloinverse.DynamicMarket.commands;
+package dynamicmarket.command;
 
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.minecraft.util.commands.NestedCommand;
 
-public class Commands
-{
-	@Command
-	(
-		aliases = {"shop", "dshop"},
-		desc = "Interaction with the DynamicMarket.",
-		usage = "Type '/shop help' for more information."
-	)
-	@NestedCommand(ShopCommands.class)
-	@CommandPermissions("access")
-	public static void shop()
-	{
-		// TODO: CommandsManager never calls this, fix that.
-	}
+public class Commands {
+    @Command(aliases = { "shop", "dshop" }, desc = "Interaction with the DynamicMarket.", usage = "Type '/shop help' for more information.")
+    @NestedCommand(ShopCommands.class)
+    @CommandPermissions("access")
+    public static void shop() {
+	// TODO: CommandsManager never calls this, fix that.
+    }
 }
