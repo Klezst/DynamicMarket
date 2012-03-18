@@ -2,7 +2,7 @@ package com.gmail.haloinverse.DynamicMarket;
 
 import java.util.ArrayList;
 
-import com.iConomy.iConomy;
+import com.gmail.klezst.Economy;
 
 //import java.sql.ResultSet;
 
@@ -594,7 +594,11 @@ public class MarketItem extends ItemClump {
         if (!getCanBuy(numBundles))
             return ("{PRM}" + getName() + "{ERR} has only {PRM}" + formatBundleCount(leftToBuy()) + " {ERR}left for sale.");
         // Display count as [<bundle>(x<numbundles>)]
-        return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + iConomy.format(getBuyPrice(numBundles)));
+        try {
+            return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Economy.format(getBuyPrice(numBundles)));
+        } catch (NullPointerException e) {
+            return "Vault has not loaded an economy plugin yet!";
+        }
         // TODO: Abstract currency name from iConomy reference.
     }
     
@@ -608,7 +612,11 @@ public class MarketItem extends ItemClump {
         if (!getCanSell(numBundles))
             return ("{PRM}" + getName() + "{ERR} is overstocked, only {PRM}" + formatBundleCount(leftToSell()) + " {ERR}can be sold.");
         // Display count as [<bundle>(x<numbundles>)]
-        return ("{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + iConomy.format(getSellPrice(numBundles)));
+        try {
+            return ("{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Economy.format(getSellPrice(numBundles)));
+        } catch (NullPointerException e) {
+            return "Vault has not loaded an economy plugin!";
+        }
         // TODO: Abstract currency name from iConomy reference.
     }
     

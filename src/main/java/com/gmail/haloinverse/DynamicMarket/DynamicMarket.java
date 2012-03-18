@@ -1,9 +1,5 @@
 package com.gmail.haloinverse.DynamicMarket;
 
-import com.nijikokun.bukkit.Permissions.Permissions;
-import com.iConomy.*;
-import com.nijiko.permissions.PermissionHandler;
-
 import java.io.File;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -11,9 +7,6 @@ import java.util.Timer;
 import java.util.logging.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.Event;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,20 +16,17 @@ public class DynamicMarket extends JavaPlugin {
     public static final Logger log = Logger.getLogger("Minecraft");
     
     public static String name; // = "SimpleMarket";
-    public static String codename = "Shaniqua";
+    public static String codename = "compatibility";
     public static String version; // = "0.4a";
     
     public iListen playerListener = new iListen(this);
     
     public static Server server = null;
-    public static iConomy economy = null;
-    public static PermissionHandler Permissions = null;
     
     public static iProperty Settings;
     public static File directory = null;
     
     //protected static String currency;// = "Coin";
-    protected static boolean econLoaded = false;
     
     public static boolean debug = false;
     
@@ -61,7 +51,6 @@ public class DynamicMarket extends JavaPlugin {
     protected static String csvFileName;
     protected static String csvFilePath;
     
-    protected EconType econType = EconType.NONE;
     protected Items items;
     protected String itemsPath = "";
     protected DatabaseMarket db = null;
@@ -70,7 +59,6 @@ public class DynamicMarket extends JavaPlugin {
     protected TransactionLogger transLog = null;
     protected String transLogFile = "transactions.log";
     protected boolean transLogAutoFlush = true;
-    private static iPluginListener pluginListener = null;
     
     public void onDisable() {
         //        db.uninitialize();
@@ -103,20 +91,6 @@ public class DynamicMarket extends JavaPlugin {
         
         sqlite = "jdbc:sqlite:" + directory + File.separator + "shop.db";
         
-        PluginManager pm = getServer().getPluginManager();
-        if (pm.getPlugin("iConomy").isEnabled() && DynamicMarket.economy == null) {
-            Plugin iConomy = pm.getPlugin("iConomy");
-            //iConomyData();	
-            setiConomy((iConomy) iConomy);
-            iConomy = (iConomy) iConomy;
-        }
-        if (pm.getPlugin("Permissions").isEnabled() && DynamicMarket.Permissions == null) {
-            setupPermissions();
-            System.out.println("[DynamicMarket] Successfully linked with Permissions.");
-        }
-        pluginListener = new iPluginListener();
-        pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
-        
         checkLibs();
         setup();
         
@@ -125,30 +99,6 @@ public class DynamicMarket extends JavaPlugin {
     
     public static Server getTheServer() {
         return server;
-    }
-    
-    public static iConomy getiConomy() {
-        return economy;
-    }
-    
-    public static boolean setiConomy(iConomy plugin) {
-        if (economy == null) {
-            economy = plugin;
-            //currency = iConomy.getCurrency();
-            econLoaded = true;
-            log.info(Messaging.bracketize(name) + " iConomy connected.");
-        } else {
-            return false;
-        }
-        return true;
-    }
-    
-    public static void setupPermissions() {
-        Plugin test = getTheServer().getPluginManager().getPlugin("Permissions");
-        if (Permissions == null)
-            if (test != null)
-                DynamicMarket.Permissions = ((Permissions) test).getHandler();
-        
     }
     
     private void checkLibs() {
@@ -266,24 +216,5 @@ public class DynamicMarket extends JavaPlugin {
         } else {
             transLog = new TransactionLogger(this, null, false);
         }
-        
-        String econTypeString = Settings.getString("economy-plugin", "iconomy4");
-        if (econTypeString.equalsIgnoreCase("iconomy4")) {
-            econType = EconType.ICONOMY4;
-        } else {
-            log.severe(Messaging.bracketize(name) + " Invalid economy setting for 'economy-plugin='.");
-            econType = EconType.NONE;
-        }
-    }
-    
-    public void InitializeEconomy() {
-        econLoaded = true;
-        log.info(Messaging.bracketize(name) + " successfully hooked into iConomy.");
-    }
-    
-    public static enum EconType {
-        
-        NONE,
-        ICONOMY4;
     }
 }

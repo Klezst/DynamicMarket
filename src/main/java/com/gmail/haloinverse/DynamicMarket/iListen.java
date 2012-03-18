@@ -5,15 +5,13 @@ import java.util.ArrayList;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 
-import com.gmail.haloinverse.DynamicMarket.DynamicMarket.EconType;
-import com.iConomy.iConomy;
-import com.iConomy.system.Account;
-import com.nijikokun.bukkit.Permissions.Permissions;
+import com.gmail.klezst.Economy;
+import com.gmail.klezst.Permission;
 
-public class iListen extends PlayerListener {
+public class iListen implements Listener {
     
     public static DynamicMarket plugin;
     
@@ -23,7 +21,7 @@ public class iListen extends PlayerListener {
     
     public boolean hasPermission(CommandSender sender, String permString) {
         //TODO: check this if - looks wrong....
-        if (DynamicMarket.simplePermissions || DynamicMarket.Permissions == null) {
+        if (DynamicMarket.simplePermissions) {
             DynamicMarket.log.info("[DynamicMarket] - Null Permission Detected when attempting command.");
             if (sender instanceof Player) {
                 if (Misc.isAny(permString, new String[] { "access", "buy", "sell" })) {
@@ -44,7 +42,11 @@ public class iListen extends PlayerListener {
         }
         // Permissions not overridden.
         if (sender instanceof Player) {
-            return Permissions.Security.permission((Player) sender, DynamicMarket.name.toLowerCase() + "." + permString);
+            try {
+        	return Permission.hasPermission(sender, DynamicMarket.name.toLowerCase() + "." + permString);
+            } catch (NullPointerException e) {
+        	return sender.isOp();
+            }
         }
         return true;
     }
@@ -379,13 +381,11 @@ public class iListen extends PlayerListener {
     }
     
     private int get_balance(String name) {
-        if (!DynamicMarket.econLoaded) {
-            return 0;
-        }
-        
         if ((name != null) && (!name.isEmpty())) {
-            if (plugin.econType == EconType.ICONOMY4) {
-                return (int) iConomy.getAccount(name).getHoldings().balance();
+            try {
+        	return Economy.getBalance(name);
+            } catch (NullPointerException e) {
+        	// return 0;
             }
         }
         
@@ -393,21 +393,17 @@ public class iListen extends PlayerListener {
     }
     
     private void show_balance(Player player, Messaging message) {
-        // plugin.iC.l.showBalance(player.getName(), player, true);
         int thisBalance = get_balance(player.getName());
-        message.send("{} Balance: {PRM}" + iConomy.format(thisBalance));
+        message.send("{} Balance: {PRM}" + Economy.format(thisBalance)); // No NullPointerException will be thrown since, get_balance uses Economy too.
     }
     
     private void delta_balance(String name, int amount) //throws InvalidTransactionException
     {
-        if (!DynamicMarket.econLoaded) {
-            return;
-        }
         if ((name != null) && (!name.isEmpty())) {
-            if (plugin.econType == EconType.ICONOMY4) {
-                Account thisAccount = iConomy.getAccount(name);
-                thisAccount.getHoldings().add(amount);
-                //                thisAccount.save();
+            try {
+        	Economy.deltaBalance(amount, name);
+            } catch (NullPointerException e) {
+        	// Originally nothing was done, if no economy was loaded. I assume this was handled earlier.
             }
         }
     }
@@ -502,7 +498,11 @@ public class iListen extends PlayerListener {
         
         plugin.db.removeStock(requested, shopLabel);
         
-        message.send(plugin.shop_tag + "Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + iConomy.format(transValue));
+        try {
+            message.send(plugin.shop_tag + "Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Economy.format(transValue));
+        } catch (NullPointerException e) {
+            message.send("Vault has not loaded an economy plugin yet.");
+        }
         show_balance(player, message);
         
         if (plugin.transLog.isOK) {
@@ -514,12 +514,21 @@ public class iListen extends PlayerListener {
     
     private String getCurrencyNamePlural() {
         // TODO Auto-generated method stub
-        return com.iConomy.util.Constants.Major.get(1);
+	try {
+	    return Economy.getCurrencyNamePlural();
+	} catch (NullPointerException e) {
+	    return "currency";
+	}
     }
     
+    @Deprecated
     private String getCurrencyName() {
         // TODO Auto-generated method stub
-        return com.iConomy.util.Constants.Major.get(0);
+	try {
+	    return Economy.getCurrencyNameSingular();
+	} catch (NullPointerException e) {
+	    return "currency";
+	}
     }
     
     private boolean shopSellItem(Player player, String itemString,
@@ -583,7 +592,11 @@ public class iListen extends PlayerListener {
         delta_balance(player.getName(), transValue);
         delta_balance(accountName, -transValue);
         plugin.db.addStock(requested, shopLabel);
-        message.send(plugin.shop_tag + "Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + transValue + " " + iConomy.format(transValue));
+        try {
+            message.send(plugin.shop_tag + "Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + transValue + " " + Economy.format(transValue));
+        } catch (NullPointerException e) {
+            message.send("Vault has not loaded an economy plugin yet.");
+        }
         show_balance(player, message);
         
         if (plugin.transLog.isOK) {
