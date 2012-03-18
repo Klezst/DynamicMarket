@@ -1,6 +1,6 @@
 name: DynamicMarket
 main: com.gmail.haloinverse.DynamicMarket.DynamicMarket
-version: compatibility
+version: Compatibility
 author: [HaloInverse, Klezst]
 depend: [Vault]
 description: >

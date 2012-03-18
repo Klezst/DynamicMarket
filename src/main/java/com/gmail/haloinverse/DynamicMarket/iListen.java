@@ -380,31 +380,12 @@ public class iListen implements Listener {
         return false;
     }
     
-    private int get_balance(String name) {
-        if ((name != null) && (!name.isEmpty())) {
-            try {
-        	return Economy.getBalance(name);
-            } catch (NullPointerException e) {
-        	// return 0;
-            }
-        }
-        
-        return 0;
-    }
-    
     private void show_balance(Player player, Messaging message) {
-        int thisBalance = get_balance(player.getName());
-        message.send("{} Balance: {PRM}" + Economy.format(thisBalance)); // No NullPointerException will be thrown since, get_balance uses Economy too.
-    }
-    
-    private void delta_balance(String name, int amount) //throws InvalidTransactionException
-    {
-        if ((name != null) && (!name.isEmpty())) {
-            try {
-        	Economy.deltaBalance(amount, name);
-            } catch (NullPointerException e) {
-        	// Originally nothing was done, if no economy was loaded. I assume this was handled earlier.
-            }
+        try {
+            int balance = Economy.getBalance(player.getName());
+            message.send("{} Balance: {PRM}" + Economy.format(balance));
+        } catch (NullPointerException e) {
+            message.send("{ERR}Vault has not loaded an economy plugin yet.");
         }
     }
     
@@ -446,7 +427,13 @@ public class iListen implements Listener {
         ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel, player);
         Messaging message = new Messaging(player);
         
-        int balance = get_balance(player.getName());
+        int balance = 0;
+        try {
+            balance = Economy.getBalance(player.getName());
+        } catch (NullPointerException e) {
+            message.send("{ERR}Vault has not loaded an economy plugin yet.");
+            return true;
+        }
         
         int transValue;
         
@@ -491,8 +478,13 @@ public class iListen implements Listener {
             return true;
         }
         
-        delta_balance(player.getName(), -transValue);
-        delta_balance(accountName, transValue);
+        try {
+            Economy.deltaBalance(-transValue, player.getName());
+            Economy.deltaBalance(transValue, accountName);
+        } catch (NullPointerException e) {
+            message.send("{ERR}Vault has not loaded the economy yet.");
+            return true;
+        }
         
         player.getInventory().addItem(new ItemStack[] { new ItemStack(data.itemId, requested.count * data.count, (short) 0, (byte) requested.subType) });
         
@@ -501,7 +493,7 @@ public class iListen implements Listener {
         try {
             message.send(plugin.shop_tag + "Purchased {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + Economy.format(transValue));
         } catch (NullPointerException e) {
-            message.send("Vault has not loaded an economy plugin yet.");
+            message.send("{ERR}Vault has not loaded an economy plugin yet.");
         }
         show_balance(player, message);
         
@@ -581,21 +573,35 @@ public class iListen implements Listener {
         transValue = data.getSellPrice(requested.count);
         
         if (!freeAccount) {
-            if (get_balance(accountName) < transValue) {
+            int balance = 0;
+            try {
+                balance = Economy.getBalance(player.getName());
+            } catch (NullPointerException e) {
+                message.send("{ERR}Vault has not loaded an economy plugin yet.");
+                return true;
+            }
+            
+            if (balance < transValue) {
                 message.send(plugin.shop_tag + "{ERR}Shop account does not have enough " + getCurrencyNamePlural() + " to pay for " + data.formatBundleCount(requested.count) + " " + data.getName() + ".");
                 return true;
             }
         }
         
+        try {
+            Economy.deltaBalance(transValue, player.getName());
+            Economy.deltaBalance(-transValue, accountName);
+        } catch (NullPointerException e) {
+            message.send("{ERR}Vault has not loaded an economy plugin yet.");
+            return true;
+        }
+        
         plugin.items.remove(player, data, requested.count);
         
-        delta_balance(player.getName(), transValue);
-        delta_balance(accountName, -transValue);
         plugin.db.addStock(requested, shopLabel);
         try {
             message.send(plugin.shop_tag + "Sold {BKT}[{PRM}" + data.formatBundleCount(requested.count) + "{BKT}]{PRM} " + data.getName() + "{} for {PRM}" + transValue + " " + Economy.format(transValue));
         } catch (NullPointerException e) {
-            message.send("Vault has not loaded an economy plugin yet.");
+            message.send("{ERR}Vault has not loaded an economy plugin yet.");
         }
         show_balance(player, message);
         

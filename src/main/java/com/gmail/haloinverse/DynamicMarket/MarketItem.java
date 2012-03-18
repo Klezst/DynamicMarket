@@ -597,7 +597,7 @@ public class MarketItem extends ItemClump {
         try {
             return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Economy.format(getBuyPrice(numBundles)));
         } catch (NullPointerException e) {
-            return "Vault has not loaded an economy plugin yet!";
+            return ("{}Buy: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + getBuyPrice(numBundles));
         }
         // TODO: Abstract currency name from iConomy reference.
     }
@@ -615,7 +615,7 @@ public class MarketItem extends ItemClump {
         try {
             return ("{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + Economy.format(getSellPrice(numBundles)));
         } catch (NullPointerException e) {
-            return "Vault has not loaded an economy plugin!";
+            return "{}Sell: {BKT}[{PRM}" + formatBundleCount(numBundles) + "{BKT}]{} for {PRM}" + getSellPrice(numBundles);
         }
         // TODO: Abstract currency name from iConomy reference.
     }
