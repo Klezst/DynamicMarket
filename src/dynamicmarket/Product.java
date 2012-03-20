@@ -88,7 +88,7 @@ public class Product {
 	this.type = type;
 	this.data = data;
 	this.bundleSize = bundleSize;
-	this.buyable = buyable;
+	this.buyable = buyable; //TODO: Migrate sellable and buyable to permissions.
 	this.sellable = sellable;
 	this.basePrice = basePrice;
 	setMaxPrice(maxPrice);

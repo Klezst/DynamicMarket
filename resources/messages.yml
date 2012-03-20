@@ -1,0 +1,154 @@
+# Please use ALL CAPS when dealing with colors.
+custom_colors:
+  CMD: AQUA
+  ERR: RED
+  NRM: WHITE
+  PRM: GOLD
+  BKT: LIGHT_PURPLE
+add:
+  #Available variables: item and shop.
+  success: "{PRM}$item$ {NRM}is now for sale at {PRM}$shop${NRM}."
+buy:
+  too_much: "{ERR}You cannot buy that much at once."
+  low_stock: "{ERR}We don't have enough in stock, sorry." 
+export:
+  # Available variables: filepath.
+  failure: "{ERR}Database export FAILED!"
+  success: |
+    {NRM}Database successfully exported to:
+        $filepath$\shops.csv
+help:
+  add: |
+    {CMD}/shop add {BKT}<{PRM}id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>] [{PRM}tags{BKT}]
+    {NRM}Adds a product to the shop.
+    {NRM}See also: {CMD}/shop help tags
+  buy: |
+    {CMD}/shop buy {BKT}<{PRM{id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>] [{PRM}amount{BKT}]
+    {PRM}amount {NRM}is the number of bundles of the item you want to buy.
+    {NRM}If no {PRM}amount {NRM}is specified it defaults to 1.
+  default: |
+    {CMD}/shop help {BKT}[{PRM}topic{BKT}]
+    {NRM}Displays information about {PRM}topic{NRM}.
+  export: |
+    {CMD}/shop export
+    {NRM}Exports the database to shops.csv.
+    {NRM}The file's location can be set in the config.yml.
+    {NRM}The file is editable by most spreadsheet programs.
+  ids: |
+    {NRM}Format: {BKT}<{PRM}id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>]
+    {NRM}Subtypes are used for wool/dye colors, log types, etc...
+    {NRM}You can use the full name of the item instead.
+  import: |
+    {CMD}/shop import
+    {NRM}Imports the database from shops.csv.
+    {NRM}The file's location can be set in the config.yml.
+    {NRM}The format MUST be in the same format as the export format.
+    {NRM}THIS WILL OVERWRITE THE DATABASE; backup your database first.
+  info: |
+    {CMD}/shop info {BKT}<{PRM}id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>]
+    {NRM}Shows detailed information about a product.
+  list: |
+    {CMD}/shop list {BKT}[{PRM}filter{BKT}] [{PRM}page{BKT}]
+    {NRM}Displays items for sale.
+    {NRM}List format: {BKT}<{PRM}id{BKT}> <{PRM}fullName{BKT}> {NRM}Bundle: {BKT}<{PRM}bundleSize{BKT}> {NRM}Buy: {BKT}<{PRM}buyPrice{BKT}> {NRM}Sell: {BKT}<{PRM}sellPrice{BKT}>
+    {NRM}Page 1 is displayed if {PRM}page {NRM}is not specified.
+    {NRM}If {PRM}filter {NRM}is provided, displays only products containing {PRM}filter {NRM}in their name.
+    {NRM}Ex: {CMD}/shop list diamond 2 {NRM}- Shows the second page of products that contain diamond in their names.
+  reload: |
+    {CMD}/shop reload
+    {NRM}Restarts the plugin.
+    {NRM}Reloads config.yml and the database.
+    {NRM}Does not reload messages.yml (restart the server to do this).
+  remove: |
+    {CMD}/shop remove {BKT}<{PRM}id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>]
+    {NRM}Removes an item from the shop.
+  sell: |
+    {CMD}/shop buy {BKT}<{PRM}id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>] [{PRM}amount{BKT}]
+    {PRM}amount {NRM}is the number of bundles you want to sell.
+    {NRM}If {PRM}amount {NRM}is not specified it defaults to 1.
+  update: |
+    {CMD}/shop update {BKT}<{PRM}id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>] <{PRM}tags{BKT}>
+    {NRM}Changes the characteristics of an item.
+    {NRM}See also: {CMD}/shop help tags
+  tag:
+    baseprice: |
+      {CMD}basePrice:{BKT}<{PRM}basePrice{BKT}> {NRM}- Base purchase price.
+      {NRM}Base price of the item at stock level 0.
+      {NRM}All other prices are derrived from this starting value.
+      {NRM}Referenced by salesTax, stock, volatility.
+      {NRM}Limited by minPrice and maxPrice.
+    buyable: |
+      {CMD}buyable:{BKT}<{PRM}T/F{BKT}> {NRM}- Buyability of an product.
+      {NRM}Use to allow buying an product from the shop.
+      {NRM}Set to Y or T to allow buying the product from the shop.
+      {NRM}Set to N or F to prohibit buying the product from the shop.
+    default: |
+      {NRM}Tag format: {BKT}<{PRM}tagName{BKT}>{CMD}:{BKT}<{PRM}value{BKT}> <{PRM}tagName{BKT}>{CMD}:<{PRM}value{BKT}>{NRM}...
+      {NRM}Available tags: basePrice, salesTax, canBuy, canSell, volitility,
+      {NRM}stock, maxStock, minStock, maxPrice, minPrice, buyable, sellable.
+      {NRM}Use {CMD}/shop help tag {BKT}<{PRM}tagName{BKT}> {NRM}for tag descriptions.
+    #Available variables: tag.
+    invalid: |
+      {PRM}$tag$ {ERR}is not a valid tag!
+      {NRM}Use {CMD}/shop help tags {NRM}to list all of thevalid tags.
+    #Available variables: THERE ARE NO AVAILABLE VARIABLES.
+    maxprice: |
+      {CMD}maxPrice:{BKT}<{PRM}maxPrice{BKT}> {NRM}- Highest price.
+      {NRM}The price will never go above maxPrice.
+    maxstock: |
+      {CMD}maxStock:{BKT}<{PRM}maxStock{BKT}> {NRM}- Highest stock level.
+      {NRM}If maxStock is reached, customers will no longer be able to sell the product.
+    minprice: |
+      {CMD}minPrice:{BKT}<{PRM}minPrice{BKT}> {NRM}- Lowest price.
+      {NRM}The price will never go below minPrice.
+    minstock: |
+      {CMD}minStock:{BKT}<{PRM}minStock{BKT}> {NRM}- Lowest stock level.
+      {NRM}If minStock is reached, customers will no longer be able to buy the product.
+    salestax: |
+      {CMD}salesTax:{BKT}<{PRM}salesTax{BKT}>
+      {NRM}Percent difference in buy and sell price in decimal format.
+      {NRM}buyPrice = sellPrice + {BKT}({NRM}sellPrice * salesTax{BKT})
+      {NRM}salesTax is applied before maxPrice and minPrice.
+    sellable: |
+      {CMD}sellable:{BKT}<{PRM}T/F{BKT}> {NRM}- Sellability of an product.
+      {NRM}Use to allow players to sell the product to the shop.
+      {NRM}Set to Y or T to allow players to sell the product to the shop.
+      {NRM}Set to N or F to prohibit players from selling the product to the shop.
+    stock: |
+      {CMD}stock:{BKT}<{PRM}stock{BKT}> {NRM}- Current stock level.
+      {NRM}Stock level of this item in bundles.
+      {NRM}Decreases or increases when products are bought or sold.
+      {NRM}Affects buy and sell prices, if volatility > 0.
+      {NRM}Limited by minStock and maxStock.
+    volatility: |
+      {CMD}volatility:{BKT}<{PMR}volatility{BKT}> {NRM}- Price volatility.
+      {NRM}Percent price increase in decimal format per bundle bought.
+      {NRM}0 prevents the price from changing with the stock level {BKT}({NRM}flat pricing{BKT}){NRM}.
+      {NRM}1 increases the price by 100% per each bundle bought.
+      {NRM}0.01 increases the price by 1% per each bundle bought.
+      {NRM}Calculations are compound versus current stock level.
+import:
+  failure: "{ERR}Import FAILED!"
+  success: "{NRM}Import successful."
+list:
+  #Available variables: page.
+  no_results: "{ERR}No such products are available!"
+  page:
+    negative: "{ERR}You must specify a positive page number!"
+    non_numeric: "{PRM}$page$ {ERR}is not a page number!"
+    too_high: "{ERR}There aren't that many pages!"
+reload: "{NRM}DynamicMarket has successfuly reloaded."
+remove:
+  #Available variables: product and shop.
+  success: "{PRM}$product$ {NRM} is no longer sold at {PRM}$shop${NRM}."
+sell:
+  no_space: "{ERR}The shop doesn't have enough of that to sell to you."
+transaction:
+  #Available variables: amount.
+  amount:
+    non_numeric: "{PRM}$amount$ {ERR}is not a valid amount!"
+update:
+  #Available variables: product.
+  success: "{PRM}$product$ {NRM}has been successfully updated."
+  flag:
+    non_numeric: "{ERR}Invalid flags, some of the update may have been successful."

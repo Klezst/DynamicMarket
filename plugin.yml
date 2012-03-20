@@ -3,7 +3,7 @@ depend: [WorldEdit, Vault]
 description: Provides command based shops with dynamic pricing.
 main: dynamicmarket.DynamicMarket
 name: DynamicMarket
-version: 0.1 Dragon
+version: 1.0 (Persistence)
 commands:
     shop:
        aliases: dshop

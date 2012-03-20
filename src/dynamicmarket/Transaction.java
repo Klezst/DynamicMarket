@@ -64,6 +64,7 @@ public class Transaction {
 
     public Transaction() {
 	// Needed for persistence.
+	//TODO: Initialize variables.
     }
 
     public Transaction(DynamicMarket plugin, int amount, Player player,
@@ -76,7 +77,6 @@ public class Transaction {
     }
 
     // TODO: remove items by Exceptions
-    @SuppressWarnings("boxing")
     private void commitTransaction(DynamicMarket plugin, int amount,
 	    Player player, String matrialid) {
 	MaterialData data;
@@ -97,9 +97,9 @@ public class Transaction {
 
 	    if (!product.hasStock(amount)) {
 		if (newVolume < 0) {
-		    throw new IllegalArgumentException(Message.NO_SPACE.getMessage());
+		    throw new IllegalArgumentException(Message.SELL_NO_SPACE.getMessage());
 		}
-		throw new IllegalArgumentException(Message.LOW_STOCK.getMessage());
+		throw new IllegalArgumentException(Message.BUY_LOW_STOCK.getMessage());
 	    }
 
 	    double newPrice, newBundles;

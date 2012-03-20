@@ -1,0 +1,10 @@
+version: 1.0 # Do not change this; it may break updates.
+database:
+  driver: org.sqlite.JDBC
+  url: jdbc:sqlite:{DIR}{NAME}.db
+  username: root
+  password: walrus
+  isolation: SERIALIZABLE
+  logging: false
+import-export-path: plugins\DynamicMarket\ # Location of shops.csv.
+transaction-logging: true # Logs transactions in the database table "transactions".

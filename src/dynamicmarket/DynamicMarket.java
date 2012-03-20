@@ -29,6 +29,7 @@ import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
 import dynamicmarket.command.Commands;
 import dynamicmarket.util.IO;
+import dynamicmarket.util.Message;
 import dynamicmarket.util.MyDatabase;
 import dynamicmarket.util.Setting;
 
@@ -52,7 +53,6 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
     }
 
     // Method template by LennardF1989
-    @SuppressWarnings("boxing")
     private void initializeDatabase() {
 	this.database = new MyDatabase(this) {
 	    @Override
@@ -111,7 +111,18 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    return;
 	}
 
-	// Load & Validate settings.
+	// Load & validate messages.
+	try {
+	    new Settings(Message.getConfig(), Message.values());
+	} catch (InvalidSettingsException e) {
+	    log(Level.SEVERE, "Invalid messages.yml:");
+	    e.printExceptions(Logging.getLogger(), "["
+		    + getDescription().getName() + "]\t");
+	    pm.disablePlugin(this);
+	    return;
+	}
+	
+	// Load & validate settings.
 	try {
 	    this.settings = new Settings(getConfig(), Setting.values());
 	} catch (InvalidSettingsException e) {
@@ -121,7 +132,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    pm.disablePlugin(this);
 	    return;
 	}
-
+	
 	// Setup & load database.
 	initializeDatabase();
 	List<Shop> shops = getDatabase().find(Shop.class).findList();

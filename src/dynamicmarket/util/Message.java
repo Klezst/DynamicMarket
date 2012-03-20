@@ -8,6 +8,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import bukkitutil.configuration.InvalidSettingException;
+import bukkitutil.configuration.InvalidSettingsException;
+import bukkitutil.configuration.Validatable;
 import bukkitutil.util.Messaging;
 
 /**
@@ -15,12 +18,16 @@ import bukkitutil.util.Messaging;
  * 
  * @author Klezst
  */
-public enum Message {
+public enum Message implements Validatable {
     // Alphanumeric order.
+    ADD_SUCCESS("add.success"),
     BUY_TOO_MUCH("buy.too_much"),
+    BUY_LOW_STOCK("buy.low_stock"),
+    EXPORT_FAILURE("export.failure"),
     EXPORT_SUCCESS("export.success"),
     HELP_ADD("help.add"),
     HELP_BUY("help.buy"),
+    HELP_DEFAULT("help.default"),
     HELP_EXPORT("help.export"),
     HELP_IDS("help.ids"),
     HELP_IMPORT("help.import"),
@@ -31,6 +38,8 @@ public enum Message {
     HELP_SELL("help.sell"),
     HELP_TAG_BASEPRICE("help.tag.baseprice"),
     HELP_TAG_BUYABLE("help.tag.buyable"),
+    HELP_TAG_DEFAULT("help.tag.default"),
+    HELP_TAG_INVALID("help.tag.invalid"),
     HELP_TAG_MAX_PRICE("help.tag.maxstock"),
     HELP_TAG_MAX_STOCK("help.tag.maxstock"),
     HELP_TAG_MIN_PRICE("help.tag.minprice"),
@@ -40,15 +49,28 @@ public enum Message {
     HELP_TAG_STOCK("help.tag.stock"),
     HELP_TAG_VOLATILITY("help.tag.volatility"),
     HELP_UPDATE("help.update"),
-    LOW_STOCK("buy.low_stock"),
-    NO_SPACE("sell.no_space");
+    IMPORT_FAILURE("import.failure"),
+    IMPORT_SUCCESS("import.success"),
+    LIST_NO_RESULTS("list.no_results"),
+    LIST_PAGE_NON_NUMERIC("list.page.non_numeric"),
+    LIST_PAGE_NEGATIVE("list.page.negative"),
+    LIST_PAGE_TOO_HIGH("list.page.too_high"),
+    RELOAD("reload"),
+    REMOVE_SUCCESS("remove.success"),
+    SELL_NO_SPACE("sell.no_space"),
+    TRANSACTION_AMOUNT_NON_NUMERIC("transaction.amount.non_numeric"),
+    UPDATE_SUCCESS("update.success"),
+    UPDATE_FLAG_NON_NUMERIC("update.flag.non_numeric");
 
-    private static YamlConfiguration config;
+    private static YamlConfiguration config = null;
 
+    private String key;
     private String message;
 
     private Message(String key)
     {
+	// TODO: Validate messages.yml.
+	this.key = key;
 	this.message = Messaging.parseColor(getConfig().getString(key, "")); // We cannot use config directly in the constructor because the compiler thinks it's not initialized yet (it get's initialized in getConfig()).
     }
 
@@ -59,7 +81,7 @@ public enum Message {
      * 
      * @author Klezst
      */
-    private static YamlConfiguration getConfig()
+    public static YamlConfiguration getConfig()
     {
 	if (config != null) // We already initialized.
 	{
@@ -130,5 +152,22 @@ public enum Message {
 	for (String line : msg.split("\n")) {
 	    sender.sendMessage(line);
 	}
+    }
+
+    // Validation functions.
+    @Override
+    public String getKey() {
+	return key;
+    }
+
+    @Override
+    public Class<?> getType() {
+	return String.class;
+    }
+
+    @Override
+    public Object validate(Object value) throws InvalidSettingException,
+	    InvalidSettingsException {
+	return value;
     }
 }

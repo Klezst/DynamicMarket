@@ -62,10 +62,10 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    // throws DynamicMarketExceotion, iff args is not a valid Product.
 	    Product product = Product.parseProduct(args);
 	    shop.addProduct(product);
+	    
 	    // Update database if valid
 	    plugin.getDatabase().save(product);
-	    Messaging.send(sender, "{}" + args.getString(0)
-		    + " is now for sale at " + shop.getName() + ".");
+	    Message.ADD_SUCCESS.send(sender, Messaging.buildContext("item", args.getString(0), "shop", shop.getName()));
 	} catch (IllegalArgumentException e) {
 	    Messaging.send(sender, "{ERR}" + e.getMessage());
 	    return;
@@ -93,7 +93,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		    "shops.csv", plugin.getMarket());
 	} catch (IOException e) {
 	    plugin.log(Level.WARNING, e.getMessage());
-	    Messaging.send(sender, "{ERR}Export FAILED!"); // TODO: Add to messages.yml and Message.
+	    Message.EXPORT_FAILURE.send(sender, Messaging.buildContext("filepath", filePath));
 	    return;
 	}
 	Message.EXPORT_SUCCESS.send(sender, Messaging.buildContext("filepath", filePath));
@@ -112,15 +112,13 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    }
 	}
 
-	// Generate message. TODO: Migrate messages to an Enum or some form of constant.
+	// Generate message.
 	if (topic.isEmpty()) {
 	    String commands = "";
 	    String topics = "";
 	    String shortcuts = "";
 
-	    sender.sendMessage("/shop help [topic]");
-	    sender.sendMessage("Displays information about the topic.");
-	    // TODO: Add generic help message to Message and message.yml.
+	    Message.HELP_DEFAULT.send(sender);
 
 	    commands += " list";
 	    shortcuts += " -? -l";
@@ -165,7 +163,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    return;
 	}
 	sender.sendMessage("----------" + plugin.getDescription().getName()
-		+ "----------");
+		+ "----------"); // TODO: Add to messages.yml. Perhaps add predefined string identifiers in messages.yml.
 
 	if (topic.equalsIgnoreCase("buy")) {
 	    Message.HELP_BUY.send(sender);
@@ -270,14 +268,10 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		 * "{CMD}update {PRM}<itemID> {CMD}renorm{} - Renormalize an item's price.", "{} Resets an item's {PRM}Stock{}, while preserving its current price.",
 		 * "{} Sets an item's {PRM}BasePrice{} to its current {PRM}BuyPrice,", "{} and sets it's {PRM}Stock{} to 0."); return; } */
 
-		sender.sendMessage("Unknown tag" + thisTag + "."); // TODO: Add to messages.yml and Message.
-		sender.sendMessage("Use /shop help tags to list tags.");
+		Message.HELP_TAG_INVALID.send(sender, Messaging.buildContext("tag", thisTag));
 		return;
 	    }
-	    sender.sendMessage("Tag format: <tagName>:<value> <tagName>:<value>..."); // TODO: Add to messages.yml and Message.
-	    sender.sendMessage("Available tags: basePrice, salesTax, canBuy, canSell, volitility,");
-	    sender.sendMessage("stock, maxStock, minStock, maxPrice, minPrice, buyable, sellable.");
-	    sender.sendMessage("Use /shop help tag <tagName> for tag descriptions.");
+	    Message.HELP_TAG_DEFAULT.send(sender);
 	    return;
 	}
 	if (topic.equalsIgnoreCase("about")) {
@@ -297,9 +291,9 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     public static void importDB(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
 	if (plugin.importDB()) {
-	    sender.sendMessage("Import successful."); // TODO: Add to messages.yml and Message.
+	    Message.IMPORT_SUCCESS.send(sender);
 	} else {
-	    sender.sendMessage("Import FAILED!");
+	    Message.IMPORT_FAILURE.send(sender);
 	}
     }
 
@@ -330,7 +324,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		}
 		Messaging.send(sender, product.toString());
 	    } else {
-		sender.sendMessage("You must be logged in to issue this command");
+		sender.sendMessage("You must be logged in to issue this command"); //TODO: Migrate to messages.yml.
 	    }
 	}
     }
@@ -338,75 +332,69 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @Command(aliases = { "list", "l" }, desc = "Lists items for sale", usage = "[filter] [page]", min = 0, max = 2)
     public static void list(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	try {
-	    Shop shop = plugin.getMarket().getShop(
-		    ((Player) sender).getLocation());
-	    String[] lines = shop.toString().split("\n");
-
-	    int page = 1;
-	    if (args.argsLength() > 0) {
-		try {
-		    page = Format.parseInteger(args.getString(0));
-		} catch (NumberFormatException e) {
-		    if (args.argsLength() > 1) {
+		Shop shop = plugin.getMarket().getShop(
+			((Player) sender).getLocation());
+		String[] lines = shop.toString().split("\n");
+		
+		int page = 1;
+		if (args.argsLength() > 0) {
 			try {
-			    page = Format.parseInteger(args.getString(1));
-			} catch (NumberFormatException ex) {
-			    Messaging.send(sender, "{ERR}" + args.getString(1)
-				    + " is not a page number!");
-			    return;
+				page = Format.parseInteger(args.getString(0));
+			} catch (NumberFormatException e) {
+				if (args.argsLength() > 1) {
+					try {
+						page = Format.parseInteger(args.getString(1));
+					} catch (NumberFormatException ex) {
+						Message.LIST_PAGE_NON_NUMERIC.send(sender, Messaging.buildContext("page", args.getString(1)));
+						return;
+					}
+				}
+				
+				// Filter
+				String filter = args.getString(0).toLowerCase();
+				List<String> temp = new ArrayList<String>();
+				for (String product : lines) {
+					if (product.toLowerCase().contains(filter)) {
+						temp.add(product);
+					}
+				}
+				
+				lines = temp.toArray(new String[temp.size()]);
 			}
-		    }
-
-		    // Filter
-		    String filter = args.getString(0).toLowerCase();
-		    List<String> temp = new ArrayList<String>();
-		    for (String product : lines) {
-			if (product.toLowerCase().contains(filter)) {
-			    temp.add(product);
-			}
-		    }
-
-		    lines = temp.toArray(new String[temp.size()]);
 		}
+		
+		if (page < 1) {
+			Message.LIST_PAGE_NEGATIVE.send(sender, Messaging.buildContext("page", "" + page));
+			return;
+		}
+		
+		int bound = Math.min(page * 8, lines.length);
+		int startIndex = (page - 1) * 8;
+		
+		if (startIndex > bound) {
+			Message.LIST_PAGE_TOO_HIGH.send(sender, Messaging.buildContext("page", "" + page));
+			return;
 	    }
-
-	    if (page < 1) {
-		Messaging.send(sender,
-			"{ERR}You must specify a positive page number!");
-		return;
-	    }
-
-	    int bound = Math.min(page * 8, lines.length);
-	    int startIndex = (page - 1) * 8;
-
-	    if (startIndex > bound) {
-		Messaging.send(sender, "{ERR}There aren't that many pages!");
-		return;
-	    }
-
-	    lines = Arrays.copyOfRange(lines, startIndex, bound);
-
-	    if (lines.length == 0) {
-		Messaging.send(sender, "{ERR}No such products found.");
-		return;
-	    }
-
-	    Messaging.send(sender, lines);
-	} catch (IllegalArgumentException e) {
-	    e.printStackTrace();
+		
+		lines = Arrays.copyOfRange(lines, startIndex, bound);
+		
+		if (lines.length == 0) {
+			Message.LIST_NO_RESULTS.send(sender, Messaging.buildContext("page, " + page));
+			return;
+		}
+		
+		Messaging.send(sender, lines);
 	}
-    }
 
     @Command(aliases = { "reload" }, desc = "Restarts the plugin", min = 0, max = 0)
     @CommandPermissions("admin")
     public static void reload(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
-		+ " has issued the reload command; reloading.");
+		+ " has issued the reload command; reloading."); //TODO: Add all logging to messages.yml.
 	plugin.onDisable();
 	plugin.onEnable();
-	sender.sendMessage(plugin.getDescription().getName() + " Reloaded."); // TODO: Add to messages.yml and Message.
+	Message.RELOAD.send(sender);
     }
 
     @Command(aliases = { "remove", "r" }, desc = "Removes an item from the shop", usage = "<id>[:<subType>]", min = 1, max = 1)
@@ -424,8 +412,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    shop.remove(product);
 	    plugin.getDatabase().delete(product);
 
-	    Messaging.send(sender, args.getString(0) + " is no longer sold at "
-		    + shop.getName() + "."); // TODO: Add to messages.yml and Message.
+	    Message.REMOVE_SUCCESS.send(sender, Messaging.buildContext("product", args.getString(0), "shop", shop.getName()));
 	} catch (IllegalArgumentException e) {
 	    sender.sendMessage(e.getMessage());
 	    return;
@@ -449,7 +436,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    }
 	    new Transaction(plugin, amount, (Player) sender, args.getString(0));
 	} catch (NumberFormatException e) {
-	    sender.sendMessage(args.getString(1) + " is not a valid amount!"); // TODO: Add to messages.yml and Message.
+	    Message.TRANSACTION_AMOUNT_NON_NUMERIC.send(sender, Messaging.buildContext("amount", "" + args.getInteger(1)));
 	}
     }
 
@@ -511,9 +498,9 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		product.setMinStock(Format.parseInteger(properties
 			.get("minstock")));
 	    }
-	    Messaging.send(sender, "{}" + args.getString(0) + " updated.");
+	    Message.UPDATE_SUCCESS.send(sender, Messaging.buildContext("product", args.getString(0)));
 	} catch (NumberFormatException e) {
-	    Messaging.send(sender, "{ERR}Invalid flags; some of the updates may have been successful!");
+	    Message.UPDATE_FLAG_NON_NUMERIC.send(sender, Messaging.buildContext("product", args.getString(0)));
 	} catch (IllegalArgumentException e) {
 	    sender.sendMessage(e.getMessage());
 	} finally {
@@ -521,12 +508,14 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    // Finally will still try to save any changes.
 	    // plugin.getDatabase().update(product);
 	    // We must still save the product, in case earlier flags were successful.
+	    // TODO: Figure this out.
 	}
     }
 
     @Deprecated
     @Command(aliases = { "importold" }, desc = "Imports a .csv in the original format.", min = 0, max = 0)
     @CommandPermissions("admin")
+    // This function does not have entries in the messages.yml.
     public static void importOldDB(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
 	plugin.log(Level.INFO, sender.getName()
