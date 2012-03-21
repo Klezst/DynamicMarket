@@ -1,0 +1,7 @@
+# Valid levels: CONFIG, FINE, FINER, FINEST, INFO, SEVERE, WARNING.
+export:
+  level: "INFO"
+  message: "$player$ issued the export command; exporting to $filepath$"
+import:
+  level: "INFO"
+  message: "$player$ issued the import command; importing from $filepath$"

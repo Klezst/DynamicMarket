@@ -28,10 +28,11 @@ import com.sk89q.minecraft.util.commands.MissingNestedCommandException;
 import com.sk89q.minecraft.util.commands.WrappedCommandException;
 
 import dynamicmarket.command.Commands;
+import dynamicmarket.configuration.Log;
+import dynamicmarket.configuration.Message;
+import dynamicmarket.configuration.Setting;
 import dynamicmarket.util.IO;
-import dynamicmarket.util.Message;
 import dynamicmarket.util.MyDatabase;
-import dynamicmarket.util.Setting;
 
 public class DynamicMarket extends BukkitUtilJavaPlugin {
     public static final double DDM_MAXVALUE = 999999999.99;
@@ -46,6 +47,18 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	super("[DynamicMarket]");
     }
 
+    /**
+     * Disables the plugin.
+     * NOTE: This will still return to the calling method and finish execution!
+     * 
+     * @param errors
+     * 		Messages to log.
+     */
+    private void disable(String errors) {
+	this.log(Level.SEVERE, errors);
+	this.getServer().getPluginManager().disablePlugin(this);
+    }
+    
     // Method template by LennardF1989
     @Override
     public EbeanServer getDatabase() {
@@ -78,14 +91,14 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
     @Override
     public void onDisable() {
-	log(Level.INFO, "Disabled.");
+	log(Level.INFO, "Disabled."); // This cannot be migrated to logs.yml because, it still executes, if Log fails to validate.
     }
 
     @Override
     public void onEnable() {
 	PluginManager pm = getServer().getPluginManager();
 
-	DynamicMarket.INSTANCE = this;
+	DynamicMarket.INSTANCE = this; // TODO: Remove this variable.
 
 	// Setup commands.
 	this.commandsManager = new CommandsManager<CommandSender>() {
@@ -102,15 +115,21 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
 	// Extract files.
 	try {
-	    bukkitutil.util.IO.extract(this, "config.yml", "messages.yml", "shops.csv",
-		    "LICENSE.txt");
+	    bukkitutil.util.IO.extract(this, "config.yml", "logs.yml", "messages.yml",
+		    "shops.csv", "LICENSE.txt");
 	} catch (IOException e) {
-	    log(Level.SEVERE, "Error extracting resources; disabling.");
+	    this.disable("Error extracting resources; disabling.");
 	    e.printStackTrace();
-	    pm.disablePlugin(this);
 	    return;
 	}
 
+	// Load & validate log configuration.
+	String errors = Log.validate();
+	if (errors != null) {
+	    disable(errors);
+	    return;
+	}
+	
 	// Load & validate messages.
 	try {
 	    new Settings(Message.getConfig(), Message.values());
@@ -140,10 +159,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    log(Level.INFO, "Empty database; loading defaults from shops.csv.");
 	    this.market = new Market();
 	    if (!importDB()) {
-		log(Level.SEVERE, "Database import failed on first run!");
-		log(Level.INFO,
-			"\tTry deleting plugins/DynamicMarket/shops.csv.");
-		pm.disablePlugin(this);
+		this.disable("Database import failed on first run!\n\tTry deleting plugins/DynamicMarket/shops.csv.");
 		return;
 	    }
 	} else {
@@ -214,8 +230,6 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	for (Shop shop : shops) {
 	    getDatabase().save(shop);
 	}
-
-	log(Level.INFO, "Import successful.");
 	return true;
     }
 }

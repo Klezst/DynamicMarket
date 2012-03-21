@@ -6,7 +6,7 @@ custom_colors:
   PRM: GOLD
   BKT: LIGHT_PURPLE
 add:
-  #Available variables: item and shop.
+  # Available variables: item and shop.
   success: "{PRM}$item$ {NRM}is now for sale at {PRM}$shop${NRM}."
 buy:
   too_much: "{ERR}You cannot buy that much at once."
@@ -131,7 +131,7 @@ import:
   failure: "{ERR}Import FAILED!"
   success: "{NRM}Import successful."
 list:
-  #Available variables: page.
+  # Available variables: page.
   no_results: "{ERR}No such products are available!"
   page:
     negative: "{ERR}You must specify a positive page number!"
@@ -139,16 +139,16 @@ list:
     too_high: "{ERR}There aren't that many pages!"
 reload: "{NRM}DynamicMarket has successfuly reloaded."
 remove:
-  #Available variables: product and shop.
+  # Available variables: product and shop.
   success: "{PRM}$product$ {NRM} is no longer sold at {PRM}$shop${NRM}."
 sell:
   no_space: "{ERR}The shop doesn't have enough of that to sell to you."
 transaction:
-  #Available variables: amount.
+  # Available variables: amount.
   amount:
     non_numeric: "{PRM}$amount$ {ERR}is not a valid amount!"
 update:
-  #Available variables: product.
+  # Available variables: product.
   success: "{PRM}$product$ {NRM}has been successfully updated."
   flag:
     non_numeric: "{ERR}Invalid flags, some of the update may have been successful."

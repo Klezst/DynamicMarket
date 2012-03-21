@@ -35,8 +35,8 @@ import bukkitutil.util.Util;
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
 
-import dynamicmarket.util.Message;
-import dynamicmarket.util.Setting;
+import dynamicmarket.configuration.Message;
+import dynamicmarket.configuration.Setting;
 
 @Entity
 @Table(name = "dm_transactions")

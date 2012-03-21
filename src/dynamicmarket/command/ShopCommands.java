@@ -42,9 +42,10 @@ import dynamicmarket.DynamicMarket;
 import dynamicmarket.Product;
 import dynamicmarket.Shop;
 import dynamicmarket.Transaction;
+import dynamicmarket.configuration.Log;
+import dynamicmarket.configuration.Message;
+import dynamicmarket.configuration.Setting;
 import dynamicmarket.util.IO;
-import dynamicmarket.util.Message;
-import dynamicmarket.util.Setting;
 
 public class ShopCommands // TODO: All shop modification/creation/deletion commands.
 {
@@ -83,8 +84,8 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("admin")
     public static void exportDB(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	plugin.log(Level.INFO, sender.getName()
-		+ " has issued the exportDB command; exporting.");
+	Log.EXPORT.log(Messaging.buildContext("player", sender.getName(),
+		"filepath", plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class)));
 	
 	String filePath = plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class);
 	try {
@@ -290,6 +291,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("admin")
     public static void importDB(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
+	Log.IMPORT.log(Messaging.buildContext("player", sender.getName(), "filepath", plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class)));
 	if (plugin.importDB()) {
 	    Message.IMPORT_SUCCESS.send(sender);
 	} else {

@@ -39,6 +39,7 @@ import dynamicmarket.DynamicMarket;
 import dynamicmarket.Market;
 import dynamicmarket.Product;
 import dynamicmarket.Shop;
+import dynamicmarket.configuration.Setting;
 
 public class IO {
     final static int size = 1024;
