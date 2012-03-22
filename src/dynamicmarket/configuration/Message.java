@@ -1,8 +1,27 @@
+/*
+	DynamicMarket
+	Copyright (C) 2011 Klezst
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package dynamicmarket.configuration;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,7 +37,7 @@ import bukkitutil.util.Messaging;
  * 
  * @author Klezst
  */
-public enum Message implements Validatable {
+public enum Message {
     // Alphanumeric order.
     ADD_SUCCESS("add.success"),
     BUY_TOO_MUCH("buy.too_much"),
@@ -62,7 +81,7 @@ public enum Message implements Validatable {
     UPDATE_SUCCESS("update.success"),
     UPDATE_FLAG_NON_NUMERIC("update.flag.non_numeric");
     
-    private static final String FILEPATH = "plugins/DynamicMarket/messages.yml";
+    public static final String FILEPATH = "plugins/DynamicMarket/messages.yml";
     
     private static YamlConfiguration config = null;
 
@@ -105,6 +124,41 @@ public enum Message implements Validatable {
 	}
 	
 	return config;
+    }
+    
+    /**
+     * Validates config.
+     * 
+     * @return If config is valid, null; otherwise, a String that represents the errors.
+     * 
+     * @author Klezst
+     */
+    public static String validate() {
+	String errors = "";
+	
+	// Validate.
+	for (Message message : Message.values()) {
+	    if (message.getMessage().isEmpty()) {
+		errors += "\t\t" + message.getKey() + "\n";
+	    }
+	}
+	
+	if (!errors.isEmpty()) {
+	    errors.substring(0, errors.length() - 1); // Remove trailing newline.
+	    return errors;
+	}
+	return null;
+    }
+    
+    /**
+     * Returns key.
+     * 
+     * @return key.
+     * 
+     * @author Klezst
+     */
+    public String getKey() {
+	return this.key;
     }
     
     /**
@@ -153,22 +207,5 @@ public enum Message implements Validatable {
 	for (String line : msg.split("\n")) {
 	    sender.sendMessage(line);
 	}
-    }
-    
-    // Validation functions.
-    @Override
-    public String getKey() {
-	return key;
-    }
-
-    @Override
-    public Class<?> getType() {
-	return String.class;
-    }
-
-    @Override
-    public Object validate(Object value) throws InvalidSettingException,
-	    InvalidSettingsException {
-	return value;
     }
 }

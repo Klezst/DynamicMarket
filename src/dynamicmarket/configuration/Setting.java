@@ -33,6 +33,8 @@ public enum Setting implements Validatable {
     IMPORT_EXPORT_PATH("import-export-path", String.class),
     TRANSACTION_LOGGING("transaction-logging", Boolean.class);
 
+    public static final String FILEPATH = "plugins/DynamicMarket/settings.yml";
+    
     private String key;
     private Class<?> type;
 

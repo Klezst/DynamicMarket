@@ -1,5 +1,5 @@
 /*
-	Shopaholic
+	DynamicMarket
 	Copyright (C) 2011 Klezst
 
 	This program is free software: you can redistribute it and/or modify

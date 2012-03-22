@@ -1,3 +1,21 @@
+/*
+	DynamicMarket
+	Copyright (C) 2011 Klezst
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package dynamicmarket;
 
 import java.io.IOException;
@@ -16,6 +34,7 @@ import bukkitutil.configuration.InvalidSettingsException;
 import bukkitutil.configuration.Settings;
 import bukkitutil.configuration.Validatable;
 import bukkitutil.util.Logging;
+import bukkitutil.util.Messaging;
 import bukkitutil.util.Util;
 
 import com.avaje.ebean.EbeanServer;
@@ -36,7 +55,6 @@ import dynamicmarket.util.MyDatabase;
 
 public class DynamicMarket extends BukkitUtilJavaPlugin {
     public static final double DDM_MAXVALUE = 999999999.99;
-    public static DynamicMarket INSTANCE;
 
     private Market market;
     private MyDatabase database;
@@ -45,18 +63,6 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
     public DynamicMarket() {
 	super("[DynamicMarket]");
-    }
-
-    /**
-     * Disables the plugin.
-     * NOTE: This will still return to the calling method and finish execution!
-     * 
-     * @param errors
-     * 		Messages to log.
-     */
-    private void disable(String errors) {
-	this.log(Level.SEVERE, errors);
-	this.getServer().getPluginManager().disablePlugin(this);
     }
     
     // Method template by LennardF1989
@@ -91,14 +97,12 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
     @Override
     public void onDisable() {
-	log(Level.INFO, "Disabled."); // This cannot be migrated to logs.yml because, it still executes, if Log fails to validate.
+	log(Level.INFO, "Disabled."); // Cannot go though Log, since Log necessarily is not validated yet.
     }
 
     @Override
     public void onEnable() {
 	PluginManager pm = getServer().getPluginManager();
-
-	DynamicMarket.INSTANCE = this; // TODO: Remove this variable.
 
 	// Setup commands.
 	this.commandsManager = new CommandsManager<CommandSender>() {
@@ -110,34 +114,28 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	};
 	this.commandsManager.register(Commands.class);
 
-	// Set up directory.
-	getDataFolder().mkdirs();
-
 	// Extract files.
 	try {
 	    bukkitutil.util.IO.extract(this, "config.yml", "logs.yml", "messages.yml",
 		    "shops.csv", "LICENSE.txt");
 	} catch (IOException e) {
-	    this.disable("Error extracting resources; disabling.");
-	    e.printStackTrace();
+	    log(Level.SEVERE, "Error extracting resources; disabling:\n\t" + e.getMessage()); // Cannot go though Log, since Log is not validated yet.
 	    return;
 	}
 
-	// Load & validate log configuration.
+	// Load & validate logs.
 	String errors = Log.validate();
 	if (errors != null) {
-	    disable(errors);
+	    log(Level.SEVERE, errors);
+	    this.getServer().getPluginManager().disablePlugin(this);
 	    return;
 	}
 	
 	// Load & validate messages.
-	try {
-	    new Settings(Message.getConfig(), Message.values());
-	} catch (InvalidSettingsException e) {
-	    log(Level.SEVERE, "Invalid messages.yml:");
-	    e.printExceptions(Logging.getLogger(), "["
-		    + getDescription().getName() + "]\t");
-	    pm.disablePlugin(this);
+	errors = Message.validate();
+	if (errors != null) {
+	    Log.CONFIG_INVALID_MESSAGES.log(Messaging.buildContext("errors", errors, "filepath", Message.FILEPATH));
+	    this.getServer().getPluginManager().disablePlugin(this);
 	    return;
 	}
 	
@@ -159,7 +157,8 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    log(Level.INFO, "Empty database; loading defaults from shops.csv.");
 	    this.market = new Market();
 	    if (!importDB()) {
-		this.disable("Database import failed on first run!\n\tTry deleting plugins/DynamicMarket/shops.csv.");
+		Log.IMPORT_FAILURE_INITIAL.log();
+		this.getServer().getPluginManager().disablePlugin(this);
 		return;
 	    }
 	} else {
