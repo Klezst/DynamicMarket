@@ -182,7 +182,7 @@ public class Transaction {
 	    this.volume = newVolume;
 	    this.price = newPrice;
 
-	    if (plugin.getSetting(Setting.TRANSACTION_LOGGING, Boolean.class)) {
+	    if (Setting.TRANSACTION_LOGGING.getValue(Boolean.class)) {
 		plugin.getDatabase().save(this);
 	    }
 

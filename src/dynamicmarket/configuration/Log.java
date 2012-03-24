@@ -37,6 +37,7 @@ import bukkitutil.util.Messaging;
 public enum Log {
     // Alphanumeric order.
     CONFIG_INVALID_MESSAGES("config.invalid.messages"),
+    CONFIG_INVALID_SETTINGS("config.invalid.settings"),
     EXPORT("export"),
     IMPORT("import"),
     IMPORT_FAILURE_INITIAL("import.failure.initial");

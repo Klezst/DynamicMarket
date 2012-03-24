@@ -18,10 +18,15 @@
 
 package dynamicmarket.configuration;
 
+import java.io.File;
+
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
 import bukkitutil.configuration.Validatable;
 
 
-public enum Setting implements Validatable {
+public enum Setting implements Validatable<Object> {
     // Do not use primitive data types or null.
     VERSION("version", Double.class), // Double.class is the class of the type of data you expect to get from the config.yml.
     DRIVER("database.driver", String.class),
@@ -30,22 +35,31 @@ public enum Setting implements Validatable {
     PASSWORD("database.password", String.class),
     ISOLATION("database.isolation", String.class),
     LOGGING("database.logging", Boolean.class),
-    IMPORT_EXPORT_PATH("import-export-path", String.class),
-    TRANSACTION_LOGGING("transaction-logging", Boolean.class);
-
+    IMPORT_EXPORT_PATH("import_export_path", String.class),
+    TRANSACTION_LOGGING("transaction_logging", Boolean.class);
+    
     public static final String FILEPATH = "plugins/DynamicMarket/settings.yml";
     
-    private String key;
-    private Class<?> type;
+    private String key = null;
+    private Class<?> type = null;
+    private Object value = null;
 
     private Setting(String key, Class<?> type) {
 	this.key = key;
 	this.type = type;
     }
+    
+    public static FileConfiguration getConfig() {
+	return YamlConfiguration.loadConfiguration(new File(FILEPATH));
+    }
 
-    @Override
     public String getKey() {
 	return this.key;
+    }
+    @Override
+    public String[] getKeys() {
+	String[] keys = {this.getKey()};
+	return keys;
     }
 
     @Override
@@ -53,8 +67,33 @@ public enum Setting implements Validatable {
 	return this.type;
     }
 
+    /**
+     * Returns a setting's value.
+     * 
+     * @param type
+     * 		The Class of the setting
+     * 
+     * @return The value of the setting.
+     * 
+     * @throws NullPointerException
+     * 		If you did not properly validate this.
+     * @throws IllegalArgumentException
+     * 		If the setting is not of Class type.
+     * 
+     * @author Klezst
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getValue(Class<T> type) throws NullPointerException, IllegalArgumentException {
+	if (value.getClass().equals(type)) {
+	    return (T)value;
+	}
+	throw new IllegalArgumentException("Programmer error:\n\tThe setting " + this.name()
+		+ " is not a " + type.getSimpleName() + ".");
+    }
+    
     @Override
-    public Object validate(Object value) {
-	return value;
+    public String set(String key, Object value) {
+	this.value = value;
+	return null;
     }
 }

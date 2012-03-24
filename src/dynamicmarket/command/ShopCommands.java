@@ -85,9 +85,9 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     public static void exportDB(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
 	Log.EXPORT.log(Messaging.buildContext("player", sender.getName(),
-		"filepath", plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class)));
+		"filepath", Setting.IMPORT_EXPORT_PATH.getValue(String.class)));
 	
-	String filePath = plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class);
+	String filePath = Setting.IMPORT_EXPORT_PATH.getValue(String.class);
 	try {
 	    IO.dumpToCSV(
 		    filePath,
@@ -291,7 +291,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("admin")
     public static void importDB(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	Log.IMPORT.log(Messaging.buildContext("player", sender.getName(), "filepath", plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class)));
+	Log.IMPORT.log(Messaging.buildContext("player", sender.getName(), "filepath", Setting.IMPORT_EXPORT_PATH.getValue(String.class)));
 	if (plugin.importDB()) {
 	    Message.IMPORT_SUCCESS.send(sender);
 	} else {
@@ -524,7 +524,7 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		+ " has issued the importOld command; importing.");
 	try {
 	    IO.importOld(plugin,
-		    plugin.getSetting(Setting.IMPORT_EXPORT_PATH, String.class)
+		    Setting.IMPORT_EXPORT_PATH.getValue(String.class)
 			    + "shopDB.csv");
 	} catch (IOException e) {
 	    plugin.log(Level.WARNING, e.getMessage());

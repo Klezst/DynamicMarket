@@ -21,14 +21,11 @@ package dynamicmarket.configuration;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import bukkitutil.configuration.InvalidSettingException;
-import bukkitutil.configuration.InvalidSettingsException;
 import bukkitutil.configuration.Validatable;
 import bukkitutil.util.Messaging;
 
@@ -37,7 +34,7 @@ import bukkitutil.util.Messaging;
  * 
  * @author Klezst
  */
-public enum Message {
+public enum Message implements Validatable<String> {
     // Alphanumeric order.
     ADD_SUCCESS("add.success"),
     BUY_TOO_MUCH("buy.too_much"),
@@ -82,96 +79,36 @@ public enum Message {
     UPDATE_FLAG_NON_NUMERIC("update.flag.non_numeric");
     
     public static final String FILEPATH = "plugins/DynamicMarket/messages.yml";
-    
-    private static YamlConfiguration config = null;
 
     private String key;
     private String message;
 
-    private Message(String key)
-    {
+    private Message(String key) {
 	this.key = key;
-	this.message = Messaging.parseColor(getConfig().getString(key, "")); // We cannot use config directly in the constructor because the compiler thinks it's not initialized yet (it gets initialized in getConfig()).
+	this.message = null;
     }
 
-    /**
-     * We cannot use config directly in the constructor because the compiler thinks it's not initialized yet. Initializes config.
-     * 
-     * @return config.
-     * 
-     * @author Klezst
-     */
-    public static YamlConfiguration getConfig()
-    {
-	if (config != null) // We already initialized.
-	{
-	    return config;
-	}
-	
-	config = YamlConfiguration.loadConfiguration(new File(
-		FILEPATH));
-
-	// Load custom chat colors.
-	ConfigurationSection section = config.getConfigurationSection("custom_colors");
-	if (section == null) // There are no custom colors.
-	{
-	    return config;
-	}
-	
-	for (Map.Entry<String, Object> entry : section.getValues(false).entrySet())
-	{
-	    Messaging.addColor(entry.getKey(), (String)entry.getValue());
-	}
-	
-	return config;
+    public static FileConfiguration getConfig() {
+	return YamlConfiguration.loadConfiguration(new File(FILEPATH));
     }
     
-    /**
-     * Validates config.
-     * 
-     * @return If config is valid, null; otherwise, a String that represents the errors.
-     * 
-     * @author Klezst
-     */
-    public static String validate() {
-	String errors = "";
-	
-	// Validate.
-	for (Message message : Message.values()) {
-	    if (message.getMessage().isEmpty()) {
-		errors += "\t\t" + message.getKey() + "\n";
-	    }
-	}
-	
-	if (!errors.isEmpty()) {
-	    errors.substring(0, errors.length() - 1); // Remove trailing newline.
-	    return errors;
-	}
-	return null;
-    }
-    
-    /**
-     * Returns key.
-     * 
-     * @return key.
-     * 
-     * @author Klezst
-     */
     public String getKey() {
 	return this.key;
     }
     
-    /**
-     * Returns message.
-     * 
-     * @return message.
-     * 
-     * @author Klezst
-     */
+    public String[] getKeys() {
+	String[] keys = {this.key};
+	return keys;
+    }
+
     public String getMessage() {
 	return this.message;
     }
 
+    public Class<?> getType() {
+	return String.class;
+    }
+    
     /**
      * Sends the Message to sender.
      * 
@@ -207,5 +144,10 @@ public enum Message {
 	for (String line : msg.split("\n")) {
 	    sender.sendMessage(line);
 	}
+    }
+    
+    public String set(String key, String value) {
+	this.message = value.toString();
+	return null;
     }
 }

@@ -6,5 +6,5 @@ database:
   password: walrus
   isolation: SERIALIZABLE
   logging: false
-import-export-path: plugins\DynamicMarket\ # Location of shops.csv.
-transaction-logging: true # Logs transactions in the database table "transactions".
+import_export_path: plugins\DynamicMarket\ # Location of shops.csv.
+transaction_logging: true # Logs transactions in the database table "transactions".

@@ -26,14 +26,10 @@ import java.util.logging.Level;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 
 import bukkitutil.BukkitUtilJavaPlugin;
 import bukkitutil.compatibility.Permission;
-import bukkitutil.configuration.InvalidSettingsException;
-import bukkitutil.configuration.Settings;
-import bukkitutil.configuration.Validatable;
-import bukkitutil.util.Logging;
+import bukkitutil.configuration.Validation;
 import bukkitutil.util.Messaging;
 import bukkitutil.util.Util;
 
@@ -58,7 +54,6 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
     private Market market;
     private MyDatabase database;
-    private Settings settings;
     private CommandsManager<CommandSender> commandsManager;
 
     public DynamicMarket() {
@@ -85,12 +80,12 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    }
 	};
 	this.database.initializeDatabase(
-		getSetting(Setting.DRIVER, String.class),
-		getSetting(Setting.URL, String.class),
-		getSetting(Setting.USERNAME, String.class),
-		getSetting(Setting.PASSWORD, String.class),
-		getSetting(Setting.ISOLATION, String.class),
-		getSetting(Setting.LOGGING, Boolean.class), false // If an update to database structure is done, a function to determine whether or not to rebuild is be written.
+		Setting.DRIVER.getValue(String.class),
+		Setting.URL.getValue(String.class),
+		Setting.USERNAME.getValue(String.class),
+		Setting.PASSWORD.getValue(String.class),
+		Setting.ISOLATION.getValue(String.class),
+		Setting.LOGGING.getValue(Boolean.class), false // If an update to database structure is done, a function to determine whether or not to rebuild is be written.
 		);
 	this.database.getDatabase().getAdminLogging().setLogLevel(LogLevel.SQL);
     }
@@ -102,8 +97,6 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
     @Override
     public void onEnable() {
-	PluginManager pm = getServer().getPluginManager();
-
 	// Setup commands.
 	this.commandsManager = new CommandsManager<CommandSender>() {
 	    @Override
@@ -116,7 +109,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 
 	// Extract files.
 	try {
-	    bukkitutil.util.IO.extract(this, "config.yml", "logs.yml", "messages.yml",
+	    bukkitutil.util.IO.extract(this, "logs.yml", "messages.yml", "settings.yml",
 		    "shops.csv", "LICENSE.txt");
 	} catch (IOException e) {
 	    log(Level.SEVERE, "Error extracting resources; disabling:\n\t" + e.getMessage()); // Cannot go though Log, since Log is not validated yet.
@@ -132,24 +125,20 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	}
 	
 	// Load & validate messages.
-	errors = Message.validate();
-	if (errors != null) {
+	errors = Validation.validate(Message.getConfig(), Message.values());
+	if (!errors.isEmpty()) {
 	    Log.CONFIG_INVALID_MESSAGES.log(Messaging.buildContext("errors", errors, "filepath", Message.FILEPATH));
 	    this.getServer().getPluginManager().disablePlugin(this);
 	    return;
 	}
 	
 	// Load & validate settings.
-	try {
-	    this.settings = new Settings(getConfig(), Setting.values());
-	} catch (InvalidSettingsException e) {
-	    log(Level.SEVERE, "Invalid config.yml:");
-	    e.printExceptions(Logging.getLogger(), "["
-		    + getDescription().getName() + "]\t");
-	    pm.disablePlugin(this);
+	errors = Validation.validate(Setting.getConfig(), Setting.values());
+	if (!errors.isEmpty()) {
+	    Log.CONFIG_INVALID_SETTINGS.log(Messaging.buildContext("errors", "" + errors, "filepath", Setting.FILEPATH));
+	    this.getServer().getPluginManager().disablePlugin(this);
 	    return;
 	}
-	
 	// Setup & load database.
 	initializeDatabase();
 	List<Shop> shops = getDatabase().find(Shop.class).findList();
@@ -203,15 +192,11 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	return this.market;
     }
 
-    public <T> T getSetting(Validatable setting, Class<T> type) {
-	return this.settings.getSetting(setting, type);
-    }
-
     public boolean importDB() {
 	List<Shop> shops;
 	try {
 	    shops = IO.inhaleFromCSV(
-		    getSetting(Setting.IMPORT_EXPORT_PATH, String.class),
+		    Setting.IMPORT_EXPORT_PATH.getValue(String.class),
 		    "shops.csv"); // throws IOException
 	} catch (IOException e) {
 	    log(Level.WARNING, e.getMessage());

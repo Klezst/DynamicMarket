@@ -4,7 +4,10 @@ config:
   invalid:
     messages:
       level: "SEVERE"
-      message: "Invalid $filepath$:\n\tInvalid keys:\n$errors$"
+      message: "Invalid $filepath$:\nInvalid keys:\n$errors$"
+    settings:
+      level: "SEVERE"
+      message: "Invalid $filepath$:\nInvalid keys:\n$errors$"
 export:
   # Available variables: player, filepath.
   level: "INFO"
