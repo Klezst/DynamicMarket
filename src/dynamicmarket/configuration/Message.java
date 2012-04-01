@@ -96,17 +96,15 @@ public enum Message implements Validatable<String> {
 	return this.key;
     }
     
-    public String[] getKeys() {
-	String[] keys = {this.key};
+    @Override
+    public Map<String, Class<?>> getTypes() {
+	Map<String, Class<?>> keys = new HashMap<String, Class<?>>();
+	keys.put(this.key, String.class);
 	return keys;
     }
 
     public String getMessage() {
 	return this.message;
-    }
-
-    public Class<?> getType() {
-	return String.class;
     }
     
     /**

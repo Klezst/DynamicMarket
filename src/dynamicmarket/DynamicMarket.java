@@ -117,9 +117,9 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	}
 
 	// Load & validate logs.
-	String errors = Log.validate();
-	if (errors != null) {
-	    log(Level.SEVERE, errors);
+	String errors = Validation.validate(Log.getConfig(), Log.values()); // Migrate paramaters to the Validatable class.
+	if (!errors.isEmpty()) {
+	    log(Level.SEVERE, "Invalid " + Log.FILEPATH + "; Invalid keys:", errors);
 	    this.getServer().getPluginManager().disablePlugin(this);
 	    return;
 	}
@@ -139,6 +139,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    this.getServer().getPluginManager().disablePlugin(this);
 	    return;
 	}
+	
 	// Setup & load database.
 	initializeDatabase();
 	List<Shop> shops = getDatabase().find(Shop.class).findList();

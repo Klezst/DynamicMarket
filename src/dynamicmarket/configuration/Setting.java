@@ -19,6 +19,8 @@
 package dynamicmarket.configuration;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -56,15 +58,12 @@ public enum Setting implements Validatable<Object> {
     public String getKey() {
 	return this.key;
     }
+    
     @Override
-    public String[] getKeys() {
-	String[] keys = {this.getKey()};
+    public Map<String, Class<?>> getTypes() {
+	Map<String, Class<?>> keys = new HashMap<String, Class<?>>();
+	keys.put(this.key, this.type);
 	return keys;
-    }
-
-    @Override
-    public Class<?> getType() {
-	return this.type;
     }
 
     /**

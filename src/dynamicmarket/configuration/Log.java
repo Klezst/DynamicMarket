@@ -19,22 +19,23 @@
 package dynamicmarket.configuration;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import bukkitutil.configuration.Validatable;
 import bukkitutil.util.Logging;
 import bukkitutil.util.Messaging;
 
 /**
  * Handles logging.
- * NOTE: You should always initialize this class by using validate(). If validate() does not return null, do not use this class!
  * 
  * @author Klezst
  */
-public enum Log {
+public enum Log implements Validatable<String> {
     // Alphanumeric order.
     CONFIG_INVALID_MESSAGES("config.invalid.messages"),
     CONFIG_INVALID_SETTINGS("config.invalid.settings"),
@@ -47,8 +48,6 @@ public enum Log {
     private static final String LEVEL_KEY = ".level";
     private static final String MESSAGE_KEY = ".message";
     private static final String PREFIX = "[DynamicMarket] ";
-    
-    private static YamlConfiguration config = null;
 
     private String key = null;
     private Level level = null;
@@ -56,75 +55,18 @@ public enum Log {
 
     private Log(String key)
     {
-	YamlConfiguration file = getConfig(); // We cannot use config directly in the constructor because the compiler thinks it's not initialized yet (it gets initialized in getConfig()).
 	this.key = key;
-	this.message = file.getString(this.getMessageKey(), ""); // TODO: Strip color.
-	
-	// Parse level.
-	try {
-	    this.level = Level.parse(file.getString(this.getLevelKey(), ""));
-	} catch (IllegalArgumentException e) {
-	    this.level = null;
-	}
     }
 
     /**
-     * We cannot use config directly in the constructor because the compiler thinks it's not initialized yet. Initializes config.
+     * Returns config.
      * 
      * @return config.
      * 
      * @author Klezst
      */
-    public static YamlConfiguration getConfig()
-    {
-	if (config != null) // We already initialized.
-	{
-	    return config;
-	}
-	
-	config = YamlConfiguration.loadConfiguration(new File(FILEPATH));
-
-	// Load custom chat colors.
-	ConfigurationSection section = config.getConfigurationSection("custom_colors");
-	if (section == null) // There are no custom colors.
-	{
-	    return config;
-	}
-	
-	for (Map.Entry<String, Object> entry : section.getValues(false).entrySet())
-	{
-	    Messaging.addColor(entry.getKey(), (String)entry.getValue());
-	}
-	
-	return config;
-    }
-    
-    /**
-     * Validates config.
-     * 
-     * @return If config is valid, null; otherwise, a String that represents the errors.
-     * 
-     * @author Klezst
-     */
-    public static String validate() {
-	String errors = "";
-	
-	// Validate.
-	for (Log log : Log.values()) {
-	    if (log.getLevel() == null || log.getLevel() == Level.ALL || log.getLevel() == Level.OFF) {
-		errors += "\t\t" + log.getLevelKey() + "\n";
-	    }
-	    if (log.getMessage().isEmpty()) {
-		errors += "\t\t" + log.getMessageKey() + "\n";
-	    }
-	}
-	
-	if (!errors.isEmpty()) {
-	    errors = "Invalid " + FILEPATH + ":\n\tInvalid keys:\n" + errors;
-	    errors.substring(0, errors.length() - 1); // Remove trailing newline.
-	    return errors;
-	}
-	return null;
+    public static FileConfiguration getConfig() {
+	return YamlConfiguration.loadConfiguration(new File(FILEPATH));
     }
 
     /**
@@ -182,6 +124,14 @@ public enum Log {
 	return this.getKey() + Log.MESSAGE_KEY;
     }
     
+    @Override
+    public Map<String, Class<?>> getTypes() {
+	Map<String, Class<?>> keys = new HashMap<String, Class<?>>();
+	keys.put(this.getMessageKey(), String.class);
+	keys.put(this.getLevelKey(), String.class);
+	return keys;
+    }
+    
     /**
      * Logs messages. Each line will have PREFIX added before it.
      * 
@@ -205,5 +155,19 @@ public enum Log {
     public void log(Map<String, String> context) throws NullPointerException {
 	String msg = Messaging.replace(this.message, context, "$", "$"); // TODO: Migrate "$" and "$" to constants.
 	Logging.prefixLog(this.level, PREFIX, msg);
+    }
+    
+    @Override
+    public String set(String key, String value) throws IllegalArgumentException {
+	if (key.equals(this.getLevelKey())) {
+	    // Parse level.
+	    this.level = Level.parse(value);
+	    if (this.level == Level.ALL || this.level == Level.OFF) {
+		return "May not be \"ALL\" or \"OFF\"";
+	    }
+	} else {
+	    message = value; // TODO: Strip color.
+	}
+	return null;
     }
 }
