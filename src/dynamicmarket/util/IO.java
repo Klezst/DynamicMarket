@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket.util;
 
@@ -33,7 +33,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-import bukkitutil.util.Format;
+import com.gmail.klezst.bukkit.bukkitutil.util.Format;
 
 import dynamicmarket.DynamicMarket;
 import dynamicmarket.Market;

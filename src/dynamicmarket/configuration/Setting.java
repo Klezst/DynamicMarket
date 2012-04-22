@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket.configuration;
 
@@ -25,7 +25,7 @@ import java.util.Map;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import bukkitutil.configuration.Validatable;
+import com.gmail.klezst.bukkit.bukkitutil.configuration.Validatable;
 
 
 public enum Setting implements Validatable<Object> {

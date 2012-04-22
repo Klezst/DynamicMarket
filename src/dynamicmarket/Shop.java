@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket;
 
@@ -30,8 +30,8 @@ import javax.persistence.Table;
 import org.bukkit.Location;
 import org.bukkit.material.MaterialData;
 
-import bukkitutil.util.Format;
-import bukkitutil.util.Messaging;
+import com.gmail.klezst.bukkit.bukkitutil.util.Format;
+import com.gmail.klezst.bukkit.bukkitutil.util.Messaging;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;

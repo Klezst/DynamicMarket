@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket;
 
@@ -27,11 +27,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import bukkitutil.BukkitUtilJavaPlugin;
-import bukkitutil.compatibility.Permission;
-import bukkitutil.configuration.Validation;
-import bukkitutil.util.Messaging;
-import bukkitutil.util.Util;
+import com.gmail.klezst.bukkit.bukkitutil.BukkitUtilJavaPlugin;
+import com.gmail.klezst.bukkit.bukkitutil.compatibility.Permission;
+import com.gmail.klezst.bukkit.bukkitutil.configuration.Validation;
+import com.gmail.klezst.bukkit.bukkitutil.util.Messaging;
+import com.gmail.klezst.bukkit.bukkitutil.util.Util;
 
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.LogLevel;
@@ -55,10 +55,6 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
     private Market market;
     private MyDatabase database;
     private CommandsManager<CommandSender> commandsManager;
-
-    public DynamicMarket() {
-	super("[DynamicMarket]");
-    }
     
     // Method template by LennardF1989
     @Override
@@ -108,14 +104,12 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	this.commandsManager.register(Commands.class);
 
 	// Extract files.
-	try {
-	    bukkitutil.util.IO.extract(this, "logs.yml", "messages.yml", "settings.yml",
-		    "shops.csv", "LICENSE.txt");
-	} catch (IOException e) {
-	    log(Level.SEVERE, "Error extracting resources; disabling:\n\t" + e.getMessage()); // Cannot go though Log, since Log is not validated yet.
-	    return;
-	}
-
+	this.saveResource("logs.yml", false);
+	this.saveResource("messages.yml", false);
+	this.saveResource("settings.yml", false);
+	this.saveResource("shops.csv", false);
+	this.saveResource("LICENSE.txt", false);
+	    
 	// Load & validate logs.
 	String errors = Validation.validate(Log.getConfig(), Log.values()); // Migrate paramaters to the Validatable class.
 	if (!errors.isEmpty()) {

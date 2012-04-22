@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket.configuration;
 
@@ -26,8 +26,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import bukkitutil.configuration.Validatable;
-import bukkitutil.util.Messaging;
+import com.gmail.klezst.bukkit.bukkitutil.configuration.Validatable;
+import com.gmail.klezst.bukkit.bukkitutil.util.Messaging;
 
 /**
  * Handles messaging.

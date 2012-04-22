@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket.configuration;
 
@@ -22,13 +22,14 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import bukkitutil.configuration.Validatable;
-import bukkitutil.util.Logging;
-import bukkitutil.util.Messaging;
+import com.gmail.klezst.bukkit.bukkitutil.configuration.Validatable;
+import com.gmail.klezst.bukkit.bukkitutil.util.Messaging;
 
 /**
  * Handles logging.
@@ -45,9 +46,9 @@ public enum Log implements Validatable<String> {
     
     public static final String FILEPATH = "plugins/DynamicMarket/logs.yml";
     
+    private static final Logger LOGGER = Bukkit.getServer().getPluginManager().getPlugin("DynamicMarket").getLogger();
     private static final String LEVEL_KEY = ".level";
     private static final String MESSAGE_KEY = ".message";
-    private static final String PREFIX = "[DynamicMarket] ";
 
     private String key = null;
     private Level level = null;
@@ -141,7 +142,7 @@ public enum Log implements Validatable<String> {
      * @author Klezst
      */
     public void log() {
-	Logging.prefixLog(this.level, PREFIX, this.message);
+	LOGGER.log(this.level, this.message);
     }
     
     /**
@@ -154,7 +155,7 @@ public enum Log implements Validatable<String> {
      */
     public void log(Map<String, String> context) throws NullPointerException {
 	String msg = Messaging.replace(this.message, context, "$", "$"); // TODO: Migrate "$" and "$" to constants.
-	Logging.prefixLog(this.level, PREFIX, msg);
+	LOGGER.log(this.level, msg);
     }
     
     @Override

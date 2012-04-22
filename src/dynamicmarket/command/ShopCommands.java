@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket.command;
 
@@ -29,10 +29,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.material.MaterialData;
 
-import bukkitutil.compatibility.Permission;
-import bukkitutil.util.Format;
-import bukkitutil.util.Messaging;
-import bukkitutil.util.Util;
+import com.gmail.klezst.bukkit.bukkitutil.compatibility.Permission;
+import com.gmail.klezst.bukkit.bukkitutil.util.Format;
+import com.gmail.klezst.bukkit.bukkitutil.util.Messaging;
+import com.gmail.klezst.bukkit.bukkitutil.util.Util;
 
 import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;

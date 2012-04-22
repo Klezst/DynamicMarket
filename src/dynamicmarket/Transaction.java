@@ -14,7 +14,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 package dynamicmarket;
 
@@ -28,9 +28,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 
-import bukkitutil.compatibility.Economy;
-import bukkitutil.util.Messaging;
-import bukkitutil.util.Util;
+import com.gmail.klezst.bukkit.bukkitutil.compatibility.Economy;
+import com.gmail.klezst.bukkit.bukkitutil.util.Messaging;
+import com.gmail.klezst.bukkit.bukkitutil.util.Util;
 
 import com.avaje.ebean.validation.NotEmpty;
 import com.avaje.ebean.validation.NotNull;
