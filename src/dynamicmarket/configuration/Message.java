@@ -34,11 +34,14 @@ import com.gmail.klezst.bukkit.bukkitutil.util.Messaging;
  * 
  * @author Klezst
  */
+// TODO: Export color handling to BukkitUtil.
 public enum Message implements Validatable<String> {
     // Alphanumeric order.
     ADD_SUCCESS("add.success"),
     BUY_TOO_MUCH("buy.too_much"),
     BUY_LOW_STOCK("buy.low_stock"),
+    COMMAND_PLAYER_ONLY("command.player_only"),
+    COMMAND_NEED_PERMISSION("command.need_permission"),
     EXPORT_FAILURE("export.failure"),
     EXPORT_SUCCESS("export.success"),
     HELP_ADD("help.add"),
@@ -71,7 +74,8 @@ public enum Message implements Validatable<String> {
     LIST_PAGE_NON_NUMERIC("list.page.non_numeric"),
     LIST_PAGE_NEGATIVE("list.page.negative"),
     LIST_PAGE_TOO_HIGH("list.page.too_high"),
-    RELOAD("reload"),
+    RELOAD_BEFORE("reload.before"),
+    RELOAD_AFTER("reload.after"),
     REMOVE_SUCCESS("remove.success"),
     SELL_NO_SPACE("sell.no_space"),
     TRANSACTION_AMOUNT_NON_NUMERIC("transaction.amount.non_numeric"),
@@ -119,7 +123,7 @@ public enum Message implements Validatable<String> {
      * @author Klezst
      */
     public void send(CommandSender sender) throws NullPointerException {
-	send(sender, new HashMap<String, String>());
+	this.send(sender, new HashMap<String, String>());
     }
 
     /**
@@ -138,10 +142,7 @@ public enum Message implements Validatable<String> {
     public void send(CommandSender sender, Map<String, String> context)
 	    throws NullPointerException {
 	String msg = Messaging.replace(this.message, context, "$", "$");
-
-	for (String line : msg.split("\n")) {
-	    sender.sendMessage(line);
-	}
+	Messaging.send(sender, msg);
     }
     
     public String set(String key, String value) {

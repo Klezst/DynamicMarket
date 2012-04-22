@@ -170,11 +170,7 @@ public class Product {
     }
 
     public void setMaxPrice(double maxPrice) {
-	if (maxPrice >= Double.MAX_VALUE) {
-	    this.maxPrice = DynamicMarket.DDM_MAXVALUE;
-	} else {
-	    this.maxPrice = maxPrice;
-	}
+	this.maxPrice = maxPrice;
     }
 
     public double getMinPrice() {

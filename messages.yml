@@ -6,14 +6,19 @@ custom_colors:
   PRM: GOLD
   BKT: LIGHT_PURPLE
 add:
-  # Available variables: item and shop.
+  # Available variables: item & shop.
   success: "{PRM}$item$ {NRM}is now for sale at {PRM}$shop${NRM}."
 buy:
   too_much: "{ERR}You cannot buy that much at once."
-  low_stock: "{ERR}We don't have enough in stock, sorry." 
+  low_stock: "{ERR}We don't have enough in stock, sorry."
+command:
+  player_only: "You must be logged in to issue that command."
+  # Available variables: player.
+  need_permission: "{ERR}You don't have permission to do that!"  
 export:
   # Available variables: filepath.
   failure: "{ERR}Database export FAILED!"
+  # Available variables: filepath.
   success: |
     {NRM}Database successfully exported to:
         $filepath$\shops.csv
@@ -26,9 +31,13 @@ help:
     {CMD}/shop buy {BKT}<{PRM{id{BKT}>[{CMD}:{BKT}<{PRM}subtype{BKT}>] [{PRM}amount{BKT}]
     {PRM}amount {NRM}is the number of bundles of the item you want to buy.
     {NRM}If no {PRM}amount {NRM}is specified it defaults to 1.
+  # Available variables: commands, shortcuts, & topics.
   default: |
     {CMD}/shop help {BKT}[{PRM}topic{BKT}]
     {NRM}Displays information about {PRM}topic{NRM}.
+    {NRM}Commands: {CMD}$commands${NRM}.
+    {NRM}Shortcuts: {CMD}$shortcuts${NRM}.
+    {NRM}Other topics: {CMD}$topics${NRM}.
   export: |
     {CMD}/shop export
     {NRM}Exports the database to shops.csv.
@@ -91,7 +100,6 @@ help:
     invalid: |
       {PRM}$tag$ {ERR}is not a valid tag!
       {NRM}Use {CMD}/shop help tags {NRM}to list all of thevalid tags.
-    #Available variables: THERE ARE NO AVAILABLE VARIABLES.
     maxprice: |
       {CMD}maxPrice:{BKT}<{PRM}maxPrice{BKT}> {NRM}- Highest price.
       {NRM}The price will never go above maxPrice.
@@ -134,18 +142,23 @@ list:
   # Available variables: page.
   no_results: "{ERR}No such products are available!"
   page:
+    # Available variables: page.
     negative: "{ERR}You must specify a positive page number!"
+    # Available variables: page.
     non_numeric: "{PRM}$page$ {ERR}is not a page number!"
+    # Available variables: page.
     too_high: "{ERR}There aren't that many pages!"
-reload: "{NRM}DynamicMarket has successfuly reloaded."
+reload:
+  before: "{NRM}Reloading."
+  after: "{NRM}Reloaded."
 remove:
-  # Available variables: product and shop.
+  # Available variables: product & shop.
   success: "{PRM}$product$ {NRM} is no longer sold at {PRM}$shop${NRM}."
 sell:
   no_space: "{ERR}The shop doesn't have enough of that to sell to you."
 transaction:
-  # Available variables: amount.
   amount:
+    # Available variables: amount.
     non_numeric: "{PRM}$amount$ {ERR}is not a valid amount!"
 update:
   # Available variables: product.

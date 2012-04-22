@@ -50,8 +50,6 @@ import dynamicmarket.util.IO;
 import dynamicmarket.util.MyDatabase;
 
 public class DynamicMarket extends BukkitUtilJavaPlugin {
-    public static final double DDM_MAXVALUE = 999999999.99;
-
     private Market market;
     private MyDatabase database;
     private CommandsManager<CommandSender> commandsManager;
@@ -158,8 +156,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	if (!(sender instanceof Player) && args.length > 0
 		&& !Util.isAny(args[0], "info", "importdb", "exportdb")) // TODO: Make console check an annotation for CommandsManager
 	{
-	    sender.sendMessage("You must be logged in to issue the "
-		    + commandLabel + " command.");
+	    Message.COMMAND_PLAYER_ONLY.send(sender);
 	    return true;
 	}
 
@@ -167,7 +164,7 @@ public class DynamicMarket extends BukkitUtilJavaPlugin {
 	    this.commandsManager.execute(cmd.getName(), args, sender, this,
 		    sender);
 	} catch (CommandPermissionsException e) {
-	    sender.sendMessage("You don't have permission"); // TODO: Add to messages.yml and Message.
+	    Message.COMMAND_NEED_PERMISSION.send(sender, Messaging.buildContext("player", sender.getName()));
 	} catch (MissingNestedCommandException e) {
 	    sender.sendMessage(e.getUsage());
 	} catch (CommandUsageException e) {

@@ -155,7 +155,7 @@ public class Shop // TODO: Add location support.
 	    return new Shop(args[0], Format.parseBoolean(args[1]),
 		    Format.parseDouble(args[2]), Format.parseInteger(args[3]));
 	} catch (NumberFormatException e) {
-	    // TODO: cMore detailed exception message.
+	    // TODO: More detailed exception message.
 
 	} catch (IndexOutOfBoundsException e) {
 	    // TODO: More detailed exception message.

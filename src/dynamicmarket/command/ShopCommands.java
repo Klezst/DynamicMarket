@@ -119,8 +119,6 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 	    String topics = "";
 	    String shortcuts = "";
 
-	    Message.HELP_DEFAULT.send(sender);
-
 	    commands += " list";
 	    shortcuts += " -? -l";
 	    if (Permission.hasPermission(sender, "buy")) {
@@ -157,9 +155,8 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
 		topics += " tags";
 	    }
 
-	    sender.sendMessage("Commands: " + commands); // TODO: Add to Message and messages.yml under HELP?.
-	    sender.sendMessage("Shortcuts: " + shortcuts);
-	    sender.sendMessage("Other help topics: " + topics);
+	    Message.HELP_DEFAULT.send(sender, Messaging.buildContext("commands",
+		    commands, "shortcuts", shortcuts, "topics", topics));
 
 	    return;
 	}
@@ -392,11 +389,12 @@ public class ShopCommands // TODO: All shop modification/creation/deletion comma
     @CommandPermissions("admin")
     public static void reload(CommandContext args, DynamicMarket plugin,
 	    CommandSender sender) {
-	plugin.log(Level.INFO, sender.getName()
-		+ " has issued the reload command; reloading."); //TODO: Add all logging to messages.yml.
+	Log.RELOAD.log(Messaging.buildContext("player", sender.getName()));
+	
+	Message.RELOAD_BEFORE.send(sender);
 	plugin.onDisable();
 	plugin.onEnable();
-	Message.RELOAD.send(sender);
+	Message.RELOAD_AFTER.send(sender);
     }
 
     @Command(aliases = { "remove", "r" }, desc = "Removes an item from the shop", usage = "<id>[:<subType>]", min = 1, max = 1)

@@ -1,23 +1,27 @@
 # Valid levels: CONFIG, FINE, FINER, FINEST, INFO, SEVERE, WARNING.
 config:
-  # Available variables: errors, filepath.
   invalid:
     messages:
       level: "SEVERE"
+      # Available variables: errors, filepath.
       message: "Invalid $filepath$:\nInvalid keys:\n$errors$"
     settings:
       level: "SEVERE"
+      # Available variables: errors, filepath.
       message: "Invalid $filepath$:\nInvalid keys:\n$errors$"
 export:
-  # Available variables: player, filepath.
   level: "INFO"
+  # Available variables: player, filepath.
   message: "$player$ issued the export command; exporting to $filepath$"
 import:
-  # Available variables: player, filepath.
   level: "INFO"
+  # Available variables: player, filepath.
   message: "$player$ issued the import command; importing from $filepath$"
-  # Available variables: THERE ARE NO AVAILABLE VARIABLES.
   failure:
     initial:
       level: "SEVERE"
       message: "Database import failed on first run! Try deleting plugins/DynamicMarket/shops.csv."
+reload:
+  level: "INFO"
+  # Available variables: player.
+  message: "$player$ has issued the reload command."

@@ -42,7 +42,8 @@ public enum Log implements Validatable<String> {
     CONFIG_INVALID_SETTINGS("config.invalid.settings"),
     EXPORT("export"),
     IMPORT("import"),
-    IMPORT_FAILURE_INITIAL("import.failure.initial");
+    IMPORT_FAILURE_INITIAL("import.failure.initial"),
+    RELOAD("reload");
     
     public static final String FILEPATH = "plugins/DynamicMarket/logs.yml";
     
