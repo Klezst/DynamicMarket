@@ -7,25 +7,24 @@
 	<name>DynamicMarket</name>
 	<repositories>
 		<repository>
-			<id>nexisonline-repo</id>
-			<url>http://repo.nexisonline.net:8080/nexus/content/groups/public/</url>
+			<id>bukkit-repo</id>
+			<url>http://repo.bukkit.org/content/groups/public/</url>
+		</repository>
+		<repository>
+			<id>vault-repo</id>
+			<url>http://ci.herocraftonline.com/plugin/repository/everything</url>
 		</repository>
 	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.bukkit</groupId>
-			<artifactId>bukkit</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<artifactId>craftbukkit</artifactId>
+			<version>1.4.2-R0.2</version>
 		</dependency>
 		<dependency>
-			<groupId>com.nijikokun.bukkit</groupId>
-			<artifactId>Permissions</artifactId>
-			<version>3.1.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.iConomy</groupId>
-			<artifactId>iConomy</artifactId>
-			<version>5.0.1</version>
+			<groupId>net.milkbowl.vault</groupId>
+			<artifactId>Vault</artifactId>
+			<version>1.2.19-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

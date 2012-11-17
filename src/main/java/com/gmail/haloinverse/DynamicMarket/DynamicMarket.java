@@ -65,7 +65,7 @@ public class DynamicMarket extends JavaPlugin {
         log.info(Messaging.bracketize(name) + " version " + Messaging.bracketize(version) + " (" + codename + ") disabled");
     }
     
-    public File getDataFolder() {
+    public File getFolder() {
         if (directory == null) {
             String pluginDirString = "plugins" + File.separator + "DynamicMarket";
             if (!super.getDataFolder().toString().equals(pluginDirString)) {
@@ -82,7 +82,7 @@ public class DynamicMarket extends JavaPlugin {
     @Override
     public void onEnable() {
         PluginDescriptionFile desc = getDescription();
-        getDataFolder().mkdir();
+        getFolder().mkdir();
         
         server = getServer();
         
@@ -102,25 +102,10 @@ public class DynamicMarket extends JavaPlugin {
     }
     
     private void checkLibs() {
-        boolean isok = false;
-        File a = new File(getDataFolder() + "/sqlitejdbc-v056.jar");
-        if (!a.exists()) {
-            isok = FileDownloader.fileDownload("http://www.brisner.no/libs/sqlitejdbc-v056.jar", getDataFolder().toString());
-            if (isok)
-                System.out.println("[DynamicMarket] Downloaded SQLite Successfully.");
-        }
-        File b = new File(getDataFolder() + "/mysql-connector-java-5.1.15-bin.jar");
-        if (!b.exists()) {
-            isok = FileDownloader.fileDownload("http://www.brisner.no/libs/mysql-connector-java-5.1.15-bin.jar", getDataFolder().toString());
-            if (isok)
-                System.out.println("[DynamicMarket] Downloaded MySQL Successfully.");
-        }
-        File c = new File(getDataFolder() + "/items.db");
-        if (!c.exists()) {
-            isok = FileDownloader.fileDownload("http://www.brisner.no/DynamicMarket/items.db", getDataFolder().toString());
-            if (isok)
-                System.out.println("[DynamicMarket] items.db downloaded successfully");
-        }
+        this.saveResource("sqlitejdbc-v056.jar", false);
+        this.saveResource("mysql-connector-java-5.1.15-bin.jar", false);
+        this.saveResource("items.db", false);
+        this.saveResource("shopDB.csv", false);
     }
     
     @Override
@@ -157,12 +142,12 @@ public class DynamicMarket extends JavaPlugin {
     }
     
     public void setup() {
-        Settings = new iProperty(getDataFolder() + File.separator + name + ".settings");
+        Settings = new iProperty(getFolder() + File.separator + name + ".settings");
         
         debug = Settings.getBoolean("debug", false);
         
         // ItemsFile = new iProperty("items.db");
-        itemsPath = Settings.getString("items-db-path", getDataFolder() + File.separator);
+        itemsPath = Settings.getString("items-db-path", getFolder() + File.separator);
         items = new Items(itemsPath + "items.db", this);
         
         shop_tag = Settings.getString("shop-tag", shop_tag);
@@ -195,7 +180,7 @@ public class DynamicMarket extends JavaPlugin {
         }
         
         csvFileName = Settings.getString("csv-file", "shopDB.csv");
-        csvFilePath = Settings.getString("csv-file-path", getDataFolder() + File.separator);
+        csvFilePath = Settings.getString("csv-file-path", getFolder() + File.separator);
         //        wrapperMode = Settings.getBoolean("wrapper-mode", false);
         simplePermissions = Settings.getBoolean("simple-permissions", false);
         wrapperPermissions = Settings.getBoolean("wrapper-permissions", false);
@@ -212,7 +197,7 @@ public class DynamicMarket extends JavaPlugin {
         transLogFile = Settings.getString("transaction-log-file", transLogFile);
         transLogAutoFlush = Settings.getBoolean("transaction-log-autoflush", transLogAutoFlush);
         if ((transLogFile != null) && (!transLogFile.isEmpty())) {
-            transLog = new TransactionLogger(this, getDataFolder() + File.separator + transLogFile, transLogAutoFlush);
+            transLog = new TransactionLogger(this, getFolder() + File.separator + transLogFile, transLogAutoFlush);
         } else {
             transLog = new TransactionLogger(this, null, false);
         }
