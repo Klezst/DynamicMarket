@@ -2,6 +2,7 @@ package com.gmail.haloinverse.DynamicMarket;
 
 import java.util.ArrayList;
 
+import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChatEvent;
@@ -424,8 +425,14 @@ public class iListen implements Listener {
         // TODO: check aren's source - oddly different here
         
         // TODO: Check for sufficient inventory space for received items.
-        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel, player);
         Messaging message = new Messaging(player);
+
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            message.send("{ERR}You must be in survival mode to buy items.");
+            return true;
+        }
+
+        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel, player);
         
         int balance = 0;
         try {
@@ -527,8 +534,14 @@ public class iListen implements Listener {
             String shopLabel, String accountName, boolean freeAccount) {
         // TODO: check aren's source different here
         
-        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel, player);
         Messaging message = new Messaging(player);
+
+        if (player.getGameMode() != GameMode.SURVIVAL) {
+            message.send("{ERR}You must be in survival mode to sell items.");
+            return true;
+        }
+
+        ItemClump requested = new ItemClump(itemString, plugin.db, shopLabel, player);
         
         int transValue;
         
